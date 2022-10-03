@@ -3,11 +3,11 @@
     <div class="mt-3 px-3 w-full">
       <label class="relative">
         <svg class="absolute top-1 left-1 fill-black" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"><path d="M21.172 24l-7.387-7.387c-1.388.874-3.024 1.387-4.785 1.387-4.971 0-9-4.029-9-9s4.029-9 9-9 9 4.029 9 9c0 1.761-.514 3.398-1.387 4.785l7.387 7.387-2.828 2.828zm-12.172-8c3.859 0 7-3.14 7-7s-3.141-7-7-7-7 3.14-7 7 3.141 7 7 7z"/></svg>
-        <input v-model="search" type="text" class="focus:outline-none rounded-md w-full px-5 py-1 bg-[#FEFBF6] placeholder-black" :placeholder="$t('images.search')">
+        <input v-model="search" type="text" class="focus:outline-none border border-[#3D3C42] rounded-md w-full px-5 py-1 bg-[#FEFBF6] placeholder-black" :placeholder="$t('images.search')">
       </label>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
         <template v-for="image in value">
-          <card-image v-for="tags in image.tags" :key="tags.image_id" :header="tags.image.concat(':', tags.tag)" :color="selectColor(tags.vulnerabilities, tags.outdated_packages)">
+          <card-image v-for="tags in image.tags" :key="tags.image_id" :header="tags.image.concat(':', tags.tag)" :color="selectColor(tags.vulnerabilities, tags.outdated_packages)" @click.native="$router.push('/images/' + tags.sha)" >
             <ul>
               <li>{{ $t('images.added_date') }} : {{ convertDate(tags.date_added) }}</li>
               <li>{{ $t('images.size') }} : {{ calcSize(tags.size) }}</li>
@@ -26,26 +26,35 @@
 </template>
 
 <script>
-import {api} from "static/data";
+import { mapActions, mapState } from 'vuex'
 
 export default {
   name: "ImagesPage",
   data() {
     return {
-      value: api,
-      search: undefined
+      value: undefined,
+      search: undefined,
     }
+  },
+  computed: {
+    ...mapState('image', ['images']),
   },
   watch: {
     search(newValue) {
       if(newValue === '') {
-        this.value = api
+        this.value = this.images
       } else {
-        this.value = api.filter((el) => el.name.includes(newValue) )
+        this.value = this.images.filter((el) => el.name.toLowerCase().includes(newValue.toLowerCase()) )
       }
-    }
+    },
+  },
+  async mounted() {
+    await this.getImages().then(() => {
+      this.value = this.images
+    })
   },
   methods: {
+    ...mapActions('image', ['getImages']),
     convertDate(date) {
       const options = { year: 'numeric', month: 'long', day: 'numeric' };
       return new Date(date).toLocaleDateString('fr-FR', options)
@@ -73,8 +82,7 @@ export default {
         return 'bg-yellow-400'
       }
       return 'bg-green-400'
-    }
-
+    },
   }
 }
 </script>
