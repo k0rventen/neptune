@@ -1,0 +1,11 @@
+{
+  "navbar": {
+    "home": "Dashboard",
+    "images": "Images"
+  },
+  "card" : {
+    "image_vulnerability": "Vulnerable image | Vulnerable image | Vulnerable images",
+    "vulnerability": "Vulnerabilities",
+    "follow_up_vulnerability": "Follow-up vulnerabilities"
+  }
+}
