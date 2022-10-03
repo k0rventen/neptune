@@ -7,5 +7,13 @@
     "image_vulnerability": "Image Vulnérable | Image Vulnérable | Images Vulnérables",
     "vulnerability": "Vulnérabilité",
     "follow_up_vulnerability": "Suivi Vulnérabilité"
+  },
+  "images" : {
+    "search": "Rechercher ...",
+    "added_date": "Date d'ajout",
+    "size": "Taille",
+    "vulnerability": "Vulnérabilité | Vulnérabilité | Vulnérabilités",
+    "package": "Paquet | Paquet | Paquets",
+    "outdated_package": "Paquet obsolète | Paquet obsolète | Paquets obsolètes"
   }
 }
