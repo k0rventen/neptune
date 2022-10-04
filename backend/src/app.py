@@ -1,11 +1,13 @@
 """main module"""
 import threading
 
+from uvicorn import Config
+
 import api
 from models import create_db
 from tasks import tasks_thread
-from utils import Logger, APIServer
-from uvicorn import Config
+from utils import APIServer, Logger
+
 logger = Logger("main")
 
 if __name__ == "__main__":
@@ -14,5 +16,4 @@ if __name__ == "__main__":
     threading.Thread(target=tasks_thread).start()
     server_config = Config(api.neptune_api, host="0.0.0.0", port=5000)
     server = APIServer(server_config)
-    logger.info('')
     server.run()

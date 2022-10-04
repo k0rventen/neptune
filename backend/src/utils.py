@@ -3,11 +3,11 @@ import logging
 import os
 import subprocess
 import threading
+
 import uvicorn
 
-
-from models import (Image, Package, PackageVersion,
-                    RegistryConfig, create_session)
+from models import (Image, Package, PackageVersion, RegistryConfig,
+                    create_session)
 
 stop_flag = threading.Event()
 
