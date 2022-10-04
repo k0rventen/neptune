@@ -51,7 +51,7 @@ def cleanup_images():
     cleanup = Logger("cleanup")
     cleanup.info("Cleaning up images..")
     for image in os.listdir("images"):
-        os.remove("images/{}".format(image))
+        os.remove("/tmp/{}".format(image))
 
 
 def database_housekeeping():
@@ -126,7 +126,7 @@ def skopeo_pull(url, local_path):
         tuple: (bool,str)
     """
     pull = subprocess.run(["skopeo", "copy", "docker://{}".format(url),
-                          "docker-archive:images/{}".format(local_path)], capture_output=True)
+                          "docker-archive:/tmp/{}".format(local_path)], capture_output=True)
     if pull.returncode == 0:
         return True, pull.stdout.decode()
     return False, pull.stdout.decode()+pull.stderr.decode()
@@ -149,7 +149,7 @@ def grype_report(local_image_path):
         tuple: (bool,str)
     """
     grype = subprocess.run(["grype", "-q", "-o", "json",
-                           "images/{}".format(local_image_path)], capture_output=True)
+                           "/tmp/{}".format(local_image_path)], capture_output=True)
     if grype.returncode == 0:
         return True, grype.stdout.decode()
     return False, grype.stdout.decode()+grype.stderr.decode()
@@ -165,7 +165,7 @@ def syft_report(local_image_path):
         tuple: (bool,str)
     """
     syft = subprocess.run(["syft", "-q", "-o", "json",
-                          "docker-archive:images/{}".format(local_image_path)], capture_output=True)
+                          "docker-archive:/tmp/{}".format(local_image_path)], capture_output=True)
     if syft.returncode == 0:
         return True, syft.stdout.decode()
     return False, syft.stdout.decode()+syft.stderr.decode()
