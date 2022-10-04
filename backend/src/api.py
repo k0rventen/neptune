@@ -4,15 +4,14 @@ import time
 from datetime import datetime
 from uuid import uuid4
 
-
-from models import (Image, Package, PackageVersion, RegistryConfig, Tag,
-                    Vulnerability, create_session)
-from utils import (Logger, grype_report, skopeo_login,
-                   skopeo_pull, syft_report, human_readable_time)
-from fastapi import FastAPI, APIRouter
+from fastapi import APIRouter, FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+from models import (Image, Package, PackageVersion, RegistryConfig, Tag,
+                    Vulnerability, create_session)
+from utils import (Logger, grype_report, human_readable_size,
+                   human_readable_time, skopeo_login, skopeo_pull, syft_report)
 
 logger = Logger("api")
 session = create_session()
@@ -56,7 +55,7 @@ def post_config(new_config: RegistryConfigRequest):
         session.add(registry_conf)
         session.commit()
         return {"message": message}, 200
-    return {"message": message}, 400
+    raise HTTPException(status_code=400, detail=message)
 
 
 @api_router.get("/registries")
@@ -77,12 +76,12 @@ def scan_image(scan_request: ImageScanRequest):
     logger.info("pulling image..")
     pull_ok, message = skopeo_pull(image, image_uuid)
     if not pull_ok:
-        return {"message": message}, 400
+        raise HTTPException(status_code=400, detail=message)
 
     logger.info("grabbing SBOM")
     syft_ok, sbom_str = syft_report(image_uuid)
     if not syft_ok:
-        return {"message": sbom_str}, 400
+        raise HTTPException(status_code=400, detail=sbom_str)
 
     sbom_json = json.loads(sbom_str)
     image_distro = sbom_json["distro"].get("name", "distroless")
@@ -94,10 +93,10 @@ def scan_image(scan_request: ImageScanRequest):
     logger.info("fetched {} packages".format(len(sbom)))
 
     logger.info("checking vulns")
-    grype_ok, grype = grype_report(image_uuid)
+    grype_ok, grype_str = grype_report(image_uuid)
     if not grype_ok:
-        return {"message": grype}, 400
-    vuln_json = json.loads(grype)
+        raise HTTPException(status_code=400, detail=grype_str)
+    vuln_json = json.loads(grype_str)
     vulns = [{"id": v["vulnerability"]["id"],
               "severity":v["vulnerability"]["severity"],
               "description":v["vulnerability"].get("description", ""),
@@ -188,12 +187,12 @@ def scan_image(scan_request: ImageScanRequest):
                 active_vulns.append(v.name)
     response = {"image": image_name,
                 "tag": image_tag,
-                "size": image_size,
+                "size": human_readable_size(image_size),
                 "scan_time": human_readable_time(int(t1)),
                 "packages": len(s_image.packages),
                 "vulnerabilities": active_vulns}
     if active_vulns:
-        return response, 400
+        raise HTTPException(status_code=400, detail=response)
     return response, 200
 
 
@@ -223,7 +222,7 @@ def delete_tag(sha: str):
         logger.info("deleting tag %s", sha)
         session.delete(tag)
         session.commit()
-    return "", 204
+    return {}
 
 
 @api_router.get("/vulnerabilities")
@@ -246,6 +245,7 @@ def set_vuln_notes(cve_id: int, vuln_def: VulnPut):
         Vulnerability.id == cve_id).first()
     ack_vuln.active = vuln_def.active
     session.commit()
+    return {}
 
 
 @api_router.get("/dependencies")
@@ -257,12 +257,12 @@ def dependencies():
 
 @api_router.get('/housekeeping')
 def trigger_housekeeping_chores():
-    return "NotImplementedError"
+    raise HTTPException(status_code=404, detail="not implemented yet")
 
 
 @api_router.get('/schedules')
 def neptuneSchedules():
-    return "NotImplementedError"
+    raise HTTPException(status_code=404, detail="not implemented yet")
 
 
 
@@ -270,7 +270,7 @@ def neptuneSchedules():
 neptune_api = FastAPI(
     title="Neptune API",
     version="0.2.0",
-    description="Container SBOM & vulnerability management",
+    description="Containers SBOM & vulnerability management",
     redoc_url=None,
     docs_url="/api",
     openapi_url="/api/openapi.json"
