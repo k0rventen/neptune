@@ -12,6 +12,10 @@ stop_flag = threading.Event()
 
 
 class APIServer(uvicorn.Server):
+    """custom uvicorn server
+    
+    when receiving a sigterm, it will toggle our stop flag for the task threads
+    """
     def handle_exit(self, sig: int, frame) -> None:
         stop_flag.set()
         return super().handle_exit(sig, frame)
@@ -43,6 +47,15 @@ def human_readable_time(time_s: int) -> str:
         timestr += "{}{}".format(quot, timeunit[1]) if quot > 0 else ""
         time_s = rem
     return timestr
+
+
+def human_readable_size(size_s: int) -> str:
+    sizestr = ""
+    for sizeunit in [(1000000000, "Go"), (1000000, "Mo")]:
+        quot, rem = divmod(size_s, sizeunit[0])
+        sizestr += "{}{}".format(quot, sizeunit[1]) if quot > 0 else ""
+        size_s = rem
+    return sizestr
 
 
 def cleanup_images():
@@ -84,6 +97,8 @@ def database_housekeeping():
 
 
 def startup_logins():
+    """tries to login to every registered registry
+    """
     app_session = create_session()
     startup_logger = Logger("registry_login")
     registries = app_session.query(RegistryConfig).all()
