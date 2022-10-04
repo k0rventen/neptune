@@ -54,7 +54,7 @@ def post_config(new_config: RegistryConfigRequest):
     if auth_ok:
         session.add(registry_conf)
         session.commit()
-        return {"message": message}, 200
+        return {"message": message}
     raise HTTPException(status_code=400, detail=message)
 
 
@@ -193,7 +193,7 @@ def scan_image(scan_request: ImageScanRequest):
                 "vulnerabilities": active_vulns}
     if active_vulns:
         raise HTTPException(status_code=400, detail=response)
-    return response, 200
+    return response
 
 
 @api_router.get("/images")
