@@ -202,11 +202,13 @@ def images():
     results = session.query(Image).order_by(Image.last_update.desc()).all()
     return [i.serialize() for i in results]
 
+
 @api_router.get("/tags")
 def get_all_tags():
     """list of tags"""
     results = session.query(Tag).order_by(Image.date_added.desc()).all()
     return [i.serialize() for i in results]
+
 
 @api_router.get("/tags/{sha}")
 def get_tag(sha: str):
@@ -265,8 +267,6 @@ def neptuneSchedules():
     raise HTTPException(status_code=404, detail="not implemented yet")
 
 
-
-
 neptune_api = FastAPI(
     title="Neptune API",
     version="0.2.0",
@@ -278,6 +278,6 @@ neptune_api = FastAPI(
 
 neptune_api.include_router(api_router)
 neptune_api.mount(
-    path="/", 
-    app=StaticFiles(directory="/app/dist", html=True), 
+    path="/",
+    app=StaticFiles(directory="/app/dist", html=True),
     name="ui")

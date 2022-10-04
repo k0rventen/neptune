@@ -6,20 +6,21 @@ import threading
 import uvicorn
 
 
-from models import (Image, Package, PackageVersion, RegistryConfig,create_session)
+from models import (Image, Package, PackageVersion,
+                    RegistryConfig, create_session)
 
 stop_flag = threading.Event()
 
 
 class APIServer(uvicorn.Server):
     """custom uvicorn server
-    
+
     when receiving a sigterm, it will toggle our stop flag for the task threads
     """
+
     def handle_exit(self, sig: int, frame) -> None:
         stop_flag.set()
         return super().handle_exit(sig, frame)
-
 
 
 def Logger(name, level='INFO'):
