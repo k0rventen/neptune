@@ -1,7 +1,8 @@
 {
   "navbar": {
     "home": "Dashboard",
-    "images": "Images"
+    "images": "Images",
+    "vulnerabilities": "Vulnerabilités"
   },
   "card": {
     "image_vulnerability": "Image Vulnérable | Image Vulnérable | Images Vulnérables",
@@ -15,5 +16,19 @@
     "vulnerability": "Vulnérabilité | Vulnérabilité | Vulnérabilités",
     "package": "Paquet | Paquet | Paquets",
     "outdated_package": "Paquet obsolète | Paquet obsolète | Paquets obsolètes"
+  },
+  "vulnerability" : {
+    "name": "Nom",
+    "severity": "Sévérité",
+    "source": "Source",
+    "affected_tags": "Tags affectés",
+    "notes": "Notes",
+    "acknowledged": "Reconnu",
+    "state": {
+      "negligible": "Negligeable",
+      "low": "Faible",
+      "medium": "Moyenne",
+      "high": "Elevé"
+    }
   }
 }
