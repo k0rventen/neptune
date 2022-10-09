@@ -2,6 +2,7 @@
 """
 import re
 from datetime import datetime
+from itertools import chain
 
 from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Integer, String,
                         Table, create_engine)
@@ -115,16 +116,17 @@ class Tag(Base):
             "image": self.image.name,
             "image_id": self.image_id,
         }
-        if full:
-            spec.update({"packages": 3,
-                         "outdated_packages": '',
-                         "vulnerabilities": ''})
-        else:
+        if full: # return the id of each related objects
+            spec.update({"packages": [p.id for p in self.packages],
+                         "outdated_packages": [p.id for p in self.packages if p.is_outdated()],
+                         "vulnerabilities": [v.id for v in set(chain.from_iterable([p.vulnerabilities for p in self.packages]))]})
+        else: # only return the len of the corresponding objects
             spec.update({"packages": len(self.packages),
                          "outdated_packages": len([p for p in self.packages if p.is_outdated()]),
-                         "vulnerabilities": 0})
+                         "vulnerabilities": sum(set([v.id for v in set(chain.from_iterable([p.vulnerabilities for p in self.packages]))])),
+                         'active_vulnerabilities':sum(set([v.id for v in set(chain.from_iterable([p.vulnerabilities for p in self.packages])) if v.active]))})
+                        
         return spec
-
 
 class Package(Base):
     """A Package is a python package on which a Tag is dependent. It has a given version.
