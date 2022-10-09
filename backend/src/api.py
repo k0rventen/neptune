@@ -2,9 +2,11 @@
 import json
 import time
 from datetime import datetime
+from typing import Optional
 from uuid import uuid4
 
 from fastapi import APIRouter, FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -28,16 +30,21 @@ class ImageScanRequest(BaseModel):
 
 
 class VulnPut(BaseModel):
-    notes: str
-    active: bool
+    notes: Optional[str]
+    active: Optional[bool]
+
+
+class PackagePut(BaseModel):
+    notes: Optional[str]
+    minimum_version: Optional[str]
 
 
 api_router = APIRouter(prefix='/api')
 
 
-@api_router.post("/registries")
+@api_router.post("/registries", tags=['config'])
 def post_config(new_config: RegistryConfigRequest):
-    """set a new config for anchore"""
+    """add a new registry login for skopeo"""
     registry_conf = session.query(RegistryConfig).filter(
         RegistryConfig.url == new_config.url).one_or_none()
     if registry_conf:
@@ -58,16 +65,16 @@ def post_config(new_config: RegistryConfigRequest):
     raise HTTPException(status_code=400, detail=message)
 
 
-@api_router.get("/registries")
+@api_router.get("/registries", tags=['config'])
 def get_config():
-    """ get the current config """
+    """get the current registries configs"""
     registry_configs = session.query(RegistryConfig).all()
     return [c.serialize() for c in registry_configs]
 
 
-@api_router.post("/scan")
+@api_router.post("/scan", tags=['config'])
 def scan_image(scan_request: ImageScanRequest):
-    """ add a new image to neptune"""
+    """add a new image to neptune"""
     db_session = create_session()
     image = scan_request.image
     logger.info("Processing %s", image)
@@ -196,28 +203,28 @@ def scan_image(scan_request: ImageScanRequest):
     return response
 
 
-@api_router.get("/images")
+@api_router.get("/images", tags=['images'])
 def images():
     """list of images"""
     results = session.query(Image).order_by(Image.last_update.desc()).all()
     return [i.serialize() for i in results]
 
 
-@api_router.get("/tags")
+@api_router.get("/tags", tags=['images'])
 def get_all_tags():
     """list of tags"""
     results = session.query(Tag).order_by(Image.date_added.desc()).all()
     return [i.serialize() for i in results]
 
 
-@api_router.get("/tags/{sha}")
+@api_router.get("/tags/{sha}", tags=['images'])
 def get_tag(sha: str):
     """specific image:tag"""
     spec_image = session.query(Tag).filter(Tag.sha == sha).first()
-    return spec_image.serialize()
+    return spec_image.serialize(full=True)
 
 
-@api_router.delete("/tags/{sha}")
+@api_router.delete("/tags/{sha}", tags=['images'])
 def delete_tag(sha: str):
     tag = session.query(Tag).filter(Tag.sha == sha).first()
     if tag:
@@ -227,16 +234,26 @@ def delete_tag(sha: str):
     return {}
 
 
-@api_router.get("/vulnerabilities")
+@api_router.get("/vulnerabilities", tags=['vulnerabilities'])
 def vulnerabilities():
     """vulnerabilities interface"""
-    vulns = session.query(Vulnerability).filter().all()
+    vulns = session.query(Vulnerability).all()
     return [v.serialize() for v in vulns]
 
 
-@api_router.put("/vulnerabilities/{cve_id}")
+@api_router.get("/vulnerabilities/{cve_id}", tags=['vulnerabilities'])
+def vulnerabilities(cve_id: int):
+    """vulnerabilities interface"""
+    vuln = session.query(Vulnerability).filter(
+        Vulnerability.id == cve_id).first()
+    if vuln:
+        return vuln.serialize()
+    raise HTTPException(status_code=404, detail="vulnerability does not exist")
+
+
+@api_router.put("/vulnerabilities/{cve_id}", tags=['vulnerabilities'])
 def set_vuln_notes(cve_id: int, vuln_def: VulnPut):
-    """set minimum required version for a package
+    """set notes and toggle active boolean for a vuln
     """
     notes = vuln_def.notes
     vuln = session.query(Vulnerability).filter(
@@ -250,20 +267,58 @@ def set_vuln_notes(cve_id: int, vuln_def: VulnPut):
     return {}
 
 
-@api_router.get("/dependencies")
-def dependencies():
-    """package management"""
+@api_router.get("/packages", tags=['packages'])
+def packages():
+    """returns all packages"""
     dependencies = session.query(Package).all()
     return [d.serialize() for d in dependencies]
 
 
-@api_router.get('/housekeeping')
+@api_router.put("/packages/{package_id}", tags=['packages'])
+def set_packages_notes(package_id: int, package_def: PackagePut):
+    """set minimum required version for a package
+    """
+    package = session.query(Package).filter(Package.id == package_id).first()
+    if not package:
+        raise HTTPException(status_code=404, detail="id does not exists")
+    if package_def.notes:
+        package.notes = package_def.notes
+    if package_def.minimum_version:
+        package.minimum_version = package_def.minimum_version
+    session.commit()
+    return {}
+
+
+@api_router.get("/packages/{package_id}", tags=['packages'])
+def get_specific_package_versions(package_id: int):
+    """set minimum required version for a package
+    """
+    package = session.query(Package).filter(Package.id == package_id).first()
+    if not package:
+        raise HTTPException(status_code=404, detail="id does not exists")
+    return package.serialize()
+
+
+@api_router.get('/housekeeping', tags=['wip'])
 def trigger_housekeeping_chores():
     raise HTTPException(status_code=404, detail="not implemented yet")
 
 
-@api_router.get('/schedules')
-def neptuneSchedules():
+@api_router.get('/schedules', tags=['wip'])
+def neptune_schedules():
+    '''get neptune images scan schedules'''
+    raise HTTPException(status_code=404, detail="not implemented yet")
+
+
+@api_router.post('/schedules', tags=['wip'])
+def create_neptune_schedules():
+    '''create neptune images scan schedules'''
+    raise HTTPException(status_code=404, detail="not implemented yet")
+
+
+@api_router.delete('/schedules', tags=['wip'])
+def delete_neptune_schedules():
+    '''delete neptune images scan schedules'''
     raise HTTPException(status_code=404, detail="not implemented yet")
 
 
@@ -274,6 +329,14 @@ neptune_api = FastAPI(
     redoc_url=None,
     docs_url="/api",
     openapi_url="/api/openapi.json"
+)
+
+neptune_api.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 neptune_api.include_router(api_router)
