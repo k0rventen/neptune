@@ -2,33 +2,32 @@
 FROM debian as bin-downloader
 RUN apt update && apt install upx-ucl wget ca-certificates -y --no-install-recommends
 WORKDIR /download
-RUN wget https://github.com/anchore/grype/releases/download/v0.50.2/grype_0.50.2_linux_amd64.tar.gz -qO - | tar xz
-RUN wget https://github.com/anchore/syft/releases/download/v0.57.0/syft_0.57.0_linux_amd64.tar.gz -qO - | tar xz
+ARG SYFT_VERSION=0.58.0
+ARG GRYPE_VERSION=0.50.2
+RUN wget https://github.com/anchore/grype/releases/download/v${GRYPE_VERSION}/grype_${GRYPE_VERSION}_linux_amd64.tar.gz -qO - | tar xz
+RUN wget https://github.com/anchore/syft/releases/download/v${SYFT_VERSION}/syft_${SYFT_VERSION}_linux_amd64.tar.gz -qO - | tar xz
 RUN upx grype syft
-RUN mkdir -p bin/
-RUN mv grype syft bin/
 
 # backend build layer
 FROM python:3.10-alpine as backend-builder
 RUN apk add build-base
 COPY backend/requirements.txt .
-RUN pip3 install  --prefix="/install" -r requirements.txt
+RUN pip3 install --prefix="/install" -r requirements.txt
 
 # frontend build layer
 FROM node:lts-alpine as frontend-build
 RUN apk add git
 WORKDIR /app
 COPY frontend/package.json ./
-RUN yarn install  --progress=false
+RUN yarn install --progress=false
 COPY . .
 RUN yarn run generate
-
 
 # final layer
 FROM python:3.10-alpine
 RUN apk add skopeo
 COPY --from=backend-builder /install /usr/local/
-COPY --from=bin-downloader /download/bin /usr/local/bin
+COPY --from=bin-downloader /download /usr/local/bin
 WORKDIR /app
 COPY backend/src/ ./
 COPY --from=frontend-build /app/dist dist/
