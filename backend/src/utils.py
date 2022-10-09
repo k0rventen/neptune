@@ -60,11 +60,11 @@ def human_readable_size(size_s: int) -> str:
 
 
 def cleanup_images():
-    """deletes images in the images/ dir
+    """deletes images in the images dir
     """
     cleanup = Logger("cleanup")
     cleanup.info("Cleaning up images..")
-    for image in os.listdir("images"):
+    for image in os.listdir("/tmp"):
         os.remove("/tmp/{}".format(image))
 
 
