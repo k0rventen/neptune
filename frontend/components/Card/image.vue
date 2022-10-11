@@ -3,7 +3,7 @@
     <div class="font-bold px-3 py-1 text-white uppercase" :class="color">
       <p>{{ header }}</p>
     </div>
-    <div class="bg-[#FEFBF6] h-full">
+    <div class="bg-[#FEFBF6] h-full px-3">
       <slot></slot>
     </div>
   </div>

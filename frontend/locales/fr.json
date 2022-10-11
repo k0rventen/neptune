@@ -15,12 +15,15 @@
     "size": "Taille",
     "vulnerability": "Vulnérabilité | Vulnérabilité | Vulnérabilités",
     "package": "Paquet | Paquet | Paquets",
-    "outdated_package": "Paquet obsolète | Paquet obsolète | Paquets obsolètes"
+    "outdated_package": "Paquet obsolète | Paquet obsolète | Paquets obsolètes",
+    "add_image": "Ajouter une image",
+    "name_of_image": "Nom de l'image"
   },
   "vulnerability" : {
     "name": "Nom",
     "severity": "Sévérité",
     "source": "Source",
+    "tags": "Tags",
     "affected_tags": "Tags affectés",
     "notes": "Notes",
     "acknowledged": "Reconnu",

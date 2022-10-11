@@ -2,14 +2,14 @@
   <div class="w-full h-screen">
     <Table
       :columns="[
-        {label: $t('vulnerability.name'), name: 'vuln'},
+        {label: $t('vulnerability.name'), name: 'name'},
         {label: $t('vulnerability.severity'), name: 'severity'},
         {label: $t('vulnerability.source'), name: 'source'},
-        {label: $t('vulnerability.affected_tags'), name: 'tags'},
-        {label: $t('vulnerability.notes'), name: 'note'},
+        {label: $t('vulnerability.affected_tags'), name: 'affected_images_sha'},
+        {label: $t('vulnerability.notes'), name: 'notes'},
         {label: $t('vulnerability.acknowledged'), name: 'ack'}
       ]"
-      :data="[{vuln: 'Test', severity: 'High'}]"
+      :data="vuln"
     >
       <template slot="severity" slot-scope="{item}">
         <div class="w-full flex justify-center">
@@ -17,10 +17,19 @@
             <p>{{ $t(`vulnerability.state.${item.severity.toLowerCase()}`) }}</p>
           </div>
         </div>
-
       </template>
-      <template slot="note" slot-scope="{item}">
-        <input class="w-full" type="text" @focusout="sendNewNotes(item)">
+      <template slot="name" slot-scope="{item}">
+        <a :href="`https://www.google.com/search?q=${item.name}`">
+          <p>{{ item.name }}</p>
+        </a>
+      </template>
+      <template slot="notes" slot-scope="{item}">
+        <input class="w-full bg-transparent text-center" type="text" @focusout="sendNewNotes(item)">
+      </template>
+      <template slot="affected_images_sha" slot-scope="{item}">
+        <button class="px-5 py-2 bg-[#A6D1E6] rounded-sm text-white uppercase font-bold">
+          <p>{{ item.affected_images_sha.length }} {{ $t('vulnerability.tags') }}</p>
+        </button>
       </template>
       <template slot="ack" slot-scope="{item}">
         <button class="px-5 py-2 bg-[#A6D1E6] rounded-sm text-white uppercase font-bold" @change="sendAck(item)">
@@ -40,7 +49,7 @@ import { mapState, mapActions } from "vuex";
 export default {
   name: "VunerabilitiesPage",
   async mounted() {
-    // await this.getVulnerabilties();
+    await this.getVulnerabilties();
   },
   methods: {
     ...mapActions('vulnerability', ['getVulnerabilties']),
