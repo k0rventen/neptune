@@ -1,28 +1,32 @@
 # neptune
 
+![header](header.png)
 neptune is a dependency & vulnerability inventory for containers. 
 
-Its purpose is to be called during a CI workflow where a container image is built (and optionnaly pushed to a registry).
-It will analyze the languages-specific and distro packages installed, check for vulnerabilities based on thoses, and store theses informations server-side.
+It is SBOM driven, and doesn't rely solely on the scan of an image to determine vulnerabilites.
+It will analyze the languages-specific and distro packages installed, check for vulnerabilities based on thoses, and store all of theses informations server-side.
+That means if a new vulnerability shows up, you don't have to scan your entire inventory again. neptune will automatically link new vulnerabilities to previously scanned images.
 
+
+Scans can be made through its UI, but it was initially designed to be called during a CI workflow where a container image is built (and optionnaly pushed to a registry).
 Operators can then check their dependencies and vulnerabilities inventory through the UI or the API.
 
- 
+
 ## TL;DR
 
 start neptune on port 5000
 ```
-git clone https://github.com/k0rventen/neptune.git
-cd neptune
-docker build -t neptune .
-docker run -v neptune_data:/app/data -p 5000:5000 neptune
+docker run -v neptune_data:/app/data -p 5000:5000 k0rventen/neptune
 ```
 
-scan an image using neptune
+let neptune scan itself
 ```
-http post :5000/api/scan image=python:3-slim
-# or 
-curl -d '{"image":"python:3-slim"}' -H "Content-Type: application/json" -X POST http://localhost:5000
+# httpie
+http post :5000/api/scan image=k0rventen/neptune
+# new curl
+curl --json '{"image":"k0rventen/neptune"}' http://localhost:5000
+# old curl
+curl -d '{"image":"k0rventen/neptune"}' -H "Content-Type: application/json" -X POST http://localhost:5000
 ```
 
 then open `http://localhost:5000/` to check the ui.
@@ -36,10 +40,11 @@ then open `http://localhost:5000/` to check the ui.
 - vulnerability scanning: [grype](https://github.com/anchore/grype)
 - OCI images management: [skopeo](https://github.com/containers/skopeo)
 - storage: [sqlite](https://www.sqlite.org/index.html)
+- logo: [craiyon.com](https://www.craiyon.com/)
 
 ## API
 
-The OpenAPI documentation is available at `http://localhost:5000/api` on a running neptune instance.
+The OpenAPI documentation is available at `/api` on a running neptune instance. 
 
 
 ## Usage in a CI workflow
