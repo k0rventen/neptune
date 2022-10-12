@@ -2,7 +2,8 @@
   "navbar": {
     "home": "Dashboard",
     "images": "Images",
-    "vulnerabilities": "Vulnerabilities"
+    "vulnerabilities": "Vulnerabilities",
+    "dependencies": "Dependencies"
   },
   "card" : {
     "image_vulnerability": "Vulnerable image | Vulnerable image | Vulnerable images",
@@ -27,11 +28,21 @@
     "affected_tags": "Affected tags",
     "notes": "Notes",
     "acknowledged": "Acknowledged",
+    "not_acknowledged": "Not acknowledged",
     "state": {
       "negligible": "Negligible",
       "low": "Low",
       "medium": "Medium",
-      "high": "High"
+      "high": "High",
+      "critical": "Critical"
     }
+  },
+  "dependencies": {
+    "type": "Type",
+    "name": "Name",
+    "vulnerability": "Vulnerability",
+    "version": "Version",
+    "minimum_version": "Minimum version",
+    "notes": "Notes"
   }
 }
