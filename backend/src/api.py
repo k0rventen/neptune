@@ -161,6 +161,7 @@ def scan_image(scan_request: ImageScanRequest):
         if p["version"] not in [p.version for p in package.versions]:
             version = PackageVersion(version=p["version"])
             package.versions.append(version)
+            
         else:
             version = [
                 v for v in package.versions if v.version == p["version"]][0]
@@ -179,7 +180,7 @@ def scan_image(scan_request: ImageScanRequest):
                 v = Vulnerability(name=v["id"], severity=v["severity"])
                 version.vulnerabilities.append(v)
                 db_session.add(version)
-
+    version.refresh_outdated_status()
     db_session.add(s_image)
     logger.info("commiting to DB")
     db_session.commit()
@@ -285,6 +286,10 @@ def set_packages_notes(package_id: int, package_def: PackagePut):
         package.notes = package_def.notes
     if package_def.minimum_version:
         package.minimum_version = package_def.minimum_version
+
+        # check for each version if they are now outdated
+        for version in package.versions:
+            version.outdated = version.is_outdated()
     session.commit()
     return {}
 

@@ -20,31 +20,6 @@ _packages = Table('packages_association', Base.metadata,
                   )
 
 
-def is_version_ge(version_one: str, version_two: str) -> bool:
-    """is the first version >= the second version
-
-    the comparison is based on numbers only, grouped by separators being everything __not__ a number.
-
-    Args:
-        version_one (str): first version
-        version_two (str): second
-    """
-    version_one_ints = [int(x) for x in re.findall("[0-9]+", version_one)]
-    version_two_ints = [int(x) for x in re.findall("[0-9]+", version_two)]
-
-    # r-pad the shortest with 0s
-    max_len = max(len(version_one_ints), len(version_two_ints))
-    for l in [version_one_ints, version_two_ints]:
-        if len(l) < max_len:
-            l += [0] * (max_len - len(l))
-
-    first_superior = next(
-        (i for i in range(max_len) if version_one_ints[i] > version_two_ints[i]), None)
-    first_inferior = next(
-        (i for i in range(max_len) if version_one_ints[i] < version_two_ints[i]), None)
-    return (first_superior if isinstance(first_superior, int) else max_len) <= (first_inferior if isinstance(first_inferior, int) else max_len)
-
-
 class RegistryConfig(Base):
     """the configuration for the docker registry to pull from
     """
@@ -159,6 +134,7 @@ class PackageVersion(Base):
     __tablename__ = "packageversions"
     id = Column(Integer, primary_key=True)
     version = Column(String(16))
+    outdated = Column(Boolean, default=False)
 
     # to which package does we belong to
     package_id = Column(Integer, ForeignKey('packages.id'))
@@ -170,15 +146,40 @@ class PackageVersion(Base):
     # list of tags that have this package version
     tags = relationship("Tag", secondary=_packages, back_populates="packages")
 
-    def is_outdated(self):
-        return is_version_ge(self.package.minimum_version, self.version)
+    def refresh_outdated_status(self):
+        self.outdated = self.is_outdated()
+    
+    def is_outdated(self) -> bool:
+        """is this specific version < the package minimum version
+
+        the comparison is based on numbers only, grouped by separators being everything __not__ a number.
+
+        Args:
+            version_one (str): first version
+            version_two (str): second
+        """
+        version_one_ints = [int(x) for x in re.findall("[0-9]+", self.package.minimum_version)]
+        version_two_ints = [int(x) for x in re.findall("[0-9]+", self.version)]
+
+        # r-pad the shortest with 0s
+        max_len = max(len(version_one_ints), len(version_two_ints))
+        for l in [version_one_ints, version_two_ints]:
+            if len(l) < max_len:
+                l += [0] * (max_len - len(l))
+
+        first_superior = next(
+            (i for i in range(max_len) if version_one_ints[i] > version_two_ints[i]), None)
+        first_inferior = next(
+            (i for i in range(max_len) if version_one_ints[i] < version_two_ints[i]), None)
+        return (first_superior if isinstance(first_superior, int) else max_len) <= (first_inferior if isinstance(first_inferior, int) else max_len)
+
 
     def serialize(self, full=False):
         spec = {
             "id": self.id,
             "package": self.package.name,
             "version": self.version,
-            "outdated": self.is_outdated(),
+            "outdated": self.outdated,
         }
         if full:
             spec["vulnerabilities"] = [v.id for v in self.vulnerabilities]
