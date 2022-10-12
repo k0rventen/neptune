@@ -8,14 +8,15 @@
 
     <Table
       :columns="[
-        {label: $t('vulnerability.name'), name: 'name'},
-        {label: $t('vulnerability.severity'), name: 'severity'},
+        {label: $t('vulnerability.name'), name: 'name', order: true},
+        {label: $t('vulnerability.severity'), name: 'severity', order: true},
         {label: $t('vulnerability.source'), name: 'source'},
-        {label: $t('vulnerability.affected_tags'), name: 'affected_images'},
+        {label: $t('vulnerability.affected_tags'), name: 'affected_images', order: true},
         {label: $t('vulnerability.notes'), name: 'notes'},
-        {label: $t('vulnerability.acknowledged'), name: 'ack'}
+        {label: $t('vulnerability.acknowledged'), name: 'ack', order: true}
       ]"
       :data="vuln"
+      @filter="(value) => test(value)"
     >
       <template slot="severity" slot-scope="{item}">
         <div class="w-full flex justify-center">
@@ -42,7 +43,7 @@
 
           <template #popper>
             <div class="px-3 py-1">
-              <p class="cursor-pointer" v-for="image in item.affected_images" :key="image"  @click="$router.push({ path: '/images/' + image.sha } )">{{ image.image }}:{{ image.tag }}</p>
+              <p v-for="image in item.affected_images" :key="image" class="cursor-pointer" @click="$router.push({ path: '/images/' + image.sha } )">{{ image.image }}:{{ image.tag }}</p>
             </div>
           </template>
         </VDropdown>
@@ -83,6 +84,9 @@ export default {
     ...mapActions('vulnerability', ['getVulnerabilties', 'setNotes', 'setAckState']),
     sendNewNotes(item) {
       this.setNotes({ cve: item.id, notes: this.copyNote[item.name], active: item.active })
+    },
+    test(value) {
+      console.log(value)
     },
     colorSeverity(item) {
       switch (item.severity) {
