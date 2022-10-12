@@ -20,7 +20,7 @@ RUN apk add git
 WORKDIR /app
 COPY frontend/package.json ./
 RUN yarn install --progress=false
-COPY . .
+COPY frontend ./
 RUN yarn run generate
 
 # final layer
