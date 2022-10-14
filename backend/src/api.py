@@ -2,6 +2,7 @@
 import json
 import time
 from datetime import datetime
+from itertools import groupby
 from typing import Optional
 from uuid import uuid4
 
@@ -10,14 +11,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from models import (Image, Package, PackageVersion, RegistryConfig, Tag,
-                    Vulnerability, create_session)
-from utils import (Logger, grype_report, human_readable_size,
-                   human_readable_time, skopeo_login, skopeo_pull, syft_report)
+from models import (HistoricalStatistics, Image, Package, PackageVersion,
+                    RegistryConfig, Tag, Vulnerability, create_session)
+from utils import (Logger, cleanup_images, database_housekeeping, grype_report,
+                   human_readable_size, human_readable_time, skopeo_login,
+                   skopeo_pull, syft_report,scan_mutex)
 
 logger = Logger("api")
 session = create_session()
-
 
 class RegistryConfigRequest(BaseModel):
     url: str
@@ -40,6 +41,7 @@ class PackagePut(BaseModel):
 
 
 api_router = APIRouter(prefix='/api')
+
 
 
 @api_router.post("/registries", tags=['config'])
@@ -122,68 +124,70 @@ def scan_image(scan_request: ImageScanRequest):
     except ValueError:
         image_name, image_tag = image, "latest"
 
-    sha_already_scanned = db_session.query(
-        Tag).filter(Tag.sha == image_sha).one_or_none()
-    if sha_already_scanned:
-        logger.warning(
-            "This image (%s) was already inventoried. deleting the record.", image_sha)
-        db_session.delete(sha_already_scanned)
+    # mutex here to avoid race conditions when adding records concurrently
+    with scan_mutex:
+        sha_already_scanned = db_session.query(
+            Tag).filter(Tag.sha == image_sha).one_or_none()
+        if sha_already_scanned:
+            logger.warning(
+                "This image (%s) was already inventoried. deleting the record.", image_sha)
+            db_session.delete(sha_already_scanned)
 
-    # new image, add
-    image = db_session.query(Image).filter(
-        Image.name == image_name).one_or_none()
-
-    if not image:
-        db_session.add(Image(name=image_name, tags=[]))
+        # new image, add
         image = db_session.query(Image).filter(
             Image.name == image_name).one_or_none()
-    else:
-        image.last_update = datetime.now()
-    # create tag
-    s_image = Tag(tag=image_tag,
-                  image_id=image.id,
-                  distro=image_distro,
-                  distro_version=image_distro_version,
-                  sha=image_sha,
-                  size=image_size,
-                  packages=[])
 
-    # packages
-    for p in sbom:
-        # check for base package
-        package = db_session.query(Package).filter(Package.name == p["name"]).filter(
-            Package.type == p["type"]).one_or_none()
-
-        if not package:
-            package = Package(name=p["name"], type=p["type"])
-            db_session.add(package)
-        # check for version
-        if p["version"] not in [p.version for p in package.versions]:
-            version = PackageVersion(version=p["version"])
-            package.versions.append(version)
-            
+        if not image:
+            db_session.add(Image(name=image_name, tags=[]))
+            image = db_session.query(Image).filter(
+                Image.name == image_name).one_or_none()
         else:
-            version = [
-                v for v in package.versions if v.version == p["version"]][0]
-        s_image.packages.append(version)
+            image.last_update = datetime.now()
+        # create tag
+        s_image = Tag(tag=image_tag,
+                    image_id=image.id,
+                    distro=image_distro,
+                    distro_version=image_distro_version,
+                    sha=image_sha,
+                    size=image_size,
+                    packages=[])
 
-    # vulns
-    for v in vulns:
-        is_referenced = db_session.query(Vulnerability).filter(
-            Vulnerability.name == v["id"]).one_or_none()
-        if not is_referenced:
-            logger.info("New vulnerability ! %s", v["id"])
-            # find the linked package
-            _, version = db_session.query(Package, PackageVersion).filter(Package.id == PackageVersion.package_id).filter(
-                Package.name == v["artifact_name"]).filter(Package.type == v["artifact_type"]).filter(PackageVersion.version == v["artifact_version"]).one_or_none()
-            if version:
-                v = Vulnerability(name=v["id"], severity=v["severity"])
-                version.vulnerabilities.append(v)
-                db_session.add(version)
-    version.refresh_outdated_status()
-    db_session.add(s_image)
-    logger.info("commiting to DB")
-    db_session.commit()
+        # packages
+        for p in sbom:
+            # check for base package
+            package = db_session.query(Package).filter(Package.name == p["name"]).filter(
+                Package.type == p["type"]).one_or_none()
+
+            if not package:
+                package = Package(name=p["name"], type=p["type"])
+                db_session.add(package)
+            # check for version
+            if p["version"] not in [p.version for p in package.versions]:
+                version = PackageVersion(version=p["version"])
+                package.versions.append(version)
+                
+            else:
+                version = [
+                    v for v in package.versions if v.version == p["version"]][0]
+            s_image.packages.append(version)
+
+        # vulns
+        for v in vulns:
+            is_referenced = db_session.query(Vulnerability).filter(
+                Vulnerability.name == v["id"]).one_or_none()
+            if not is_referenced:
+                logger.info("New vulnerability ! %s", v["id"])
+                # find the linked package
+                _, version = db_session.query(Package, PackageVersion).filter(Package.id == PackageVersion.package_id).filter(
+                    Package.name == v["artifact_name"]).filter(Package.type == v["artifact_type"]).filter(PackageVersion.version == v["artifact_version"]).one_or_none()
+                if version:
+                    v = Vulnerability(name=v["id"], severity=v["severity"])
+                    version.vulnerabilities.append(v)
+                    db_session.add(version)
+        #version.refresh_outdated_status()
+        db_session.add(s_image)
+        logger.info("commiting to DB")
+        db_session.commit()
 
     # now that we have updated the inventory, tell the client the stats of the image (size,packages, and vulns)
     # return 400 code if the image has active vulnerabilities
@@ -203,18 +207,32 @@ def scan_image(scan_request: ImageScanRequest):
         raise HTTPException(status_code=400, detail=response)
     return response
 
+@api_router.get("/historicalstatistics", tags=['ui'])
+def historicalstatistics():
+    all_stats = session.query(HistoricalStatistics).order_by(HistoricalStatistics.timestamp.desc()).all()
+    return [h.serialize() for h in all_stats]
 
-@api_router.get("/images", tags=['images'])
-def images():
+
+@api_router.get("/statistics", tags=['ui'])
+def statistics():
+    """statistics about the inventory"""
+    last_stat = session.query(HistoricalStatistics).order_by(HistoricalStatistics.timestamp.desc()).first()
+    stats =  last_stat.serialize()
+    stats["severities"] = {k:session.query(Vulnerability).filter(Vulnerability.severity == k).count() for k in ["Low","Medium","High","Critical","Negligible","Unknown"]}
+    return stats
+
+
+@api_router.get("/images", tags=['images',"ui"])
+def images(offset: int = 0, limit: int = 50):
     """list of images"""
-    results = session.query(Image).order_by(Image.last_update.desc()).all()
+    results = session.query(Image).order_by(Image.last_update.desc()).limit(limit).offset(offset).all()
     return [i.serialize() for i in results]
 
 
 @api_router.get("/tags", tags=['images'])
-def get_all_tags():
+def get_all_tags(offset: int = 0, limit: int = 50):
     """list of tags"""
-    results = session.query(Tag).order_by(Image.date_added.desc()).all()
+    results = session.query(Tag).order_by(Tag.date_added.desc()).limit(limit).offset(offset).all()
     return [i.serialize() for i in results]
 
 
@@ -236,9 +254,9 @@ def delete_tag(sha: str):
 
 
 @api_router.get("/vulnerabilities", tags=['vulnerabilities'])
-def vulnerabilities():
+def vulnerabilities(offset: int = 0, limit: int = 50):
     """vulnerabilities interface"""
-    vulns = session.query(Vulnerability).all()
+    vulns = session.query(Vulnerability).limit(limit).offset(offset).all()
     return [v.serialize() for v in vulns]
 
 
@@ -256,22 +274,24 @@ def vulnerabilities(cve_id: int):
 def set_vuln_notes(cve_id: int, vuln_def: VulnPut):
     """set notes and toggle active boolean for a vuln
     """
-    notes = vuln_def.notes
     vuln = session.query(Vulnerability).filter(
         Vulnerability.id == cve_id).first()
-    vuln.notes = notes
-    session.commit()
-    ack_vuln = session.query(Vulnerability).filter(
-        Vulnerability.id == cve_id).first()
-    ack_vuln.active = vuln_def.active
+    if not vuln:
+        raise HTTPException(status_code=404, detail="vulnerability does not exist")
+    if vuln_def.notes:
+        vuln.notes = vuln_def.notes
+    if vuln_def.active:
+        vuln.active = vuln_def.active
+    session.add(vuln)
     session.commit()
     return {}
 
 
 @api_router.get("/packages", tags=['packages'])
-def packages():
+def packages(package_type: str | None = None, package_name: str | None=None, offset: int = 0, limit: int = 20):
     """returns all packages"""
-    dependencies = session.query(Package).all()
+    filters = {k:v for k,v in {"type":package_type,"name":package_name}.items() if v}
+    dependencies = session.query(Package).filter_by(**filters).limit(limit).offset(offset).all()
     return [d.serialize() for d in dependencies]
 
 
@@ -290,6 +310,7 @@ def set_packages_notes(package_id: int, package_def: PackagePut):
         # check for each version if they are now outdated
         for version in package.versions:
             version.outdated = version.is_outdated()
+    session.add(package)
     session.commit()
     return {}
 
@@ -306,7 +327,9 @@ def get_specific_package_versions(package_id: int):
 
 @api_router.get('/housekeeping', tags=['wip'])
 def trigger_housekeeping_chores():
-    raise HTTPException(status_code=404, detail="not implemented yet")
+    cleanup_images()
+    database_housekeeping()
+    return {}
 
 
 @api_router.get('/schedules', tags=['wip'])
