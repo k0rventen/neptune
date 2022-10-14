@@ -9,6 +9,11 @@ module.exports = {
     extend: {
       fontFamily: {
         'clash': ['Clash'],
+      },
+      colors: {
+        'primary': '#f8f9fb',
+        'secondary': '#919191',
+        'neptune-blue': '#559cc4'
       }
     },
   },
