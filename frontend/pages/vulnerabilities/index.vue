@@ -7,16 +7,25 @@
     </label>
 
     <Table
+      v-if="vuln.length > 0"
       :columns="[
-        {label: $t('vulnerability.name'), name: 'name', order: true},
-        {label: $t('vulnerability.severity'), name: 'severity', order: true},
+        {label: $t('vulnerability.name'), name: 'name', sorter: (row1 , row2) => row1.name.localeCompare(row2.name) },
+        {label: $t('vulnerability.severity'), name: 'severity', sorter: (row1, row2) => {
+          const severity = {
+            'critical': 1,
+            'high': 2,
+            'medium': 3,
+            'low': 4,
+            'negligible': 5
+          }
+          return severity[row1.severity.toLowerCase()] - severity[row2.severity.toLowerCase()]
+        }},
         {label: $t('vulnerability.source'), name: 'source'},
-        {label: $t('vulnerability.affected_tags'), name: 'affected_images', order: true},
+        {label: $t('vulnerability.affected_tags'), name: 'affected_images', sorter: (row1, row2) => row1.affected_images.length - row2.affected_images.length },
         {label: $t('vulnerability.notes'), name: 'notes'},
-        {label: $t('vulnerability.acknowledged'), name: 'ack', order: true}
+        {label: $t('vulnerability.acknowledged'), name: 'ack', sorter: (row1, row2) => (row1.ack === row2.ack) ? 0 : x ? -1 : 1},
       ]"
       :data="vuln"
-      @filter="(value) => test(value)"
     >
       <template slot="severity" slot-scope="{item}">
         <div class="w-full flex justify-center">
@@ -84,9 +93,6 @@ export default {
     ...mapActions('vulnerability', ['getVulnerabilties', 'setNotes', 'setAckState']),
     sendNewNotes(item) {
       this.setNotes({ cve: item.id, notes: this.copyNote[item.name], active: item.active })
-    },
-    test(value) {
-      console.log(value)
     },
     colorSeverity(item) {
       switch (item.severity) {

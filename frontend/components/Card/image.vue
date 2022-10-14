@@ -1,7 +1,10 @@
 <template>
   <div class="w-full rounded-md overflow-hidden max-h-full shadow-md">
-    <div class="font-bold px-3 py-1 text-white uppercase" :class="color">
+    <div class="font-bold px-3 py-1 text-white uppercase flex w-full justify-between items-center" :class="color">
       <p>{{ header }}</p>
+      <slot name="header">
+
+      </slot>
     </div>
     <div class="bg-[#FEFBF6] h-full px-3">
       <slot></slot>

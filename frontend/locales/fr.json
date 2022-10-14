@@ -8,7 +8,9 @@
   "card": {
     "image_vulnerability": "Image Vulnérable | Image Vulnérable | Images Vulnérables",
     "vulnerability": "Vulnérabilité",
-    "follow_up_vulnerability": "Suivi Vulnérabilité"
+    "follow_up_vulnerability_package": "Suivi Vulnérabilité package",
+    "follow_up_vulnerability_tags": "Suivi Vulnérabilité Tags",
+    "follow_up_severity": "Suivi de la criticité"
   },
   "images" : {
     "search": "Rechercher ...",

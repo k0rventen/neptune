@@ -1,6 +1,7 @@
 <template>
   <div class="w-full">
     <Table
+      v-if="dependencies.length > 0"
       :columns="[
         {label: $t('dependencies.type'), name: 'type'},
         {label: $t('dependencies.name'), name: 'name'},

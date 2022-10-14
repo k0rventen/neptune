@@ -12,7 +12,7 @@ const mutations = {
   },
   currentImage(state, data) {
     state.currentImage = data
-  }
+  },
 }
 
 const actions = {
@@ -20,6 +20,15 @@ const actions = {
     await this.$axios.get('/api/images').then((response) => {
       commit('setImage', response.data)
     })
+  },
+
+  async deleteImage({commit}, data) {
+    await this.$axios.delete(`/api/tags/${data}`).then(async () => {
+      await this.$axios.get('/api/images').then((response) => {
+        commit('setImage', response.data)
+      })
+    })
+
   },
 
   async scanImages({commit}, image) {

@@ -5,10 +5,15 @@
     "vulnerabilities": "Vulnerabilities",
     "dependencies": "Dependencies"
   },
+  "dashboard": {
+
+  },
   "card" : {
     "image_vulnerability": "Vulnerable image | Vulnerable image | Vulnerable images",
     "vulnerability": "Vulnerabilities",
-    "follow_up_vulnerability": "Follow-up vulnerabilities"
+    "follow_up_vulnerability_package": "Follow-up package vulnerability",
+    "follow_up_vulnerability_tags": "Follow-up tags vulnerability",
+    "follow_up_severity": "Follow-up severity"
   },
   "images" : {
     "search": "Search ...",
