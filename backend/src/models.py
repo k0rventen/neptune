@@ -19,6 +19,30 @@ _packages = Table('packages_association', Base.metadata,
                          ForeignKey('packageversions.id'))
                   )
 
+class HistoricalStatistics(Base):
+    """timestamp'd statistics for visualizing trends
+    """
+    __tablename__ = "historicalstatistics"
+    timestamp = Column(DateTime, default=datetime.now, primary_key=True)
+
+    tags_total_count = Column(Integer)
+    vulnerable_tags_count =Column(Integer)
+    outdated_tags_count = Column(Integer)
+    packages_total_count =Column(Integer)
+    outdated_packages_count =Column(Integer)
+    vulnerable_packages_count =Column(Integer)
+    
+    vulnerabilities_total_count =Column(Integer)
+    active_vulnerabilities_count =Column(Integer)
+
+    low_vulnerabilities_count =Column(Integer)
+    medium_vulnerabilities_count =Column(Integer)
+    high_vulnerabilities_count =Column(Integer)
+    critical_vulnerabilities_count =Column(Integer)
+
+    def serialize(self):
+        return {col.name: getattr(self, col.name) for col in self.__table__.columns}
+
 
 class RegistryConfig(Base):
     """the configuration for the docker registry to pull from
@@ -78,6 +102,13 @@ class Tag(Base):
     packages = relationship(
         "PackageVersion", secondary=_packages, back_populates="tags")
 
+    def has_outdated_packages(self):
+        return any([p.outdated for p in self.packages])
+
+    def has_vulnerabilities(self):
+        return any([len(p.vulnerabilities)>0 for p in self.packages])
+        
+    
     def serialize(self, full=False):
         spec = {
             "tag": self.tag,
@@ -94,13 +125,12 @@ class Tag(Base):
         if full: # return the id of each related objects
             spec.update({"packages": [p.id for p in self.packages],
                          "outdated_packages": [p.id for p in self.packages if p.is_outdated()],
-                         "vulnerabilities": [v.id for v in set(chain.from_iterable([p.vulnerabilities for p in self.packages]))]})
+                         "vulnerabilities": 0})
         else: # only return the len of the corresponding objects
             spec.update({"packages": len(self.packages),
                          "outdated_packages": len([p for p in self.packages if p.is_outdated()]),
-                         "vulnerabilities": sum(set([v.id for v in set(chain.from_iterable([p.vulnerabilities for p in self.packages]))])),
-                         'active_vulnerabilities':sum(set([v.id for v in set(chain.from_iterable([p.vulnerabilities for p in self.packages])) if v.active]))})
-                        
+                         "vulnerabilities": 0,
+                         'active_vulnerabilities':0})
         return spec
 
 class Package(Base):
@@ -213,8 +243,8 @@ class Vulnerability(Base):
             "severity": self.severity,
             "notes": self.notes,
             "active": self.active,
-            "affected_package_id": self.package.id,
-            "affected_images_sha": [t.sha for t in self.package.tags]
+            "affected_package": self.package.id,
+            "affected_images": [t.serialize() for t in self.package.tags]
         }
 
         return spec
