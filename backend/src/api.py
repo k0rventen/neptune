@@ -2,11 +2,11 @@
 import json
 import time
 from datetime import datetime
-from itertools import groupby
 from typing import Optional
 from uuid import uuid4
 
 from fastapi import APIRouter, FastAPI, HTTPException
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -28,6 +28,7 @@ class RegistryConfigRequest(BaseModel):
 
 class ImageScanRequest(BaseModel):
     image: str
+    return_error: Optional[bool]
 
 
 class VulnPut(BaseModel):
@@ -88,11 +89,10 @@ def scan_image(scan_request: ImageScanRequest):
         raise HTTPException(status_code=400, detail=message)
 
     logger.info("grabbing SBOM")
-    syft_ok, sbom_str = syft_report(image_uuid)
-    if not syft_ok:
-        raise HTTPException(status_code=400, detail=sbom_str)
+    syft_report_path, sbom_json = syft_report(image_uuid)
+    if not syft_report_path:
+        raise HTTPException(status_code=400, detail=sbom_json)
 
-    sbom_json = json.loads(sbom_str)
     image_distro = sbom_json["distro"].get("name", "distroless")
     image_distro_version = sbom_json["distro"].get("versionID", "unknown")
     sbom = [{"name": a['name'],
@@ -102,10 +102,9 @@ def scan_image(scan_request: ImageScanRequest):
     logger.info("fetched {} packages".format(len(sbom)))
 
     logger.info("checking vulns")
-    grype_ok, grype_str = grype_report(image_uuid)
+    grype_ok, vuln_json = grype_report(syft_report_path)
     if not grype_ok:
-        raise HTTPException(status_code=400, detail=grype_str)
-    vuln_json = json.loads(grype_str)
+        raise HTTPException(status_code=400, detail=vuln_json)
     vulns = [{"id": v["vulnerability"]["id"],
               "severity":v["vulnerability"]["severity"],
               "description":v["vulnerability"].get("description", ""),
@@ -176,21 +175,20 @@ def scan_image(scan_request: ImageScanRequest):
             is_referenced = db_session.query(Vulnerability).filter(
                 Vulnerability.name == v["id"]).one_or_none()
             if not is_referenced:
-                logger.info("New vulnerability ! %s", v["id"])
                 # find the linked package
                 _, version = db_session.query(Package, PackageVersion).filter(Package.id == PackageVersion.package_id).filter(
                     Package.name == v["artifact_name"]).filter(Package.type == v["artifact_type"]).filter(PackageVersion.version == v["artifact_version"]).one_or_none()
                 if version:
                     v = Vulnerability(name=v["id"], severity=v["severity"])
                     version.vulnerabilities.append(v)
+                    version.refresh_outdated_status()
                     db_session.add(version)
-        #version.refresh_outdated_status()
         db_session.add(s_image)
         logger.info("commiting to DB")
         db_session.commit()
 
     # now that we have updated the inventory, tell the client the stats of the image (size,packages, and vulns)
-    # return 400 code if the image has active vulnerabilities
+    # return 400 code if the image has active vulnerabilities and the client wants a 400 http error as a signal 
     t1 = time.time() - t0
     active_vulns = []
     for package in s_image.packages:
@@ -199,27 +197,29 @@ def scan_image(scan_request: ImageScanRequest):
                 active_vulns.append(v.name)
     response = {"image": image_name,
                 "tag": image_tag,
+                "sha": image_sha,
                 "size": human_readable_size(image_size),
                 "scan_time": human_readable_time(int(t1)),
                 "packages": len(s_image.packages),
                 "vulnerabilities": active_vulns}
-    if active_vulns:
-        raise HTTPException(status_code=400, detail=response)
-    return response
-
-@api_router.get("/historicalstatistics", tags=['ui'])
-def historicalstatistics():
-    all_stats = session.query(HistoricalStatistics).order_by(HistoricalStatistics.timestamp.desc()).all()
-    return [h.serialize() for h in all_stats]
+    return JSONResponse(response,status_code=400 if active_vulns and scan_request.return_error else 200)
 
 
 @api_router.get("/statistics", tags=['ui'])
-def statistics():
-    """statistics about the inventory"""
-    last_stat = session.query(HistoricalStatistics).order_by(HistoricalStatistics.timestamp.desc()).first()
-    stats =  last_stat.serialize()
-    stats["severities"] = {k:session.query(Vulnerability).filter(Vulnerability.severity == k).count() for k in ["Low","Medium","High","Critical","Negligible","Unknown"]}
-    return stats
+def statistics(current:bool=False):
+    """statistics about the inventory
+    if current is True, only returns the last element
+    """
+    if current:
+        last_stat = session.query(HistoricalStatistics).order_by(HistoricalStatistics.timestamp.desc()).first()
+        if last_stat:
+            last_stat["severities"] = {k:session.query(Vulnerability).filter(Vulnerability.severity == k).count() for k in ["Low","Medium","High","Critical","Negligible","Unknown"]}
+            return last_stat
+        raise HTTPException(status_code=404,detail="no statistics yet")
+    else:
+        stats = session.query(HistoricalStatistics).order_by(HistoricalStatistics.timestamp.desc()).all()
+        stats =  [s.serialize() for s in stats]
+        return stats
 
 
 @api_router.get("/images", tags=['images',"ui"])
@@ -332,27 +332,9 @@ def trigger_housekeeping_chores():
     return {}
 
 
-@api_router.get('/schedules', tags=['wip'])
-def neptune_schedules():
-    '''get neptune images scan schedules'''
-    raise HTTPException(status_code=404, detail="not implemented yet")
-
-
-@api_router.post('/schedules', tags=['wip'])
-def create_neptune_schedules():
-    '''create neptune images scan schedules'''
-    raise HTTPException(status_code=404, detail="not implemented yet")
-
-
-@api_router.delete('/schedules', tags=['wip'])
-def delete_neptune_schedules():
-    '''delete neptune images scan schedules'''
-    raise HTTPException(status_code=404, detail="not implemented yet")
-
-
 neptune_api = FastAPI(
     title="Neptune API",
-    version="0.2.0",
+    version="0.3.0",
     description="Containers SBOM & vulnerability management",
     redoc_url=None,
     docs_url="/api",

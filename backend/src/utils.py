@@ -3,7 +3,7 @@ import logging
 import os
 import subprocess
 import threading
-
+import json
 import uvicorn
 
 from models import (Image, Tag, Package, PackageVersion, RegistryConfig,  Vulnerability,HistoricalStatistics,
@@ -176,19 +176,19 @@ def grype_update():
     return False, grype.stdout.decode()+grype.stderr.decode()
 
 
-def grype_report(local_image_path):
+def grype_report(syft_report_path):
     """reports vulnerabilities for a given local image
 
     Args:
-        local_image_path (str): local image path
+        syft_report_path (str): local image path
 
     Returns:
         tuple: (bool,str)
     """
     grype = subprocess.run(["grype", "-q", "-o", "json",
-                           "/tmp/{}".format(local_image_path)], capture_output=True)
+                           "sbom:{}".format(syft_report_path)], capture_output=True)
     if grype.returncode == 0:
-        return True, grype.stdout.decode()
+        return True, json.loads(grype.stdout.decode())
     return False, grype.stdout.decode()+grype.stderr.decode()
 
 
@@ -201,8 +201,10 @@ def syft_report(local_image_path):
     Returns:
         tuple: (bool,str)
     """
-    syft = subprocess.run(["syft", "-q", "-o", "json",
+    syft_report_path = f"/tmp/{local_image_path}_syft.json"
+    syft = subprocess.run(["syft", "-q", "-o", "json","--file",syft_report_path,
                           "docker-archive:/tmp/{}".format(local_image_path)], capture_output=True)
     if syft.returncode == 0:
-        return True, syft.stdout.decode()
+        with open(syft_report_path) as f:
+            return syft_report_path, json.load(f)
     return False, syft.stdout.decode()+syft.stderr.decode()
