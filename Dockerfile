@@ -2,8 +2,8 @@
 FROM debian as bin-downloader
 RUN apt update && apt install upx-ucl curl ca-certificates -y --no-install-recommends
 WORKDIR /download
-ARG SYFT_VERSION=v0.58.0
-ARG GRYPE_VERSION=v0.50.2
+ARG SYFT_VERSION=v0.60.3
+ARG GRYPE_VERSION=v0.52.0
 RUN curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b . ${SYFT_VERSION}
 RUN curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b . ${GRYPE_VERSION}
 RUN upx grype syft
@@ -29,6 +29,7 @@ RUN apk add skopeo
 COPY --from=backend-builder /install /usr/local/
 COPY --from=bin-downloader /download /usr/local/bin
 WORKDIR /app
+RUN mkdir data
 COPY backend/src/ ./
 COPY --from=frontend-build /app/dist dist/
 
