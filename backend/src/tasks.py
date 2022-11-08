@@ -17,7 +17,7 @@ def tasks_thread():
     tasks_logger.info("exiting")
 
 
-@repeat(every(4).hours)
+@repeat(every().day.at("23:50"))
 def daily_statistics():
     tasks_logger.info("Creating daily statistics !")
     create_statistics()
@@ -32,9 +32,9 @@ def daily_housekeeping():
 
 @repeat(every().day.at("22:00"))
 def daily_grype_db_update():
-    tasks_logger.info("Updating grype !")
+    tasks_logger.info("Updating grype vulnerability db!")
     ok, msg = grype_update()
     if not ok:
-        tasks_logger.error('Unable to update grype: %s', msg)
+        tasks_logger.error('Unable to update grype db: %s', msg)
     else:
-        tasks_logger.info("Grype updated !")
+        tasks_logger.info("Grype db updated !")
