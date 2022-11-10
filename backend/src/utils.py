@@ -6,11 +6,12 @@ import threading
 import json
 import uvicorn
 
-from models import (Image, Tag, Package, PackageVersion, RegistryConfig,  Vulnerability,HistoricalStatistics,
+from models import (Image, Tag, Package, PackageVersion, RegistryConfig,  Vulnerability, HistoricalStatistics,
                     create_session)
 
 stop_flag = threading.Event()
 scan_mutex = threading.Lock()
+
 
 class APIServer(uvicorn.Server):
     """custom uvicorn server
@@ -79,7 +80,8 @@ def database_housekeeping():
         for v in p.vulnerabilities:
             housekeeping_logger.info("deleting vulnerability %s", v.name)
             session.delete(v)
-        housekeeping_logger.info("deleting packageversion %s==%s", p.package.name, p.version)
+        housekeeping_logger.info(
+            "deleting packageversion %s==%s", p.package.name, p.version)
         session.delete(p)
 
     # now delete the remaining images & packages
@@ -100,23 +102,32 @@ def database_housekeeping():
 def create_statistics():
     session = create_session()
 
-    all_tags = session.query(Tag).all() 
+    all_tags = session.query(Tag).all()
 
     today_stats = HistoricalStatistics(
-        tags_total_count = len(all_tags),
-        vulnerable_tags_count =len([tag for tag in all_tags if tag.has_vulnerabilities()]),
-        outdated_tags_count = len([tag for tag in all_tags if tag.has_outdated_packages()]),
-        packages_total_count =session.query(PackageVersion).count(),
-        outdated_packages_count = session.query(PackageVersion).filter(PackageVersion.outdated == True).count(),
-        vulnerable_packages_count =session.query(PackageVersion).filter(PackageVersion.vulnerabilities.any()).count(),
-        vulnerabilities_total_count =session.query(Vulnerability).count(),
-        active_vulnerabilities_count =session.query(Vulnerability).filter(Vulnerability.active == True).count(),
-        low_vulnerabilities_count =session.query(Vulnerability).filter(Vulnerability.active == True, Vulnerability.severity == "Low").count(),
-        medium_vulnerabilities_count =session.query(Vulnerability).filter(Vulnerability.active == True, Vulnerability.severity == "Medium").count(),
-        high_vulnerabilities_count =session.query(Vulnerability).filter(Vulnerability.active == True, Vulnerability.severity == "High").count(),
-        critical_vulnerabilities_count =session.query(Vulnerability).filter(Vulnerability.active == True, Vulnerability.severity == "Critical").count())
+        tags_total_count=len(all_tags),
+        vulnerable_tags_count=len(
+            [tag for tag in all_tags if tag.has_vulnerabilities()]),
+        outdated_tags_count=len(
+            [tag for tag in all_tags if tag.has_outdated_packages()]),
+        packages_total_count=session.query(PackageVersion).count(),
+        outdated_packages_count=session.query(PackageVersion).filter(
+            PackageVersion.outdated == True).count(),
+        vulnerable_packages_count=session.query(PackageVersion).filter(
+            PackageVersion.vulnerabilities.any()).count(),
+        vulnerabilities_total_count=session.query(Vulnerability).count(),
+        active_vulnerabilities_count=session.query(
+            Vulnerability).filter(Vulnerability.active == True).count(),
+        low_vulnerabilities_count=session.query(Vulnerability).filter(
+            Vulnerability.active == True, Vulnerability.severity == "Low").count(),
+        medium_vulnerabilities_count=session.query(Vulnerability).filter(
+            Vulnerability.active == True, Vulnerability.severity == "Medium").count(),
+        high_vulnerabilities_count=session.query(Vulnerability).filter(
+            Vulnerability.active == True, Vulnerability.severity == "High").count(),
+        critical_vulnerabilities_count=session.query(Vulnerability).filter(Vulnerability.active == True, Vulnerability.severity == "Critical").count())
     session.add(today_stats)
     session.commit()
+
 
 def startup_logins():
     """tries to login to every registered registry
@@ -202,7 +213,7 @@ def syft_report(local_image_path):
         tuple: (bool,str)
     """
     syft_report_path = f"/tmp/{local_image_path}_syft.json"
-    syft = subprocess.run(["syft", "-q", "-o", "json","--file",syft_report_path,
+    syft = subprocess.run(["syft", "-q", "-o", "json", "--file", syft_report_path,
                           "docker-archive:/tmp/{}".format(local_image_path)], capture_output=True)
     if syft.returncode == 0:
         with open(syft_report_path) as f:

@@ -2,12 +2,15 @@
 """
 import re
 from datetime import datetime
-from itertools import chain
 
-from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Integer, String,
+
+from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Integer, String, JSON,
                         Table, create_engine)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
+
+engine = create_engine("sqlite:///data/neptune.db?check_same_thread=false")
+SessionLocal = sessionmaker(autoflush=True, bind=engine)
 
 Base = declarative_base()
 
@@ -19,6 +22,7 @@ _packages = Table('packages_association', Base.metadata,
                          ForeignKey('packageversions.id'))
                   )
 
+
 class HistoricalStatistics(Base):
     """timestamp'd statistics for visualizing trends
     """
@@ -26,19 +30,19 @@ class HistoricalStatistics(Base):
     timestamp = Column(DateTime, default=datetime.now, primary_key=True)
 
     tags_total_count = Column(Integer)
-    vulnerable_tags_count =Column(Integer)
+    vulnerable_tags_count = Column(Integer)
     outdated_tags_count = Column(Integer)
-    packages_total_count =Column(Integer)
-    outdated_packages_count =Column(Integer)
-    vulnerable_packages_count =Column(Integer)
-    
-    vulnerabilities_total_count =Column(Integer)
-    active_vulnerabilities_count =Column(Integer)
+    packages_total_count = Column(Integer)
+    outdated_packages_count = Column(Integer)
+    vulnerable_packages_count = Column(Integer)
 
-    low_vulnerabilities_count =Column(Integer)
-    medium_vulnerabilities_count =Column(Integer)
-    high_vulnerabilities_count =Column(Integer)
-    critical_vulnerabilities_count =Column(Integer)
+    vulnerabilities_total_count = Column(Integer)
+    active_vulnerabilities_count = Column(Integer)
+
+    low_vulnerabilities_count = Column(Integer)
+    medium_vulnerabilities_count = Column(Integer)
+    high_vulnerabilities_count = Column(Integer)
+    critical_vulnerabilities_count = Column(Integer)
 
     def serialize(self):
         return {col.name: getattr(self, col.name) for col in self.__table__.columns}
@@ -87,12 +91,12 @@ class Tag(Base):
     """
     __tablename__ = "tags"
     sha = Column(String(64), primary_key=True)
-    # this will be "latest" for example. We can have multiple "latest" but their sha must differ
     tag = Column(String(128))
     distro = Column(String(64))
     distro_version = Column(String(64))
     size = Column(Integer)
     date_added = Column(DateTime, default=datetime.now)
+    sbom = Column(JSON)
 
     # base image of this tag
     image_id = Column(Integer, ForeignKey('images.id'))
@@ -106,9 +110,8 @@ class Tag(Base):
         return any([p.outdated for p in self.packages])
 
     def has_vulnerabilities(self):
-        return any([len(p.vulnerabilities)>0 for p in self.packages])
-        
-    
+        return any([len(p.vulnerabilities) > 0 for p in self.packages])
+
     def serialize(self, full=False):
         spec = {
             "tag": self.tag,
@@ -122,16 +125,17 @@ class Tag(Base):
             "image": self.image.name,
             "image_id": self.image_id,
         }
-        if full: # return the id of each related objects
+        if full:  # return the id of each related objects
             spec.update({"packages": [p.id for p in self.packages],
                          "outdated_packages": [p.id for p in self.packages if p.is_outdated()],
                          "vulnerabilities": 0})
-        else: # only return the len of the corresponding objects
+        else:  # only return the len of the corresponding objects
             spec.update({"packages": len(self.packages),
                          "outdated_packages": len([p for p in self.packages if p.is_outdated()]),
                          "vulnerabilities": 0,
-                         'active_vulnerabilities':0})
+                         'active_vulnerabilities': 0})
         return spec
+
 
 class Package(Base):
     """A Package is a python package on which a Tag is dependent. It has a given version.
@@ -178,7 +182,7 @@ class PackageVersion(Base):
 
     def refresh_outdated_status(self):
         self.outdated = self.is_outdated()
-    
+
     def is_outdated(self) -> bool:
         """is this specific version < the package minimum version
 
@@ -188,7 +192,8 @@ class PackageVersion(Base):
             version_one (str): first version
             version_two (str): second
         """
-        version_one_ints = [int(x) for x in re.findall("[0-9]+", self.package.minimum_version)]
+        version_one_ints = [int(x) for x in re.findall(
+            "[0-9]+", self.package.minimum_version)]
         version_two_ints = [int(x) for x in re.findall("[0-9]+", self.version)]
 
         # r-pad the shortest with 0s
@@ -202,7 +207,6 @@ class PackageVersion(Base):
         first_inferior = next(
             (i for i in range(max_len) if version_one_ints[i] < version_two_ints[i]), None)
         return (first_superior if isinstance(first_superior, int) else max_len) <= (first_inferior if isinstance(first_inferior, int) else max_len)
-
 
     def serialize(self, full=False):
         spec = {
@@ -251,15 +255,24 @@ class Vulnerability(Base):
 
 
 def create_db():
-    engine = create_engine("sqlite:///data/neptune.db?check_same_thread=false")
     Base.metadata.create_all(engine)
-    del engine
 
 
 def create_session():
-    """creates a sqlalchemy session
+    """creates a sqlalchemy session for tasks and other backend stuff
     """
-    engine = create_engine("sqlite:///data/neptune.db?check_same_thread=false")
-    Base.metadata.create_all(engine)
-    sqlite_session = sessionmaker(bind=engine)
-    return sqlite_session()
+    db = SessionLocal()
+    return db
+
+
+def get_db():
+    """wrapper for creating sessions for requests
+    """
+    db = SessionLocal()
+    try:
+        yield db
+    except:
+        db.rollback()
+    finally:
+        db.commit()
+        db.close()
