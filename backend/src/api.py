@@ -1,4 +1,5 @@
 """API for neptune"""
+import json
 import time
 from datetime import datetime
 from typing import Optional
@@ -8,11 +9,10 @@ from fastapi import APIRouter, Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
-from sqlalchemy.orm import Session
-
 from models import (HistoricalStatistics, Image, Package, PackageVersion,
                     RegistryConfig, Tag, Vulnerability, get_db)
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
 from utils import (Logger, cleanup_images, database_housekeeping, grype_report,
                    human_readable_size, human_readable_time, scan_mutex,
                    skopeo_login, skopeo_pull, syft_report)
@@ -27,6 +27,11 @@ class RegistryConfigRequest(BaseModel):
 class ImageScanRequest(BaseModel):
     image: str
     return_error: Optional[bool]
+
+class SHAReScanRequest(BaseModel):
+    sha: str
+    return_error: Optional[bool]
+
 
 
 class VulnPut(BaseModel):
@@ -198,6 +203,44 @@ def scan_image(scan_request: ImageScanRequest, session: Session = Depends(get_db
                 "packages": len(s_image.packages),
                 "vulnerabilities": active_vulns}
     return JSONResponse(response, status_code=400 if active_vulns and scan_request.return_error else 200)
+
+@api_router.post("/rescan",tags=['internal'])
+def rescan_image(rescan_request:SHAReScanRequest, session: Session = Depends(get_db)):
+    spec_image = session.query(Tag).filter(Tag.sha == rescan_request.sha).first()
+    logger.info(f"rescanning {spec_image.tag} ({spec_image.sha})")
+    scan_uuid = uuid4()
+    syft_report_path = f'/tmp/{scan_uuid}_syftreport.json'
+    with open(syft_report_path,'w+') as f:
+        json.dump(spec_image.sbom,f)
+
+    grype_ok, vuln_json = grype_report(syft_report_path)
+    if not grype_ok:
+        raise HTTPException(status_code=400, detail=vuln_json)
+    vulns = [{"id": v["vulnerability"]["id"],
+              "severity":v["vulnerability"]["severity"],
+              "description":v["vulnerability"].get("description", ""),
+              "artifact_name":v["artifact"]["name"],
+              "artifact_type":v["artifact"]["type"],
+              "artifact_version":v["artifact"]["version"]}
+             for v in vuln_json["matches"]]
+
+    # mutex here to avoid race conditions when adding records concurrently
+    with scan_mutex:
+        # vulns
+        new_vulns = []
+        for v in vulns:
+            is_referenced = session.query(Vulnerability).filter(Vulnerability.name == v["id"]).one_or_none()
+            if not is_referenced:
+                logger.info(f"new vuln {v['id']} !")
+                # find the linked package
+                _, version = session.query(Package, PackageVersion).filter(Package.id == PackageVersion.package_id).filter(
+                    Package.name == v["artifact_name"]).filter(Package.type == v["artifact_type"]).filter(PackageVersion.version == v["artifact_version"]).one_or_none()
+                if version:
+                    v = Vulnerability(name=v["id"], severity=v["severity"])
+                    version.vulnerabilities.append(v)
+                    version.refresh_outdated_status()
+                    session.add(version)
+        return {'new_vulns':new_vulns}
 
 
 @api_router.get("/statistics", tags=['ui'])

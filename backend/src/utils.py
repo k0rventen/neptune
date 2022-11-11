@@ -5,6 +5,7 @@ import subprocess
 import threading
 import json
 import uvicorn
+import requests
 
 from models import (Image, Tag, Package, PackageVersion, RegistryConfig,  Vulnerability, HistoricalStatistics,
                     create_session)
@@ -40,7 +41,6 @@ def Logger(name, level='INFO'):
     log.setLevel(level)
 
     return log
-
 
 def human_readable_time(time_s: int) -> str:
     timestr = ""
@@ -186,6 +186,12 @@ def grype_update():
         return True, grype.stdout.decode()
     return False, grype.stdout.decode()+grype.stderr.decode()
 
+
+def db_sbom_rescan():
+    app_session = create_session()
+    all_tags = app_session.query(Tag).all()
+    for t in all_tags:
+        r = requests.post('http://127.0.0.1:5000/api/rescan',json={"sha":t.sha})
 
 def grype_report(syft_report_path):
     """reports vulnerabilities for a given local image
