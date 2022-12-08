@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full h-full bg-primary flex flex-col px-8">
+  <div class="w-full h-full bg-white shadow-md flex flex-col px-8">
     <div class="w-full flex justify-center items-center h-24">
       <img class="w-12 h-12" src="@/assets/img/logo.png" alt="">
       <p class="ml-2 text-2xl">Neptune</p>

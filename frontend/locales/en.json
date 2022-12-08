@@ -2,7 +2,7 @@
   "navbar": {
     "home": "Dashboard",
     "images": "Images",
-    "vulnerabilities": "Vulnerabilities",
+    "vulnerabilities": "CVE",
     "dependencies": "Dependencies"
   },
   "dashboard": {

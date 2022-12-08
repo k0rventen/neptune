@@ -1,40 +1,21 @@
 <template>
-  <div class="w-full">
-    <div class="mt-3 px-3 w-full">
-      <label class="relative">
-        <svg class="absolute top-1 left-1 fill-black" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"><path d="M21.172 24l-7.387-7.387c-1.388.874-3.024 1.387-4.785 1.387-4.971 0-9-4.029-9-9s4.029-9 9-9 9 4.029 9 9c0 1.761-.514 3.398-1.387 4.785l7.387 7.387-2.828 2.828zm-12.172-8c3.859 0 7-3.14 7-7s-3.141-7-7-7-7 3.14-7 7 3.141 7 7 7z"/></svg>
-        <input v-model="search" type="text" class="focus:outline-none border border-[#3D3C42] rounded-md w-full px-5 py-1 bg-[#FEFBF6] placeholder-black" :placeholder="$t('images.search')">
-        <button class="mt-2 px-3 py-1 rounded-md bg-[#A6D1E6] text-white font-bold transition ease-in hover:shadow-sm hover:-translate-y-0.5" @click="openModalAdd = true">{{ $t('images.add_image') }}</button>
-      </label>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
-        <template v-for="image in value">
-          <card-image v-for="(tags,index) in image.tags" :key="index" :header="tags.image.concat(':', tags.tag)" :color="selectColor(tags.vulnerabilities, tags.outdated_packages)" @click.native="$router.push({ path: '/images/' + tags.sha } )" >
-            <template #header>
-              <div class="bg-white opacity-50 flex justify-center items-center rounded-full px-0.5 py-0.5" @click.stop="deleteImage(tags.sha)">
-                <svg clip-rule="evenodd" width="16" height="16" fill="black" stroke-linejoin="round" stroke-miterlimit="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m12 10.93 5.719-5.72c.146-.146.339-.219.531-.219.404 0 .75.324.75.749 0 .193-.073.385-.219.532l-5.72 5.719 5.719 5.719c.147.147.22.339.22.531 0 .427-.349.75-.75.75-.192 0-.385-.073-.531-.219l-5.719-5.719-5.719 5.719c-.146.146-.339.219-.531.219-.401 0-.75-.323-.75-.75 0-.192.073-.384.22-.531l5.719-5.719-5.72-5.719c-.146-.147-.219-.339-.219-.532 0-.425.346-.749.75-.749.192 0 .385.073.531.219z"/></svg>
-              </div>
-            </template>
-            <ul>
-              <li>{{ $t('images.added_date') }} : {{ convertDate(tags.date_added) }}</li>
-              <li>{{ $t('images.size') }} : {{ calcSize(tags.size) }}</li>
-              <li>{{ $tc('images.package', tags.packages) }} : {{ tags.packages }}</li>
-              <li>{{ $tc('images.vulnerability', tags.vulnerabilities )}} : {{ tags.vulnerabilities }} </li>
-              <li>{{ $tc('images.outdated_package', tags.outdated_packages )}} : {{ tags.outdated_packages }} </li>
-            </ul>
-          </card-image>
-        </template>
-      </div>
+  <div class="w-full px-5 py-5 text-white">
+    <div class="text-gray-400">
+      <input v-model="search" type="text" class="w-full mb-5 px-6 py-3 rounded-full shadow-md outline-none" placeholder="Test...">
     </div>
+    <div class="w-full grid grid-cols-3 gap-9">
+      <template v-for="image in value">
+        <div v-for="(tags,index) in image.tags" :key="index" class="w-full cursor-pointer shadow-md bg-neptune-blue px-5 rounded-lg py-5 relative overflow-hidden" :class="selectColor(image.vulnerabilities, image.outdated_packages)" @click="$router.push({ path: '/images/' + tags.sha } )">
+          <svg class="absolute opacity-20 right-0 -bottom-8" width="128" height="128" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="white"><path d="M11.5 23l-8.5-4.535v-3.953l5.4 3.122 3.1-3.406v8.772zm1-.001v-8.806l3.162 3.343 5.338-2.958v3.887l-8.5 4.534zm-10.339-10.125l-2.161-1.244 3-3.302-3-2.823 8.718-4.505 3.215 2.385 3.325-2.385 8.742 4.561-2.995 2.771 2.995 3.443-2.242 1.241v-.001l-5.903 3.27-3.348-3.541 7.416-3.962-7.922-4.372-7.923 4.372 7.422 3.937v.024l-3.297 3.622-5.203-3.008-.16-.092-.679-.393v.002z"/></svg>
+          <p>Nom de l'image : {{tags.image + ':' + tags.tag}}</p>
+          <p>Taille de l'image : {{ calcSize(tags.size) }}</p>
+          <p>Paquets : {{ tags.packages }}</p>
+          <p>Vulnérabilité : {{ tags.vulnerabilities }}</p>
+          <p>Paquet obsolète : {{ tags.outdated_packages }}</p>
+        </div>
+      </template>
 
-  <Modal v-if="openModalAdd" v-model="openModalAdd" :title="$t('images.add_image')">
-    <div class="w-full">
-      <p class="mt-3">{{ $t('images.name_of_image') }}</p>
-      <input v-model="imageToScan" class="w-full mt-1 px-3 py-1 focus:outline-none border border-[#3D3C42] rounded-md" type="text" :placeholder="'Ex. ubuntu:22.07'">
     </div>
-    <template #footer>
-      <button class="bg-green-500 w-full text-white font-bold text-white px-3 py-1 rounded-md transition ease-in hover:shadow-sm hover:-translate-y-0.5" @click="sendImage">Envoyer</button>
-    </template>
-  </Modal>
   </div>
 </template>
 
@@ -84,7 +65,7 @@ export default {
       if(outdated > 0) {
         return 'bg-yellow-400'
       }
-      return 'bg-green-400'
+      return 'bg-neptune-blue'
     },
   }
 }
