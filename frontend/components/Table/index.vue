@@ -12,7 +12,7 @@
     </tr>
     </thead>
     <tbody>
-    <tr v-for="(row,index) in dataCopy ? dataCopy : data" :key="index" class="border-b border-[#e9e6e6]" :class="[index % 2 ? 'bg-[#e9e6e6]' : 'bg-white']">
+    <tr v-for="(row,index) in dataCopy ? dataCopy : data" :key="index" class="border-b border-[#e9e6e6]" :class="[index % 2 ? 'bg-[#e9e6e6]' : undefined]">
       <td v-for="column in columns" :key="column.name" class="text-center py-2">
         <slot :name="column.name" :item="row">
           {{ row[column.name] }}

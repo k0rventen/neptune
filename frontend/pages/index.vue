@@ -123,7 +123,7 @@
       </div>
     </div>
     <div class="w-full grid grid-cols-3 mt-9 gap-9">
-      <button @click="(openRegistriesModal = true)" class="w-full rounded-md bg-neptune-blue text-white px-3 py-2 col-span-3 lg:col-span-1">
+      <button @click="(openRegistriesModal = true)" class="w-full shadow-md rounded-xl bg-neptune-blue text-white px-3 py-2 col-span-3 lg:col-span-1">
         Ajouter un registry
       </button>
     </div>

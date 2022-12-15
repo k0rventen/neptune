@@ -36,7 +36,8 @@
       "low": "Faible",
       "medium": "Moyenne",
       "high": "Elevé",
-      "critical": "Critique"
+      "critical": "Critique",
+      "unknown": "Inconnu"
     }
   },
   "dependencies": {
