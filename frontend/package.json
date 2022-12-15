@@ -23,6 +23,7 @@
     "vue-apexcharts": "^1.6.2",
     "vue-server-renderer": "^2.6.14",
     "vue-template-compiler": "^2.6.14",
+    "vue-typed-js": "^0.1.2",
     "webpack": "^4.46.0"
   },
   "devDependencies": {

@@ -1,5 +1,6 @@
 <template>
   <div class="w-full px-5 py-5 text-white h-screen scrollbar-thin overflow-auto">
+    <Loading v-if="isLoading === true"/>
     <div class="text-gray-400">
       <input v-model="search" type="text" class="w-full mb-5 px-6 py-3 rounded-full shadow-md outline-none" placeholder="Rechercher ...">
     </div>
@@ -29,6 +30,7 @@ export default {
       imageToScan: undefined,
       search: undefined,
       openModalAdd: false,
+      isLoading: true
     }
   },
   computed: {
@@ -49,6 +51,8 @@ export default {
   async mounted() {
     await this.getTags().then(() => {
       this.value = this.tags
+    }).finally(() => {
+      this.isLoading = false
     })
   },
   methods: {

@@ -1,6 +1,7 @@
 <template>
-  <div v-if="!isLoading" class="w-full h-screen overflow-y-auto scrollbar-thin">
-    <div class="mt-3 px-3">
+  <div class="w-full h-screen overflow-y-auto scrollbar-thin">
+    <Loading v-if="isLoading === true"/>
+    <div v-if="isLoading === false" class="mt-3 px-3">
       <div class="col-span-3 md:col-span-1 w-full cursor-pointer shadow-md bg-neptune-blue px-5 rounded-lg py-5 relative overflow-hidden bg-neptune-blue text-white">
         <p>Nom de l'image : {{( currentImage.image + ':' + currentImage.tag )}}</p>
         <p>Taille de l'image : {{ calcSize(currentImage.size)}}</p>
