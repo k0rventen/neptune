@@ -1,5 +1,6 @@
 <template>
   <div class="w-full h-screen px-5 py-5 overflow-y-auto scrollbar-thin">
+    <Loading v-if="isLoading" />
     <Modal
       v-if="openRegistriesModal"
       v-model="openRegistriesModal"
@@ -65,6 +66,28 @@
           </button>
         </form>
       </div>
+    </Modal>
+    <Modal
+      v-if="openImagesModal"
+      v-model="openImagesModal"
+      title="Ajout d'une image en direct"
+    >
+      <label for="" class="my-2 gap-3 block">
+        Nom de l'image :
+        <input
+              v-model="imageName"
+              type="text"
+              class="rounded-md border border-gray-400 outline-none px-2 py-1"
+            />
+      </label>
+      <template #footer>
+        <button
+          class="px-3 py-1 rounded-md bg-neptune-blue text-white"
+          @click="sendNewImage()"
+        >
+          Envoyer
+        </button>
+      </template>
     </Modal>
     <div v-if="stats" class="grid grid-cols-4 gap-9">
       <div
@@ -311,7 +334,7 @@
         </div>
       </div>
     </div>
-    <div class="w-full grid grid-cols-3 mt-9 gap-9">
+    <div class="w-full grid grid-cols-1 lg:grid-cols-3 mt-9 gap-9">
       <button
         class="w-full shadow-md rounded-xl bg-neptune-blue text-white px-3 py-2 col-span-3 lg:col-span-1"
         @click="openRegistriesModal = true"
@@ -320,6 +343,7 @@
       </button>
       <button
         class="w-full shadow-md rounded-xl bg-neptune-blue text-white px-3 py-2 col-span-3 lg:col-span-1"
+        @click="openImagesModal = true"
       >
         Ajouter une image
       </button>
@@ -523,11 +547,14 @@ export default {
         },
       },
       openRegistriesModal: false,
+      openImagesModal: false,
       registry: {
         registry: '',
         user: '',
         password: '',
       },
+      imageName: undefined,
+      isLoading: false
     }
   },
   computed: {
@@ -585,6 +612,7 @@ export default {
       'getHistoricalStats',
       'getFiveImg',
     ]),
+    ...mapActions('image', ['scanImages']),
     ...mapActions('registries', ['getRegistries', 'sendRegistry']),
     convertDate(date) {
       const options = {
@@ -617,6 +645,14 @@ export default {
       }
       this.openRegistriesModal = false
     },
+    async sendNewImage() {
+      this.isLoading = true
+      this.openImagesModal = false
+      await this.scanImages({image: this.imageName, return_error: false}).then(() => {
+        this.imageName = undefined
+        this.isLoading = false
+      })
+    }
   },
 }
 </script>

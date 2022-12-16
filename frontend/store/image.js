@@ -35,7 +35,7 @@ const actions = {
   },
 
   async scanImages({commit}, image) {
-    await this.$axios.post('/api/scan', { image }).then((response) => {
+    await this.$axios.post('/api/scan', image).then((response) => {
       commit('addImage', response.data)
     })
   },

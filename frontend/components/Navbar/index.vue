@@ -1,7 +1,10 @@
 <template>
   <div class="shadow px-5 py-5 bg-white text-black">
     <div class="w-full flex justify-between items-center ">
-      <p class="text-2xl">Neptune</p>
+      <div class="flex items-center gap-3">
+        <img src="~/assets/img/logo.png" alt="logo" class="w-10 h-10">
+        <p class="text-2xl">Neptune</p>
+      </div>
       <div class="px-3 py-3" @click="openNav = !openNav">
         <svg width="25px" clip-rule="evenodd" fill-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m21 15.75c0-.414-.336-.75-.75-.75h-16.5c-.414 0-.75.336-.75.75s.336.75.75.75h16.5c.414 0 .75-.336.75-.75zm0-4c0-.414-.336-.75-.75-.75h-16.5c-.414 0-.75.336-.75.75s.336.75.75.75h16.5c.414 0 .75-.336.75-.75zm0-4c0-.414-.336-.75-.75-.75h-16.5c-.414 0-.75.336-.75.75s.336.75.75.75h16.5c.414 0 .75-.336.75-.75z" fill-rule="nonzero"/></svg>
       </div>

@@ -9,6 +9,12 @@
         class="w-full mb-2 px-6 py-3 rounded-full shadow-md outline-none"
         placeholder="Rechercher ..."
       />
+      <select v-model="selectedFilter" id="trie" class="w-1/6 px-3 py-1 rounded-md mb-2" placeholder="Trier par">
+        <option value="0">Aucun</option>
+        <option value="1">Vulnerabilités</option>
+        <option value="2">Outdated</option>
+        <option value="3">Taille</option>
+      </select>
     </div>
     <div class="w-full grid grid-cols-3 gap-9">
       <div
@@ -54,6 +60,8 @@ export default {
       search: undefined,
       openModalAdd: false,
       isLoading: true,
+      selectedFilter: undefined,
+      backupTags: undefined
     }
   },
   computed: {
@@ -70,11 +78,19 @@ export default {
         })
       }
     },
+    selectedFilter(newValue) {
+      if (newValue === '0') {
+        this.value = this.tags
+      } else if (newValue === '1') {
+        this.value = this.backupTags.sort((a,b) => (a.vulnerabilities > b.vulnerabilities) ? 1 : ((b.vulnerabilities > a.vulnerabilities) ? -1 : 0))
+      }
+    }
   },
   async mounted() {
     await this.getTags()
       .then(() => {
         this.value = this.tags
+        this.backupTags = [...this.tags]
       })
       .finally(() => {
         this.isLoading = false
