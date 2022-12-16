@@ -34,6 +34,9 @@
         </template>
       </Table>
     </div>
+    <div class="w-full flex justify-center mt-3">
+      <Pagination v-model="page" :nb-pages="15"/>
+    </div>
   </div>
 </template>
 
@@ -47,6 +50,7 @@ export default {
       version: '',
       copyMinVersion: [],
       copyNotes: [],
+      page: 1
     }
   },
   computed: {

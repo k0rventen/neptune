@@ -6,7 +6,7 @@
       <input
         v-model="search"
         type="text"
-        class="w-full mb-5 px-6 py-3 rounded-full shadow-md outline-none"
+        class="w-full mb-2 px-6 py-3 rounded-full shadow-md outline-none"
         placeholder="Rechercher ..."
       />
     </div>

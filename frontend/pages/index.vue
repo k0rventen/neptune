@@ -213,7 +213,7 @@
         />
       </div>
       <div class="bg-white px-3 py-3 shadow-md rounded-xl col-span-4">
-        <div class="w-full flex justify-between">
+        <div class="w-full block md:flex justify-between">
           <p class="mb-3 text-gray-400 underline">Images critiques :</p>
           <div class="flex gap-3">
             <div class="flex items-center gap-1">
@@ -317,6 +317,11 @@
         @click="openRegistriesModal = true"
       >
         Ajouter un registry
+      </button>
+      <button
+        class="w-full shadow-md rounded-xl bg-neptune-blue text-white px-3 py-2 col-span-3 lg:col-span-1"
+      >
+        Ajouter une image
       </button>
     </div>
   </div>
