@@ -204,6 +204,11 @@ def scan_image(scan_request: ImageScanRequest, session: Session = Depends(get_db
                 "vulnerabilities": active_vulns}
     return JSONResponse(response, status_code=400 if active_vulns and scan_request.return_error else 200)
 
+
+@api_router.post("/grype_update",tags=['internal'])
+def update_grype_db():
+    return update_grype_db()
+
 @api_router.post("/rescan",tags=['internal'])
 def rescan_image(rescan_request:SHAReScanRequest, session: Session = Depends(get_db)):
     spec_image = session.query(Tag).filter(Tag.sha == rescan_request.sha).first()
