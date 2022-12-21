@@ -80,16 +80,23 @@
             @focusout="sendNewNotes(item)"
           />
         </template>
+        <template slot="source" slot-scope="{ item }">
+          <p>{{ item.affected_package.name + ':' + item.affected_package.version }}</p>
+        </template>
         <template slot="affected_images" slot-scope="{ item }">
           <VDropdown :distance="6">
             <button
               class="px-5 py-2 bg-[#A6D1E6] rounded-full text-white uppercase font-bold"
             >
-              {{ $t('vulnerability.tags') }}
+              {{ item.affected_images.length }} {{ $t('vulnerability.tags') }}
             </button>
 
             <template #popper>
-              <p>{{ item }}</p>
+              <div v-for="image in item.affected_images" :key="image.sha" class="px-2 py-2 hover:font-bold cursor-pointer" @click="$router.push({ path: '/images/' + image.sha })">
+                <p>
+                  {{ image.name }}
+                </p>
+              </div>
             </template>
           </VDropdown>
         </template>
@@ -107,9 +114,6 @@
           </button>
         </template>
       </Table>
-    </div>
-    <div class="flex justify-center w-full mt-3">
-      <Pagination v-model="pages" :nb-pages="5" />
     </div>
   </div>
 </template>

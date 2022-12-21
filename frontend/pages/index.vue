@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full h-screen px-5 py-5 overflow-y-auto scrollbar-thin">
+  <div class="w-full pb-24 lg:pb-5 h-screen px-5 py-5 overflow-y-auto scrollbar-thin">
     <Loading v-if="isLoading" />
     <Modal
       v-if="openRegistriesModal"
@@ -334,7 +334,7 @@
         </div>
       </div>
     </div>
-    <div class="w-full grid grid-cols-1 lg:grid-cols-3 mt-9 gap-9">
+    <div class="w-full grid grid-cols-1 lg:grid-cols-3 mt-3 lg:mt-9 gap-3 lg:gap-9">
       <button
         class="w-full shadow-md rounded-xl bg-neptune-blue text-white px-3 py-2 col-span-3 lg:col-span-1"
         @click="openRegistriesModal = true"

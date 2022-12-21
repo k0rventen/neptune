@@ -1,6 +1,6 @@
 <template>
   <div
-    class="w-full px-5 py-5 text-white h-screen scrollbar-thin overflow-auto"
+    class="w-full px-5 py-5 pb-28 lg:pb-5 text-white h-screen scrollbar-thin overflow-auto"
   >
     <div class="text-gray-400">
       <div class="relative  mb-2">
@@ -35,16 +35,11 @@
             <option value="DESC">DESC</option>
           </select>
         </div>
-          
-
-
-
-     
       </div>
       
 
     </div>
-    <div class="w-full grid grid-cols-3 gap-9">
+    <div class="w-full grid grid-cols-3 gap-3 lg:gap-9">
       <div
         v-for="(tag, index) in value"
         :key="index"

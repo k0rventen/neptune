@@ -1,12 +1,12 @@
 <template>
   <div class="w-full h-screen px-5 py-5 overflow-y-auto scrollbar-thin">
-    <div class="w-full shadow-md rounded-xl bg-white px-3 py-3">
+    <Loading v-if="isLoading" />
+    <div v-if="!isLoading" class="w-full shadow-md rounded-xl bg-white px-3 py-3">
       <Table
         v-if="dependencies.length > 0"
         :columns="[
           { label: $t('dependencies.type'), name: 'type' },
           { label: $t('dependencies.name'), name: 'name' },
-          { label: $t('dependencies.vulnerability'), name: 'vuln' },
           { label: $t('dependencies.version'), name: 'version' },
           {
             label: $t('dependencies.minimum_version'),
@@ -32,10 +32,37 @@
             @focusout="sendNewVersion(item)"
           />
         </template>
+        <template slot="version" slot-scope="{ item }">
+            <div class="flex gap-3">
+              <VDropdown :key="version.id" v-for="version in item.versions">
+                <button class="py-1 px-2 text-xs text-white rounded-md max-w-prose" :class="bgFinder(version)">
+                  <p>{{ removeUseless(version.version) }}</p>
+                </button>
+
+                <template #popper>
+                  <div class="px-2 py-1 outline-none">
+                    <p class="text-center">{{ version.version }}</p>
+                    <hr v-if="version.vulnerabilities.length > 0">
+                    <a v-for="vuln in version.vulnerabilities" :key="vuln.id" :href="`https://www.google.com/search?client=firefox-b-d&q=${vuln.name}`">
+                      <p >
+                        {{  vuln.name }}
+                      </p>
+                    </a>
+                    
+                    <div class="mt-2">
+                      <p>Image(s) concerné(s) :</p>
+                      <hr>
+                        <p v-for="tag in version.tags" :key="tag.sha" class="cursor-pointer" @click="$router.push({ path: '/images/' + tag.sha })">
+                          {{ tag.name }}
+                        </p>
+                    </div>
+                    
+                  </div>
+                </template>
+              </VDropdown>
+          </div>
+        </template>
       </Table>
-    </div>
-    <div class="w-full flex justify-center mt-3">
-      <Pagination v-model="page" :nb-pages="15"/>
     </div>
   </div>
 </template>
@@ -50,7 +77,8 @@ export default {
       version: '',
       copyMinVersion: [],
       copyNotes: [],
-      page: 1
+      page: 1,
+      isLoading: true
     }
   },
   computed: {
@@ -60,6 +88,7 @@ export default {
     await this.getDependencies().then(() => {
       this.copyMinVersion = this.min_version
       this.copyNotes = this.notes
+      this.isLoading = false
     })
   },
   methods: {
@@ -82,6 +111,26 @@ export default {
         notes: this.copyNotes[item.name],
       })
     },
+    removeUseless(version) {
+      let res = version
+      if(res.includes('ubuntu')) {
+        res = res.replace('ubuntu', '')
+      }
+      if (res.length > 13) {
+        return res.slice(0, 13) + '...'
+      }
+      return res
+    },
+    bgFinder (version) {
+      if (version.vulnerabilities.length > 0) {
+        return 'bg-red-500'
+      }
+      if (version.oudated === true) {
+        return 'bg-yellow-500'
+      } else {
+        return 'bg-green-500'
+      }
+    }
   },
 }
 </script>

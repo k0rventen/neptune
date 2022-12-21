@@ -104,7 +104,7 @@
               </p>
             </template>
             <template slot="affected_package" slot-scope="{ item }">
-              <p>
+              <p class="text-clip">
                 {{
                   currentImage.packages.find(
                     (el) => el.id === item.affected_package
@@ -117,7 +117,7 @@
               </p>
             </template>
             <template slot="notes" slot-scope="{ item }">
-              <p>{{ copyNote[item.name] }}</p>
+              <p class="text-clip">{{ copyNote[item.name] }}</p>
             </template>
           </Table>
         </div>
