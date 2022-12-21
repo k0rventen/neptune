@@ -23,6 +23,8 @@
             <option value="1">Vulnerabilités</option>
             <option value="2">Outdated</option>
             <option value="3">Taille</option>
+            <option value="4">Sévérité</option>
+            <option value="5">Vulnérabilités actives</option>
           </select>
         </div>
 
@@ -62,7 +64,8 @@
         <p>Nom de l'image : {{ tag.image + ':' + tag.tag }}</p>
         <p>Taille de l'image : {{ calcSize(tag.size) }}</p>
         <p>Paquets : {{ tag.packages }}</p>
-        <p>Vulnérabilité : {{ tag.vulnerabilities }}</p>
+        <p>Vulnérabilité(s) : {{ tag.vulnerabilities }}</p>
+        <p>Vulnérabilité(s) active : {{ tag.active_vulnerabilities }}</p>
         <p>Paquet obsolète : {{ tag.outdated_packages }}</p>
       </div>
     </div>
@@ -113,6 +116,24 @@ export default {
         this.value = this.backupTags.sort((a,b) => (a.outdated_packages > b.outdated_packages) ? 1 : ((b.outdated_packages > a.outdated_packages) ? -1 : 0))
       } else if (newValue === '3') {
         this.value = this.backupTags.sort((a,b) => (a.size > b.size) ? 1 : ((b.size > a.size) ? -1 : 0))
+      } else if (newValue === '4') {
+        this.value = this.backupTags.sort((a,b) => {
+          if(a.vulnerabilities > 0) {
+            return 1
+          } else if (b.vulnerabilities > 0) {
+            return -1
+          } 
+
+          if(a.outdated_packages > 0) {
+            return 1
+          } else if (b.outdated_packages > 0) {
+            return -1
+          } else {
+            return 0
+          }
+        })
+      } else if (newValue === '5') {
+        this.value = this.backupTags.sort((a,b) => (a.active_vulnerabilities > b.active_vulnerabilities) ? 1 : ((b.active_vulnerabilities > a.active_vulnerabilities) ? -1 : 0))
       }
     }
   },
@@ -140,7 +161,7 @@ export default {
       if (outdated > 0) {
         return 'bg-yellow-400'
       }
-      return 'bg-neptune-blue'
+      return 'bg-green-500'
     },
   },
 }

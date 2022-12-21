@@ -175,29 +175,6 @@
         />
       </div>
       <div
-        class="bg-white px-3 py-3 h-96 shadow-md rounded-xl text-white col-span-4 md:col-span-2 lg:col-span-1"
-      >
-        <div
-          class="w-full h-full bg-neptune-blue rounded-xl px-5 py-5 relative overflow-hidden"
-        >
-          <img
-            class="absolute opacity-20 -right-24 -bottom-12"
-            src="@/assets/img/docker.webp"
-            alt="docker"
-          />
-          <p class="font-bold text-3xl mb-5">What is Neptune ?</p>
-          <p>
-            Neptune est un outil permettant d'avoir un visuel sur les images de
-            son parc.
-          </p>
-          <p>
-            L'outils permet également de pouvoir configurer des alertes sur les
-            versions de certain package
-          </p>
-          <p>Vous avez également accès à des graphiques de vos images.</p>
-        </div>
-      </div>
-      <div
         class="bg-white px-3 py-3 h-96 shadow-md rounded-xl text-white flex justify-center items-center col-span-4 md:col-span-2 lg:col-span-1"
       >
         <apexchart

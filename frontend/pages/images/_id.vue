@@ -39,6 +39,7 @@
             :columns="[
               { label: 'Package', name: 'package' },
               { label: 'Obsolète', name: 'outdated' },
+              { label: 'Version', name: 'version' }
             ]"
           >
             <template slot="outdated" slot-scope="{ item }">
@@ -78,8 +79,10 @@
             </template>
           </Table>
         </div>
-        <div
-          class="col-span-2 lg:col-span-1 w-full bg-white shadow-md rounded-xl px-3 py-3"
+        
+        <div class="col-span-2 lg:col-span-1 w-full flex flex-col gap-3">
+          <div
+          class="w-full bg-white shadow-md rounded-xl px-3 py-3"
         >
           <Table
             :data="vulnData"
@@ -121,6 +124,50 @@
             </template>
           </Table>
         </div>
+        <div
+          class="col-span-2 lg:col-span-1 w-full bg-white shadow-md rounded-xl px-3 py-3"
+        >
+          <Table
+            :data="vulnActive"
+            :columns="[
+              { label: 'CVE', name: 'name' },
+              { label: 'Package', name: 'affected_package' },
+              { label: 'Sévérité', name: 'severity' },
+              { label: $t('vulnerability.notes'), name: 'notes' },
+            ]"
+          >
+            <template slot="name" slot-scope="{ item }">
+              <a
+                :href="`https://www.google.com/search?q=${item.name}`"
+                target="_blank"
+              >
+                <p>{{ item.name }}</p>
+              </a>
+            </template>
+            <template slot="severity" slot-scope="{ item }">
+              <p>
+                {{ $t(`vulnerability.state.${item.severity.toLowerCase()}`) }}
+              </p>
+            </template>
+            <template slot="affected_package" slot-scope="{ item }">
+              <p class="text-clip">
+                {{
+                  currentImage.packages.find(
+                    (el) => el.id === item.affected_package
+                  ).package +
+                  ':' +
+                  currentImage.packages.find(
+                    (el) => el.id === item.affected_package
+                  ).version
+                }}
+              </p>
+            </template>
+            <template slot="notes" slot-scope="{ item }">
+              <p class="text-clip">{{ copyNote[item.name] }}</p>
+            </template>
+          </Table>
+        </div>
+        </div>
       </div>
     </div>
   </div>
@@ -149,8 +196,10 @@ export default {
         ...this.currentImage.packages,
       ]
       this.vulnData = [
-        ...this.currentImage.active_vulnerabilities,
         ...this.currentImage.vulnerabilities,
+      ]
+      this.vulnActive = [
+        ...this.currentImage.active_vulnerabilities
       ]
       this.vulnData.forEach((vuln) => {
         this.copyNote[vuln.name] = vuln.notes
