@@ -2,7 +2,8 @@ import time
 
 from schedule import every, repeat, run_pending
 
-from utils import (Logger, cleanup_images, database_housekeeping, grype_update, create_statistics, db_sbom_rescan,
+from utils import (Logger, cleanup_images, create_statistics,
+                   database_housekeeping, db_sbom_rescan, grype_update,
                    startup_logins, stop_flag)
 
 tasks_logger = Logger("tasks")
@@ -16,11 +17,11 @@ def tasks_thread():
         time.sleep(1)
     tasks_logger.info("exiting")
 
-@repeat(every().day.at("22:00"))
+
+@repeat(every().day.at("20:00"))
 def daily_housekeeping():
     grype_update()
     db_sbom_rescan()
     database_housekeeping()
     cleanup_images()
     create_statistics()
-

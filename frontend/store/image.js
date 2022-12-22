@@ -1,6 +1,7 @@
 const state = () => ({
   images: [],
-  currentImage: undefined
+  currentImage: undefined,
+  tags: undefined
 })
 
 const mutations = {
@@ -13,6 +14,9 @@ const mutations = {
   currentImage(state, data) {
     state.currentImage = data
   },
+  setTags(state, data) {
+    state.tags = data
+  }
 }
 
 const actions = {
@@ -28,11 +32,10 @@ const actions = {
         commit('setImage', response.data)
       })
     })
-
   },
 
   async scanImages({commit}, image) {
-    await this.$axios.post('/api/scan', { image }).then((response) => {
+    await this.$axios.post('/api/scan', image).then((response) => {
       commit('addImage', response.data)
     })
   },
@@ -40,6 +43,12 @@ const actions = {
   async getCurrentImage({commit}, image) {
     await this.$axios.get(`/api/tags/${image}`).then((response) => {
       commit('currentImage', response.data)
+    })
+  },
+
+  async getTags({commit}) {
+    await this.$axios.get('/api/tags').then(({data}) => {
+      commit('setTags', data)
     })
   }
 }

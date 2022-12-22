@@ -1,5 +1,12 @@
 module.exports = {
   mode: 'jit',
+  content: [
+    "./components/**/*.{js,vue,ts}",
+    "./layouts/**/*.vue",
+    "./pages/**/*.vue",
+    "./plugins/**/*.{js,ts}",
+    "./nuxt.config.{js,ts}",
+  ],
   purge: [],
   darkMode: false, // or 'media' or 'class'
   theme: {
@@ -20,5 +27,7 @@ module.exports = {
   variants: {
     extend: {},
   },
-  plugins: [],
+  plugins: [
+    require('tailwind-scrollbar'),
+  ],
 }

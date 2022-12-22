@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: neptune
+spec:
+  selector:
+    matchLabels:
+      app: neptune
+  template:
+    metadata:
+      labels:
+        app: neptune
+    spec:
+      containers:
+      - name: neptune
+        image: map:32000/neptune
+        resources: {}
+        ports:
+        - containerPort: 5000
+        volumeMounts:
+          - mountPath: "/app/data"
+            name: data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: neptune-data
+# ---
+# apiVersion: v1
+# kind: PersistentVolumeClaim
+# metadata:
+#   name: neptune-data
+# spec:
+#   resources:
+#     requests:
+#       storage: "200Mi"
+#   volumeMode: Filesystem
+#   accessModes:
+#     - ReadWriteOnce
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: neptune
+spec:
+  selector:
+    app: neptune
+  ports:
+  - port: 5000
+    targetPort: 5000
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: neptune
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+  labels:
+    name: neptune
+spec:
+  rules:
+  - host: neptune.map.interact-systemes-nancy.fr
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: neptune
+            port: 
+              number: 5000

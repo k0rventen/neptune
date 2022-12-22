@@ -1,7 +1,7 @@
 const state = () => ({
   stats: undefined,
   historicalStats: undefined,
-  fiveLast: undefined
+  fiveImg: undefined
 })
 
 const mutations = {
@@ -13,27 +13,27 @@ const mutations = {
     state.historicalStats = data
   },
 
-  setFiveLast(state, data) {
-    state.fiveLast = data
+  setFiveImg(state, data) {
+    state.fiveImg = data
   }
 }
 
 const actions = {
   async getStats({commit}) {
-    await this.$axios.get('/api/statistics').then((response) => {
-      commit('setStats', response.data)
+    await this.$axios.get('/api/statistics?current=true').then(({ data }) => {
+      commit('setStats', data)
     })
   },
 
   async getHistoricalStats({commit}) {
-    await this.$axios.get('/api/historicalstatistics').then((response) => {
+    await this.$axios.get('/api/statistics?current=false').then((response) => {
       commit('setHistoricalStats', response.data)
     })
   },
 
-  async getFiveLast({commit}) {
-    await this.$axios.get('/api/tags?offset=0&limit=5').then((response) => {
-      commit('setFiveLast', response.data)
+  async getFiveImg({commit}) {
+    await this.$axios.get('/api/tags/featured').then(({ data }) => {
+      commit('setFiveImg', data)
     })
   }
 }

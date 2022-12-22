@@ -84,6 +84,14 @@ class Image(Base):
         }
 
 
+class SBOMJson(Base):
+    __tablename__ = "sboms"
+    id = Column(Integer, primary_key=True)
+    sbom = Column(JSON)
+    tag_sha = Column(Integer, ForeignKey('tags.sha'))
+    tag = relationship("Tag", back_populates="sbom")
+
+
 class Tag(Base):
     """A Tag is a specific version of an Image, eg alpine:3.12.
 
@@ -96,7 +104,7 @@ class Tag(Base):
     distro_version = Column(String(64))
     size = Column(Integer)
     date_added = Column(DateTime, default=datetime.now)
-    sbom = Column(JSON)
+    sbom = relationship("SBOMJson", uselist=False, back_populates="tag")
 
     # base image of this tag
     image_id = Column(Integer, ForeignKey('images.id'))
@@ -106,11 +114,29 @@ class Tag(Base):
     packages = relationship(
         "PackageVersion", secondary=_packages, back_populates="tags")
 
+    def outdated_packages(self):
+        return [p for p in self.packages if p.outdated]
+
     def has_outdated_packages(self):
         return any([p.outdated for p in self.packages])
 
     def has_vulnerabilities(self):
         return any([len(p.vulnerabilities) > 0 for p in self.packages])
+
+    def vulnerabilities(self, only_active=False):
+        full_vuln_ids = set()
+        full_vulns = []
+        for p in self.packages:
+            full_vulns += [v for v in p.vulnerabilities]
+            if only_active:
+                full_vuln_ids.update(
+                    [v for v in p.vulnerabilities if v.active == True])
+            else:
+                full_vuln_ids.update([v.id for v in p.vulnerabilities])
+
+        full_vulns_filter = list(
+            {v.id: v.serialize() for v in full_vulns if v.id in full_vuln_ids}.values())
+        return full_vulns_filter
 
     def serialize(self, full=False):
         spec = {
@@ -126,14 +152,18 @@ class Tag(Base):
             "image_id": self.image_id,
         }
         if full:  # return the id of each related objects
-            spec.update({"packages": [p.id for p in self.packages],
-                         "outdated_packages": [p.id for p in self.packages if p.is_outdated()],
-                         "vulnerabilities": 0})
+            packages = self.packages
+            vulns = self.vulnerabilities()
+            spec.update({"packages": [p.serialize() for p in packages if not p.outdated],
+                         "outdated_packages": [p.serialize() for p in packages if p.outdated],
+                         "vulnerabilities": [v for v in vulns if not v['active']],
+                         "active_vulnerabilities": [v for v in vulns if v['active']]})
         else:  # only return the len of the corresponding objects
+            vulns = self.vulnerabilities()
             spec.update({"packages": len(self.packages),
-                         "outdated_packages": len([p for p in self.packages if p.is_outdated()]),
-                         "vulnerabilities": 0,
-                         'active_vulnerabilities': 0})
+                         "outdated_packages": len(self.outdated_packages()),
+                         "vulnerabilities": len([v["id"] for v in vulns if not v['active']]),
+                         'active_vulnerabilities': len([v["id"] for v in vulns if v['active']])})
         return spec
 
 
@@ -215,9 +245,11 @@ class PackageVersion(Base):
             "version": self.version,
             "outdated": self.outdated,
         }
-        if full:
-            spec["vulnerabilities"] = [v.id for v in self.vulnerabilities]
-            spec["tags"] = [t.id for t in self.tags]
+        if not full:
+            spec["vulnerabilities"] = [
+                {"id": v.id, "name": v.name} for v in self.vulnerabilities]
+            spec["tags"] = [
+                {"sha": t.sha, "name": t.image.name + ":"+t.tag} for t in self.tags]
         else:
             spec["vulnerabilities"] = [v.serialize()
                                        for v in self.vulnerabilities]
@@ -248,9 +280,12 @@ class Vulnerability(Base):
             "notes": self.notes,
             "active": self.active,
             "affected_package": self.package.id,
-            "affected_images": [t.serialize() for t in self.package.tags]
         }
-
+        if full:
+            spec["affected_images"] = [
+                {"sha": t.sha, "name": t.image.name + ":"+t.tag} for t in self.package.tags]
+            spec["affected_package"] = {
+                "name": self.package.package.name, "version": self.package.version, "id": self.package.id}
         return spec
 
 

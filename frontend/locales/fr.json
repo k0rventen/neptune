@@ -2,7 +2,7 @@
   "navbar": {
     "home": "Dashboard",
     "images": "Images",
-    "vulnerabilities": "Vulnerabilités",
+    "vulnerabilities": "CVE",
     "dependencies": "Dépendances"
   },
   "card": {
@@ -29,14 +29,15 @@
     "tags": "Tags",
     "affected_tags": "Tags affectés",
     "notes": "Notes",
-    "acknowledged": "Reconnu",
-    "not_acknowledged": "Non reconnu",
+    "acknowledged": "Actif",
+    "not_acknowledged": "Non actif",
     "state": {
       "negligible": "Negligeable",
       "low": "Faible",
       "medium": "Moyenne",
       "high": "Elevé",
-      "critical": "Critique"
+      "critical": "Critique",
+      "unknown": "Inconnu"
     }
   },
   "dependencies": {

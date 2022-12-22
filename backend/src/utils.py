@@ -42,6 +42,18 @@ def Logger(name, level='INFO'):
 
     return log
 
+
+def paginate_query(query,limit,offset,full_serialize=False):
+    count = query.count()
+    paginated = query.limit(limit).offset(offset).all()
+    response = {
+        "items":[i.serialize() for i in paginated],
+        "total":count,
+        "limit":limit,
+        "offset":offset
+    }
+    return response
+    
 def human_readable_time(time_s: int) -> str:
     timestr = ""
     for timeunit in [(3600, "h"), (60, "m"), (1, "s")]:
@@ -99,7 +111,7 @@ def database_housekeeping():
     session.commit()
 
 
-def create_statistics():
+def create_statistics(save_to_db=True):
     session = create_session()
 
     all_tags = session.query(Tag).all()
@@ -125,6 +137,8 @@ def create_statistics():
         high_vulnerabilities_count=session.query(Vulnerability).filter(
             Vulnerability.active == True, Vulnerability.severity == "High").count(),
         critical_vulnerabilities_count=session.query(Vulnerability).filter(Vulnerability.active == True, Vulnerability.severity == "Critical").count())
+    if not save_to_db:
+        return today_stats.serialize()
     session.add(today_stats)
     session.commit()
 
@@ -191,7 +205,9 @@ def db_sbom_rescan():
     app_session = create_session()
     all_tags = app_session.query(Tag).all()
     for t in all_tags:
-        r = requests.post('http://127.0.0.1:5000/api/rescan',json={"sha":t.sha})
+        r = requests.post('http://127.0.0.1:5000/api/rescan',
+                          json={"sha": t.sha})
+
 
 def grype_report(syft_report_path):
     """reports vulnerabilities for a given local image

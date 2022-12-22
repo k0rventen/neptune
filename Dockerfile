@@ -2,8 +2,8 @@
 FROM debian as bin-downloader
 RUN apt update && apt install upx-ucl curl ca-certificates -y --no-install-recommends
 WORKDIR /download
-ARG SYFT_VERSION=v0.60.3
-ARG GRYPE_VERSION=v0.52.0
+ARG SYFT_VERSION=v0.63.0
+ARG GRYPE_VERSION=v0.54.0
 RUN curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b . ${SYFT_VERSION}
 RUN curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b . ${GRYPE_VERSION}
 RUN upx grype syft

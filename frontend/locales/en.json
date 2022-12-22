@@ -2,7 +2,7 @@
   "navbar": {
     "home": "Dashboard",
     "images": "Images",
-    "vulnerabilities": "Vulnerabilities",
+    "vulnerabilities": "CVE",
     "dependencies": "Dependencies"
   },
   "dashboard": {
@@ -39,7 +39,8 @@
       "low": "Low",
       "medium": "Medium",
       "high": "High",
-      "critical": "Critical"
+      "critical": "Critical",
+      "unknown": "Unknown"
     }
   },
   "dependencies": {

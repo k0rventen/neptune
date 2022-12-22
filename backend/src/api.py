@@ -9,19 +9,25 @@ from fastapi import APIRouter, Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
-from models import (HistoricalStatistics, Image, Package, PackageVersion,
-                    RegistryConfig, Tag, Vulnerability, get_db)
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from utils import (Logger, cleanup_images, database_housekeeping, grype_report,
-                   human_readable_size, human_readable_time, scan_mutex,
+
+from models import (HistoricalStatistics, Image, Package, PackageVersion,
+                    RegistryConfig, SBOMJson, Tag, Vulnerability, get_db)
+from utils import (Logger, cleanup_images, create_statistics,
+                   database_housekeeping, grype_report, human_readable_size,
+                   human_readable_time, paginate_query, scan_mutex,
                    skopeo_login, skopeo_pull, syft_report)
 
 
 class RegistryConfigRequest(BaseModel):
-    url: str
+    registry: str
     user: str
     password: str
+
+
+class RegistryConfigDelete(BaseModel):
+    registry: str
 
 
 class ImageScanRequest(BaseModel):
@@ -33,7 +39,6 @@ class SHAReScanRequest(BaseModel):
     return_error: Optional[bool]
 
 
-
 class VulnPut(BaseModel):
     notes: Optional[str]
     active: Optional[bool]
@@ -43,6 +48,10 @@ class PackagePut(BaseModel):
     notes: Optional[str]
     minimum_version: Optional[str]
 
+class PackageFilter(BaseModel):
+    type: Optional[str]
+    name: Optional[str]
+    outdated: Optional[bool]
 
 logger = Logger("api")
 api_router = APIRouter(prefix='/api')
@@ -52,21 +61,31 @@ api_router = APIRouter(prefix='/api')
 def post_config(new_config: RegistryConfigRequest, session: Session = Depends(get_db)):
     """add a new registry login for skopeo"""
     registry_conf = session.query(RegistryConfig).filter(
-        RegistryConfig.url == new_config.url).one_or_none()
+        RegistryConfig.url == new_config.registry).one_or_none()
     if registry_conf:
-        registry_conf.url = new_config.url
+        registry_conf.url = new_config.registry
         registry_conf.user = new_config.user
         registry_conf.password = new_config.password
     else:
         registry_conf = RegistryConfig(
-            url=new_config.url, user=new_config.user, password=new_config.password)
+            url=new_config.registry, user=new_config.user, password=new_config.password)
         logger.info("trying registry auth")
     auth_ok, message = skopeo_login(
-        new_config.url, new_config.user, new_config.password)
+        new_config.registry, new_config.user, new_config.password)
     if auth_ok:
         session.add(registry_conf)
         return {"message": message}
     raise HTTPException(status_code=400, detail=message)
+
+
+@api_router.delete("/registries", tags=['config'])
+def delete_config(registry: RegistryConfigDelete, session: Session = Depends(get_db)):
+    """get the current registries configs"""
+    registry_config = session.query(RegistryConfig).filter(
+        RegistryConfig.url == registry.registry).one_or_none()
+    if registry_config:
+        session.delete(registry_config)
+    return JSONResponse(content={}, status_code=204)
 
 
 @api_router.get("/registries", tags=['config'])
@@ -143,13 +162,14 @@ def scan_image(scan_request: ImageScanRequest, session: Session = Depends(get_db
         else:
             image.last_update = datetime.now()
         # create tag
+        s_sbom = SBOMJson(sbom=sbom_json)
         s_image = Tag(tag=image_tag,
                       image_id=image.id,
                       distro=image_distro,
                       distro_version=image_distro_version,
                       sha=image_sha,
                       size=image_size,
-                      sbom=sbom_json,
+                      sbom=s_sbom,
                       packages=[])
 
         # packages
@@ -205,18 +225,20 @@ def scan_image(scan_request: ImageScanRequest, session: Session = Depends(get_db
     return JSONResponse(response, status_code=400 if active_vulns and scan_request.return_error else 200)
 
 
-@api_router.post("/grype_update",tags=['internal'])
+@api_router.post("/grype_update", tags=['internal'])
 def update_grype_db():
     return update_grype_db()
 
-@api_router.post("/rescan",tags=['internal'])
-def rescan_image(rescan_request:SHAReScanRequest, session: Session = Depends(get_db)):
-    spec_image = session.query(Tag).filter(Tag.sha == rescan_request.sha).first()
+
+@api_router.post("/rescan", tags=['internal'])
+def rescan_image(rescan_request: SHAReScanRequest, session: Session = Depends(get_db)):
+    spec_image = session.query(Tag).filter(
+        Tag.sha == rescan_request.sha).first()
     logger.info(f"rescanning {spec_image.tag} ({spec_image.sha})")
     scan_uuid = uuid4()
     syft_report_path = f'/tmp/{scan_uuid}_syftreport.json'
-    with open(syft_report_path,'w+') as f:
-        json.dump(spec_image.sbom,f)
+    with open(syft_report_path, 'w+') as f:
+        json.dump(spec_image.sbom.sbom, f)
 
     grype_ok, vuln_json = grype_report(syft_report_path)
     if not grype_ok:
@@ -234,7 +256,8 @@ def rescan_image(rescan_request:SHAReScanRequest, session: Session = Depends(get
         # vulns
         new_vulns = []
         for v in vulns:
-            is_referenced = session.query(Vulnerability).filter(Vulnerability.name == v["id"]).one_or_none()
+            is_referenced = session.query(Vulnerability).filter(
+                Vulnerability.name == v["id"]).one_or_none()
             if not is_referenced:
                 logger.info(f"new vuln {v['id']} !")
                 # find the linked package
@@ -245,7 +268,7 @@ def rescan_image(rescan_request:SHAReScanRequest, session: Session = Depends(get
                     version.vulnerabilities.append(v)
                     version.refresh_outdated_status()
                     session.add(version)
-        return {'new_vulns':new_vulns}
+        return {'new_vulns': new_vulns}
 
 
 @api_router.get("/statistics", tags=['ui'])
@@ -254,16 +277,14 @@ def statistics(session: Session = Depends(get_db), current: bool = False):
     if current is True, only returns the last element
     """
     if current:
-        last_stat = session.query(HistoricalStatistics).order_by(
-            HistoricalStatistics.timestamp.desc()).first()
-        if last_stat:
-            last_stat["severities"] = {k: session.query(Vulnerability).filter(Vulnerability.severity == k).count(
-            ) for k in ["Low", "Medium", "High", "Critical", "Negligible", "Unknown"]}
-            return last_stat
-        raise HTTPException(status_code=404, detail="no statistics yet")
+        last_stat_json = create_statistics(save_to_db=False)
+        last_stat_json.pop("timestamp")
+        last_stat_json["severities"] = {k: session.query(Vulnerability).filter(Vulnerability.severity == k).count(
+        ) for k in ["Low", "Medium", "High", "Critical", "Negligible", "Unknown"]}
+        return last_stat_json
     else:
         stats = session.query(HistoricalStatistics).order_by(
-            HistoricalStatistics.timestamp.desc()).all()
+            HistoricalStatistics.timestamp.asc()).all()
         stats = [s.serialize() for s in stats]
         return stats
 
@@ -272,7 +293,7 @@ def statistics(session: Session = Depends(get_db), current: bool = False):
 def images(session: Session = Depends(get_db), offset: int = 0, limit: int = 50):
     """list of images"""
     results = session.query(Image).order_by(
-        Image.last_update.desc()).limit(limit).offset(offset).all()
+        Image.last_update.desc()).all()  # .limit(limit).offset(offset).all()
     return [i.serialize() for i in results]
 
 
@@ -280,8 +301,24 @@ def images(session: Session = Depends(get_db), offset: int = 0, limit: int = 50)
 def get_all_tags(session: Session = Depends(get_db), offset: int = 0, limit: int = 50):
     """list of tags"""
     results = session.query(Tag).order_by(
-        Tag.date_added.desc()).limit(limit).offset(offset).all()
+        Tag.date_added.desc()).all()  # .limit(limit).offset(offset).all()
     return [i.serialize() for i in results]
+
+
+@api_router.get("/tags/featured", tags=['images'])
+def get_featured_tags(session: Session = Depends(get_db)):
+    """returns a curated list of 4 tags:
+       ["active_vulnerabilities", "vulnerabilities", "outdated_packages", "packages"]
+    """
+    response = {"most_vulnerabilities": {}, "most_packages": {},
+                "most_outdated_packages": {}, "most_active_vulnerabilities": {}}
+    all_tags = session.query(Tag).all()
+    for t in all_tags:
+        tag = t.serialize()
+        for feature in ["active_vulnerabilities", "vulnerabilities", "outdated_packages", "packages"]:
+            if tag[feature] > response["most_"+feature].get(feature, -1):
+                response["most_"+feature] = tag
+    return list(response.values())
 
 
 @api_router.get("/tags/{sha}", tags=['images'])
@@ -303,8 +340,9 @@ def delete_tag(sha: str, session: Session = Depends(get_db)):
 @api_router.get("/vulnerabilities", tags=['vulnerabilities'])
 def vulnerabilities(session: Session = Depends(get_db), offset: int = 0, limit: int = 50):
     """vulnerabilities interface"""
-    vulns = session.query(Vulnerability).limit(limit).offset(offset).all()
-    return [v.serialize() for v in vulns]
+    vulns = session.query(Vulnerability).all(
+    )  # limit(limit).offset(offset).all()
+    return [v.serialize(True) for v in vulns]
 
 
 @api_router.get("/vulnerabilities/{cve_id}", tags=['vulnerabilities'])
@@ -313,7 +351,7 @@ def vulnerabilities(cve_id: int, session: Session = Depends(get_db)):
     vuln = session.query(Vulnerability).filter(
         Vulnerability.id == cve_id).first()
     if vuln:
-        return vuln.serialize()
+        return vuln.serialize(True)
     raise HTTPException(status_code=404, detail="vulnerability does not exist")
 
 
@@ -326,22 +364,24 @@ def set_vuln_notes(cve_id: int, vuln_def: VulnPut, session: Session = Depends(ge
     if not vuln:
         raise HTTPException(
             status_code=404, detail="vulnerability does not exist")
-    if vuln_def.notes:
+    if vuln_def.notes is not None:
         vuln.notes = vuln_def.notes
-    if vuln_def.active:
+    if vuln_def.active is not None:
         vuln.active = vuln_def.active
     session.add(vuln)
     return {}
 
 
 @api_router.get("/packages", tags=['packages'])
-def packages(session: Session = Depends(get_db), package_type: str | None = None, package_name: str | None = None, offset: int = 0, limit: int = 20):
+def packages(session: Session = Depends(get_db),name_filter:str = None,type_filter:str = None,offset: int = 0, limit: int = 50):
     """returns all packages"""
-    filters = {k: v for k, v in {"type": package_type,
-                                 "name": package_name}.items() if v}
-    dependencies = session.query(Package).filter_by(
-        **filters).limit(limit).offset(offset).all()
-    return [d.serialize() for d in dependencies]
+    filters = []
+    if name_filter:
+        filters.append(Package.name.ilike(f"%{name_filter}%"))
+    if type_filter:
+        filters.append(Package.type.ilike(f"%{type_filter}%"))
+    query = session.query(Package).filter(*filters)
+    return paginate_query(query, limit, offset)
 
 
 @api_router.put("/packages/{package_id}", tags=['packages'])
@@ -351,7 +391,7 @@ def set_packages_notes(package_id: int, package_def: PackagePut, session: Sessio
     package = session.query(Package).filter(Package.id == package_id).first()
     if not package:
         raise HTTPException(status_code=404, detail="id does not exists")
-    if package_def.notes:
+    if package_def.notes is not None:
         package.notes = package_def.notes
     if package_def.minimum_version:
         package.minimum_version = package_def.minimum_version
@@ -369,15 +409,8 @@ def get_specific_package_versions(package_id: int, session: Session = Depends(ge
     """
     package = session.query(Package).filter(Package.id == package_id).first()
     if not package:
-        raise HTTPException(status_code=404, detail="id does not exists")
+        return {}
     return package.serialize()
-
-
-@api_router.get('/housekeeping', tags=['wip'])
-def trigger_housekeeping_chores():
-    cleanup_images()
-    database_housekeeping()
-    return {}
 
 
 neptune_api = FastAPI(
@@ -398,6 +431,7 @@ neptune_api.add_middleware(
 )
 
 neptune_api.include_router(api_router)
+
 neptune_api.mount(
     path="/",
     app=StaticFiles(directory="/app/dist", html=True),
