@@ -22,6 +22,7 @@ def daily_statistics():
     tasks_logger.info("Creating daily statistics !")
     create_statistics()
 
+
 @repeat(every().day.at("23:00"))
 def daily_housekeeping():
     tasks_logger.info("Starting housekeeping chores !")

@@ -14,14 +14,15 @@ from pydantic import BaseModel
 from models import (HistoricalStatistics, Image, Package, PackageVersion,
                     RegistryConfig, Tag, Vulnerability, create_session)
 from utils import (Logger, cleanup_images, database_housekeeping, grype_report,
-                   human_readable_size, human_readable_time, skopeo_login,
-                   skopeo_pull, syft_report,scan_mutex)
+                   human_readable_size, human_readable_time, skopeo_login, create_statistics,
+                   skopeo_pull, syft_report, scan_mutex)
 
 logger = Logger("api")
 session = create_session()
 
+
 class RegistryConfigRequest(BaseModel):
-    url: str
+    registry: str
     user: str
     password: str
 
@@ -44,23 +45,22 @@ class PackagePut(BaseModel):
 api_router = APIRouter(prefix='/api')
 
 
-
 @api_router.post("/registries", tags=['config'])
 def post_config(new_config: RegistryConfigRequest):
     """add a new registry login for skopeo"""
     registry_conf = session.query(RegistryConfig).filter(
-        RegistryConfig.url == new_config.url).one_or_none()
+        RegistryConfig.url == new_config.registry).one_or_none()
     if registry_conf:
-        registry_conf.url = new_config.url
+        registry_conf.url = new_config.registry
         registry_conf.user = new_config.user
         registry_conf.password = new_config.password
         session.commit()
     else:
         registry_conf = RegistryConfig(
-            url=new_config.url, user=new_config.user, password=new_config.password)
+            url=new_config.registry, user=new_config.user, password=new_config.password)
         logger.info("trying registry auth")
     auth_ok, message = skopeo_login(
-        new_config.url, new_config.user, new_config.password)
+        new_config.registry, new_config.user, new_config.password)
     if auth_ok:
         session.add(registry_conf)
         session.commit()
@@ -144,12 +144,12 @@ def scan_image(scan_request: ImageScanRequest):
             image.last_update = datetime.now()
         # create tag
         s_image = Tag(tag=image_tag,
-                    image_id=image.id,
-                    distro=image_distro,
-                    distro_version=image_distro_version,
-                    sha=image_sha,
-                    size=image_size,
-                    packages=[])
+                      image_id=image.id,
+                      distro=image_distro,
+                      distro_version=image_distro_version,
+                      sha=image_sha,
+                      size=image_size,
+                      packages=[])
 
         # packages
         for p in sbom:
@@ -164,7 +164,7 @@ def scan_image(scan_request: ImageScanRequest):
             if p["version"] not in [p.version for p in package.versions]:
                 version = PackageVersion(version=p["version"])
                 package.versions.append(version)
-                
+
             else:
                 version = [
                     v for v in package.versions if v.version == p["version"]][0]
@@ -188,7 +188,7 @@ def scan_image(scan_request: ImageScanRequest):
         db_session.commit()
 
     # now that we have updated the inventory, tell the client the stats of the image (size,packages, and vulns)
-    # return 400 code if the image has active vulnerabilities and the client wants a 400 http error as a signal 
+    # return 400 code if the image has active vulnerabilities and the client wants a 400 http error as a signal
     t1 = time.time() - t0
     active_vulns = []
     for package in s_image.packages:
@@ -202,38 +202,56 @@ def scan_image(scan_request: ImageScanRequest):
                 "scan_time": human_readable_time(int(t1)),
                 "packages": len(s_image.packages),
                 "vulnerabilities": active_vulns}
-    return JSONResponse(response,status_code=400 if active_vulns and scan_request.return_error else 200)
+    return JSONResponse(response, status_code=400 if active_vulns and scan_request.return_error else 200)
 
 
 @api_router.get("/statistics", tags=['ui'])
-def statistics(current:bool=False):
+def statistics(current: bool = False):
     """statistics about the inventory
     if current is True, only returns the last element
     """
     if current:
-        last_stat = session.query(HistoricalStatistics).order_by(HistoricalStatistics.timestamp.desc()).first()
-        if last_stat:
-            last_stat["severities"] = {k:session.query(Vulnerability).filter(Vulnerability.severity == k).count() for k in ["Low","Medium","High","Critical","Negligible","Unknown"]}
-            return last_stat
-        raise HTTPException(status_code=404,detail="no statistics yet")
+        last_stat_json = create_statistics(save_to_db=False)
+        last_stat_json.pop("timestamp")
+        last_stat_json["severities"] = {k: session.query(Vulnerability).filter(Vulnerability.severity == k).count() for k in ["Low", "Medium", "High", "Critical", "Negligible", "Unknown"]}
+        return last_stat_json
     else:
-        stats = session.query(HistoricalStatistics).order_by(HistoricalStatistics.timestamp.desc()).all()
-        stats =  [s.serialize() for s in stats]
+        stats = session.query(HistoricalStatistics).order_by(
+            HistoricalStatistics.timestamp.asc()).all()
+        stats = [s.serialize() for s in stats]
         return stats
 
 
-@api_router.get("/images", tags=['images',"ui"])
+@api_router.get("/images", tags=['images', "ui"])
 def images(offset: int = 0, limit: int = 50):
     """list of images"""
-    results = session.query(Image).order_by(Image.last_update.desc()).limit(limit).offset(offset).all()
+    results = session.query(Image).order_by(
+        Image.last_update.desc()).limit(limit).offset(offset).all()
     return [i.serialize() for i in results]
 
 
 @api_router.get("/tags", tags=['images'])
 def get_all_tags(offset: int = 0, limit: int = 50):
     """list of tags"""
-    results = session.query(Tag).order_by(Tag.date_added.desc()).limit(limit).offset(offset).all()
+    results = session.query(Tag).order_by(
+        Tag.date_added.desc()).limit(limit).offset(offset).all()
     return [i.serialize() for i in results]
+
+
+@api_router.get("/tags/featured", tags=['images'])
+def get_featured_tags():
+    """returns a curated list of 4 tags:
+       ["active_vulnerabilities", "vulnerabilities", "outdated_packages", "packages"]
+    """
+    response = {"most_vulnerabilities": {}, "most_packages": {},
+                "most_outdated_packages": {}, "most_active_vulnerabilities": {}}
+    all_tags = session.query(Tag).all()
+    for t in all_tags:
+        tag = t.serialize()
+        for feature in ["active_vulnerabilities", "vulnerabilities", "outdated_packages", "packages"]:
+            if tag[feature] > response["most_"+feature].get(feature, -1):
+                response["most_"+feature] = tag
+    return list(response.values())
 
 
 @api_router.get("/tags/{sha}", tags=['images'])
@@ -256,8 +274,8 @@ def delete_tag(sha: str):
 @api_router.get("/vulnerabilities", tags=['vulnerabilities'])
 def vulnerabilities(offset: int = 0, limit: int = 50):
     """vulnerabilities interface"""
-    vulns = session.query(Vulnerability).limit(limit).offset(offset).all()
-    return [v.serialize() for v in vulns]
+    vulns = session.query(Vulnerability).all() #limit(limit).offset(offset).all()
+    return [v.serialize(True) for v in vulns]
 
 
 @api_router.get("/vulnerabilities/{cve_id}", tags=['vulnerabilities'])
@@ -266,7 +284,7 @@ def vulnerabilities(cve_id: int):
     vuln = session.query(Vulnerability).filter(
         Vulnerability.id == cve_id).first()
     if vuln:
-        return vuln.serialize()
+        return vuln.serialize(True)
     raise HTTPException(status_code=404, detail="vulnerability does not exist")
 
 
@@ -277,10 +295,11 @@ def set_vuln_notes(cve_id: int, vuln_def: VulnPut):
     vuln = session.query(Vulnerability).filter(
         Vulnerability.id == cve_id).first()
     if not vuln:
-        raise HTTPException(status_code=404, detail="vulnerability does not exist")
-    if vuln_def.notes:
+        raise HTTPException(
+            status_code=404, detail="vulnerability does not exist")
+    if vuln_def.notes is not None:
         vuln.notes = vuln_def.notes
-    if vuln_def.active:
+    if vuln_def.active is not None:
         vuln.active = vuln_def.active
     session.add(vuln)
     session.commit()
@@ -288,10 +307,11 @@ def set_vuln_notes(cve_id: int, vuln_def: VulnPut):
 
 
 @api_router.get("/packages", tags=['packages'])
-def packages(package_type: str | None = None, package_name: str | None=None, offset: int = 0, limit: int = 20):
+def packages(package_type: str | None = None, package_name: str | None = None, offset: int = 0, limit: int = 20):
     """returns all packages"""
-    filters = {k:v for k,v in {"type":package_type,"name":package_name}.items() if v}
-    dependencies = session.query(Package).filter_by(**filters).limit(limit).offset(offset).all()
+    filters = {k: v for k, v in {"type": package_type,
+                                 "name": package_name}.items() if v}
+    dependencies = session.query(Package).all() #.limit(limit).offset(offset).all()
     return [d.serialize() for d in dependencies]
 
 
@@ -302,7 +322,7 @@ def set_packages_notes(package_id: int, package_def: PackagePut):
     package = session.query(Package).filter(Package.id == package_id).first()
     if not package:
         raise HTTPException(status_code=404, detail="id does not exists")
-    if package_def.notes:
+    if package_def.notes is not None:
         package.notes = package_def.notes
     if package_def.minimum_version:
         package.minimum_version = package_def.minimum_version
@@ -321,15 +341,8 @@ def get_specific_package_versions(package_id: int):
     """
     package = session.query(Package).filter(Package.id == package_id).first()
     if not package:
-        raise HTTPException(status_code=404, detail="id does not exists")
+        return {}
     return package.serialize()
-
-
-@api_router.get('/housekeeping', tags=['wip'])
-def trigger_housekeeping_chores():
-    cleanup_images()
-    database_housekeeping()
-    return {}
 
 
 neptune_api = FastAPI(

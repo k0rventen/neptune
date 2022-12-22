@@ -19,6 +19,7 @@ _packages = Table('packages_association', Base.metadata,
                          ForeignKey('packageversions.id'))
                   )
 
+
 class HistoricalStatistics(Base):
     """timestamp'd statistics for visualizing trends
     """
@@ -26,19 +27,19 @@ class HistoricalStatistics(Base):
     timestamp = Column(DateTime, default=datetime.now, primary_key=True)
 
     tags_total_count = Column(Integer)
-    vulnerable_tags_count =Column(Integer)
+    vulnerable_tags_count = Column(Integer)
     outdated_tags_count = Column(Integer)
-    packages_total_count =Column(Integer)
-    outdated_packages_count =Column(Integer)
-    vulnerable_packages_count =Column(Integer)
-    
-    vulnerabilities_total_count =Column(Integer)
-    active_vulnerabilities_count =Column(Integer)
+    packages_total_count = Column(Integer)
+    outdated_packages_count = Column(Integer)
+    vulnerable_packages_count = Column(Integer)
 
-    low_vulnerabilities_count =Column(Integer)
-    medium_vulnerabilities_count =Column(Integer)
-    high_vulnerabilities_count =Column(Integer)
-    critical_vulnerabilities_count =Column(Integer)
+    vulnerabilities_total_count = Column(Integer)
+    active_vulnerabilities_count = Column(Integer)
+
+    low_vulnerabilities_count = Column(Integer)
+    medium_vulnerabilities_count = Column(Integer)
+    high_vulnerabilities_count = Column(Integer)
+    critical_vulnerabilities_count = Column(Integer)
 
     def serialize(self):
         return {col.name: getattr(self, col.name) for col in self.__table__.columns}
@@ -102,13 +103,28 @@ class Tag(Base):
     packages = relationship(
         "PackageVersion", secondary=_packages, back_populates="tags")
 
+    def outdated_packages(self):
+        return [p for p in self.packages if p.outdated]
+
     def has_outdated_packages(self):
         return any([p.outdated for p in self.packages])
 
     def has_vulnerabilities(self):
-        return any([len(p.vulnerabilities)>0 for p in self.packages])
+        return any([len(p.vulnerabilities) > 0 for p in self.packages])
+
+    def vulnerabilities(self, only_active=False):
+        full_vuln_ids = set()
+        full_vulns = []
+        for p in self.packages:
+            full_vulns += [v for v in p.vulnerabilities]
+            if only_active:
+                full_vuln_ids.update([v for v in p.vulnerabilities if v.active == True])
+            else:
+                full_vuln_ids.update([v.id for v in p.vulnerabilities])
         
-    
+        full_vulns_filter = list({v.id:v.serialize() for v in full_vulns if v.id in full_vuln_ids}.values())
+        return full_vulns_filter
+
     def serialize(self, full=False):
         spec = {
             "tag": self.tag,
@@ -122,16 +138,21 @@ class Tag(Base):
             "image": self.image.name,
             "image_id": self.image_id,
         }
-        if full: # return the id of each related objects
-            spec.update({"packages": [p.id for p in self.packages],
-                         "outdated_packages": [p.id for p in self.packages if p.is_outdated()],
-                         "vulnerabilities": 0})
-        else: # only return the len of the corresponding objects
+        if full:  # return the id of each related objects
+            packages = self.packages
+            vulns = self.vulnerabilities()
+            spec.update({"packages": [p.serialize() for p in packages if not p.outdated],
+                         "outdated_packages": [p.serialize() for p in packages if p.outdated],
+                         "vulnerabilities": [v for v in vulns if not v['active']],
+                         "active_vulnerabilities":[v for v in vulns if v['active']]})
+        else:  # only return the len of the corresponding objects
+            vulns = self.vulnerabilities()
             spec.update({"packages": len(self.packages),
-                         "outdated_packages": len([p for p in self.packages if p.is_outdated()]),
-                         "vulnerabilities": 0,
-                         'active_vulnerabilities':0})
+                         "outdated_packages": len(self.outdated_packages()),
+                         "vulnerabilities": len([v["id"] for v in vulns if not v['active']]),
+                         'active_vulnerabilities': len([v["id"] for v in vulns if v['active']])})
         return spec
+
 
 class Package(Base):
     """A Package is a python package on which a Tag is dependent. It has a given version.
@@ -178,7 +199,7 @@ class PackageVersion(Base):
 
     def refresh_outdated_status(self):
         self.outdated = self.is_outdated()
-    
+
     def is_outdated(self) -> bool:
         """is this specific version < the package minimum version
 
@@ -188,7 +209,8 @@ class PackageVersion(Base):
             version_one (str): first version
             version_two (str): second
         """
-        version_one_ints = [int(x) for x in re.findall("[0-9]+", self.package.minimum_version)]
+        version_one_ints = [int(x) for x in re.findall(
+            "[0-9]+", self.package.minimum_version)]
         version_two_ints = [int(x) for x in re.findall("[0-9]+", self.version)]
 
         # r-pad the shortest with 0s
@@ -203,7 +225,6 @@ class PackageVersion(Base):
             (i for i in range(max_len) if version_one_ints[i] < version_two_ints[i]), None)
         return (first_superior if isinstance(first_superior, int) else max_len) <= (first_inferior if isinstance(first_inferior, int) else max_len)
 
-
     def serialize(self, full=False):
         spec = {
             "id": self.id,
@@ -211,9 +232,9 @@ class PackageVersion(Base):
             "version": self.version,
             "outdated": self.outdated,
         }
-        if full:
-            spec["vulnerabilities"] = [v.id for v in self.vulnerabilities]
-            spec["tags"] = [t.id for t in self.tags]
+        if not full:
+            spec["vulnerabilities"] = [{"id":v.id,"name":v.name} for v in self.vulnerabilities]
+            spec["tags"] = [{"sha":t.sha,"name":t.image.name +":"+t.tag} for t in self.tags]
         else:
             spec["vulnerabilities"] = [v.serialize()
                                        for v in self.vulnerabilities]
@@ -244,9 +265,10 @@ class Vulnerability(Base):
             "notes": self.notes,
             "active": self.active,
             "affected_package": self.package.id,
-            "affected_images": [t.serialize() for t in self.package.tags]
         }
-
+        if full:
+            spec["affected_images"]= [{"sha":t.sha,"name":t.image.name +":"+t.tag} for t in self.package.tags]
+            spec["affected_package"] = {"name":self.package.package.name,"version":self.package.version,"id":self.package.id}
         return spec
 
 
