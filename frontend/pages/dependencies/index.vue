@@ -134,7 +134,7 @@ export default {
       if (version.vulnerabilities.length > 0) {
         return 'bg-red-500'
       }
-      if (version.oudated === true) {
+      if (version.outdated === true) {
         return 'bg-yellow-500'
       } else {
         return 'bg-green-500'
