@@ -3,7 +3,7 @@
     <Loading v-if="isLoading === true" />
     <div v-if="isLoading === false" class="mt-3 px-3">
       <div
-        class="col-span-3 md:col-span-1 w-full cursor-pointer shadow-md bg-neptune-blue px-5 rounded-lg py-5 relative overflow-hidden bg-neptune-blue text-white"
+        class="col-span-3 overflow-x-auto md:col-span-1 w-full cursor-pointer shadow-md bg-neptune-blue px-5 rounded-lg py-5 relative overflow-hidden bg-neptune-blue text-white"
       >
         <p>
           Nom de l'image : {{ currentImage.image + ':' + currentImage.tag }}
@@ -32,7 +32,7 @@
       </div>
       <div class="w-full grid grid-cols-2 gap-3 mt-3">
         <div
-          class="col-span-2 lg:col-span-1 w-full bg-white shadow-md rounded-xl rounded-md px-3 py-3"
+          class="col-span-2 lg:col-span-1 w-full bg-white shadow-md rounded-xl rounded-md px-3 py-3 overflow-x-auto"
         >
           <Table
             :data="tableData"
@@ -77,13 +77,19 @@
                 </svg>
               </div>
             </template>
+            <template slot="package" slot-scope="{ item }">
+              <NuxtLink :to="`/dependencies?package=${item.package}`">
+                {{  item.package }}
+              </NuxtLink>
+            </template>
           </Table>
         </div>
         
-        <div class="col-span-2 lg:col-span-1 w-full flex flex-col gap-3">
+        <div class="col-span-2 lg:col-span-1 w-full flex flex-col gap-3 overflow-x-auto">
           <div
           class="w-full bg-white shadow-md rounded-xl px-3 py-3"
         >
+        <p class="underline">Vulnérabilité(s) active(s) : </p>
           <Table
             :data="vulnData"
             :columns="[
@@ -127,6 +133,7 @@
         <div
           class="col-span-2 lg:col-span-1 w-full bg-white shadow-md rounded-xl px-3 py-3"
         >
+          <p class="underline">Vulnérabilité(s): </p>
           <Table
             :data="vulnActive"
             :columns="[

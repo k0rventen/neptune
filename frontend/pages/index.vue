@@ -175,7 +175,7 @@
         />
       </div>
       <div
-        class="bg-white px-3 py-3 h-96 shadow-md rounded-xl text-white flex justify-center items-center col-span-4 md:col-span-2 lg:col-span-1"
+        class="bg-white px-3 py-3 h-96 shadow-md rounded-xl text-white flex justify-center items-center col-span-4 lg:col-span-2"
       >
         <apexchart
           height="90%"
@@ -337,24 +337,25 @@ export default {
   mixins: [calcSize],
   data() {
     return {
-      imageVuln: {
-        chartOptions: {
-          legend: {
-            show: false,
-          },
-          maintainAspectRatio: false,
-          labels: ['Vulnerable', 'Oudated', 'Secure'],
-          chart: {
-            type: 'donut',
-          },
-        },
-        series: [],
-      },
       vulnerabitily: {
         chartOptions: {
           labels: [],
+          title: {
+            text: 'Sévérité des vulnérabilités',
+            align: 'center',
+            style: {
+              fontSize: '14px',
+              fontWeight: 'regular',
+              fontFamily: undefined,
+              color: '#263238'
+            }
+          },
           chart: {
             type: 'donut',
+          },
+          legend: {
+            show: true,
+            position: 'bottom',
           },
           responsive: [
             {
@@ -388,6 +389,16 @@ export default {
           },
         ],
         chartOptions: {
+          title: {
+            text: 'Suivi des stats de package',
+            align: 'center',
+            style: {
+              fontSize: '14px',
+              fontWeight: 'regular',
+              fontFamily: undefined,
+              color: '#263238'
+            }
+          },
           colors: ['#008FFB', '#FF4560', '#FEB019'],
           chart: {
             height: 350,
@@ -444,6 +455,16 @@ export default {
           },
         ],
         chartOptions: {
+          title: {
+            text: 'Suivi des vulnérabilités',
+            align: 'center',
+            style: {
+              fontSize: '14px',
+              fontWeight: 'regular',
+              fontFamily: undefined,
+              color: '#263238'
+            }
+          },
           colors: [
             '#008FFB',
             '#FF4560',
@@ -495,6 +516,16 @@ export default {
           },
         ],
         chartOptions: {
+          title: {
+            text: 'Suivi des stats d\'image',
+            align: 'center',
+            style: {
+              fontSize: '14px',
+              fontWeight: 'regular',
+              fontFamily: undefined,
+              color: '#263238'
+            }
+          },
           colors: ['#008FFB', '#FF4560', '#FEB019'],
           chart: {
             height: 350,
@@ -541,12 +572,6 @@ export default {
   async mounted() {
     await this.getRegistries()
     await this.getStats().then(() => {
-      this.imageVuln.series = [
-        this.stats.vulnerable_tags_count,
-        this.stats.outdated_tags_count,
-        this.tags_total_count -
-          (this.stats.vulnerable_tags_count + this.stats.outdated_tags_count),
-      ]
       for (const [key, value] of Object.entries(this.stats.severities)) {
         this.vulnerabitily.chartOptions.labels.push(key)
         this.vulnerabitily.series.push(

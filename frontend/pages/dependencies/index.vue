@@ -1,7 +1,7 @@
 <template>
   <div class="w-full h-screen px-5 py-5 overflow-y-auto scrollbar-thin">
     <Loading v-if="isLoading" />
-    <div v-if="!isLoading" class="w-full shadow-md rounded-xl bg-white px-3 py-3">
+    <div class="w-full shadow-md rounded-xl bg-white overflow-x-auto px-3 py-3">
       <Table
         v-if="dependencies.length > 0"
         :columns="[
@@ -89,6 +89,15 @@ export default {
       this.copyMinVersion = this.min_version
       this.copyNotes = this.notes
       this.isLoading = false
+    }).finally(() => {
+      if(this.$route.query.package) {
+        const rows = [...document.getElementById('c-table').rows]
+        rows.forEach((el) => {
+          if(el.cells[1].innerText === this.$route.query.package) {
+            el.scrollIntoView()
+          }
+        })
+      }
     })
   },
   methods: {

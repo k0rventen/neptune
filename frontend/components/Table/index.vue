@@ -1,5 +1,5 @@
 <template>
-  <table class="w-full">
+  <table id="c-table" class="w-full">
     <thead>
     <tr v-if="data" class="border-b border-[#e9e6e6]">
       <th v-for="column in columns" :key="column.name" class="py-2 w-1/6">
