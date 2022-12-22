@@ -5,7 +5,7 @@
       <Table
         v-if="dependencies.length > 0"
         :columns="[
-          { label: $t('dependencies.type'), name: 'type' },
+          { label: $t('dependencies.type'), name: 'type', sorter: (row1, row2) => row1.type.localeCompare(row2.type) },
           { label: $t('dependencies.name'), name: 'name' },
           { label: $t('dependencies.version'), name: 'version' },
           {

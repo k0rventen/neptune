@@ -38,8 +38,8 @@
             :data="tableData"
             :columns="[
               { label: 'Package', name: 'package' },
-              { label: 'Obsolète', name: 'outdated' },
-              { label: 'Version', name: 'version' }
+              { label: 'Version', name: 'version' },
+              { label: 'Obsolète', name: 'outdated' }
             ]"
           >
             <template slot="outdated" slot-scope="{ item }">
@@ -131,7 +131,7 @@
           </Table>
         </div>
         <div
-          class="col-span-2 lg:col-span-1 w-full bg-white shadow-md rounded-xl px-3 py-3"
+          class="col-span-2 lg:col-span-1 w-full bg-white shadow-md rounded-xl px-3 py-3 overflow-x-auto"
         >
           <p class="underline">Vulnérabilité(s): </p>
           <Table

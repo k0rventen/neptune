@@ -14,6 +14,11 @@
         v-if="cveTable.length > 0"
         :columns="[
           {
+            label: $t('vulnerability.acknowledged'),
+            name: 'ack',
+            sorter: (row1, row2) => (row1.ack === row2.ack ? 0 : x ? -1 : 1),
+          },
+          {
             label: $t('vulnerability.name'),
             name: 'name',
             sorter: (row1, row2) => row1.name.localeCompare(row2.name),
@@ -44,11 +49,6 @@
               row1.affected_images.length - row2.affected_images.length,
           },
           { label: $t('vulnerability.notes'), name: 'notes' },
-          {
-            label: $t('vulnerability.acknowledged'),
-            name: 'ack',
-            sorter: (row1, row2) => (row1.ack === row2.ack ? 0 : x ? -1 : 1),
-          },
         ]"
         :data="cveTable"
       >

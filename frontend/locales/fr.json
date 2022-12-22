@@ -29,8 +29,8 @@
     "tags": "Tags",
     "affected_tags": "Tags affectés",
     "notes": "Notes",
-    "acknowledged": "Reconnu",
-    "not_acknowledged": "Non reconnu",
+    "acknowledged": "Actif",
+    "not_acknowledged": "Non actif",
     "state": {
       "negligible": "Negligeable",
       "low": "Faible",
