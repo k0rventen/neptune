@@ -5,7 +5,8 @@
       { name: $t('navbar.home'), route: '/' },
       { name: $t('navbar.images'), route: '/images' },
       { name: $t('navbar.vulnerabilities'), route: '/vulnerabilities' },
-      { name: $t('navbar.dependencies'), route: '/dependencies' }
+      { name: $t('navbar.dependencies'), route: '/dependencies' },
+      { name: $t('navbar.registry'), route: '/registry'}
     ]"
     />
     <div class="w-1/5 bg-red-600 h-screen hidden lg:block">
@@ -13,7 +14,8 @@
       { name: $t('navbar.home'), route: '/' },
       { name: $t('navbar.images'), route: '/images' },
       { name: $t('navbar.vulnerabilities'), route: '/vulnerabilities' },
-      { name: $t('navbar.dependencies'), route: '/dependencies' }
+      { name: $t('navbar.dependencies'), route: '/dependencies' },
+      { name: $t('navbar.registry'), route: '/registry'}
       ]"/>
     </div>
     <div class="w-full">
