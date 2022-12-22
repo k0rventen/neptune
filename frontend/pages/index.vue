@@ -2,72 +2,6 @@
   <div class="w-full pb-24 lg:pb-5 h-screen px-5 py-5 overflow-y-auto scrollbar-thin">
     <Loading v-if="isLoading" />
     <Modal
-      v-if="openRegistriesModal"
-      v-model="openRegistriesModal"
-      title="Éditions des registries"
-    >
-      <div class="h-2/3 px-3 py-3 border border-gray-300 my-2 rounded-xl">
-        <div class="grid grid-cols-3 gap-5">
-          <div
-            v-for="registry in registries"
-            :key="registry.url"
-            class="text-white px-5 rounded-lg py-5 overflow-hidden cursor-pointer bg-neptune-blue relative"
-          >
-            <svg
-              class="absolute opacity-20 -right-5 -bottom-5"
-              width="116"
-              height="116"
-              viewBox="0 0 24 24"
-              fill="white"
-            >
-              <path
-                d="M18 10.031v-6.423l-6.036-3.608-5.964 3.569v6.499l-6 3.224v7.216l6.136 3.492 5.864-3.393 5.864 3.393 6.136-3.492v-7.177l-6-3.3zm-1.143.036l-4.321 2.384v-4.956l4.321-2.539v5.111zm-4.895-8.71l4.272 2.596-4.268 2.509-4.176-2.554 4.172-2.551zm-10.172 12.274l4.778-2.53 4.237 2.417-4.668 2.667-4.347-2.554zm4.917 3.587l4.722-2.697v5.056l-4.722 2.757v-5.116zm6.512-3.746l4.247-2.39 4.769 2.594-4.367 2.509-4.649-2.713zm9.638 6.323l-4.421 2.539v-5.116l4.421-2.538v5.115z"
-              />
-            </svg>
-            <p class="truncate">URL : {{ registry.registry }}</p>
-            <p class="truncate">Utilisateur : {{ registry.user }}</p>
-            <p class="truncate">Mot de passe : {{ registry.password }}</p>
-          </div>
-        </div>
-      </div>
-      <div class="h-1/3 px-3 py-3">
-        <form @submit.prevent="sendRegisteriesData()">
-          <label class="mb-2 gap-3">
-            URL :
-            <input
-              v-model="registry.url"
-              type="text"
-              class="rounded-md border border-gray-400 outline-none px-2 py-1"
-            />
-          </label>
-
-          <label for="" class="my-2 gap-3 block">
-            Nom d'utilisateur :
-            <input
-              v-model="registry.user"
-              type="text"
-              class="rounded-md border border-gray-400 outline-none px-2 py-1"
-            />
-          </label>
-
-          <label for="" class="mb-2 gap-3 block">
-            Mot de passe
-            <input
-              v-model="registry.password"
-              type="password"
-              class="rounded-md border border-gray-400 outline-none px-2 py-1"
-            />
-          </label>
-          <button
-            type="submit"
-            class="px-3 py-1 rounded-md bg-neptune-blue text-white"
-          >
-            Envoyer
-          </button>
-        </form>
-      </div>
-    </Modal>
-    <Modal
       v-if="openImagesModal"
       v-model="openImagesModal"
       title="Ajout d'une image en direct"
@@ -314,12 +248,6 @@
     <div class="w-full grid grid-cols-1 lg:grid-cols-3 mt-3 lg:mt-9 gap-3 lg:gap-9">
       <button
         class="w-full shadow-md rounded-xl bg-neptune-blue text-white px-3 py-2 col-span-3 lg:col-span-1"
-        @click="openRegistriesModal = true"
-      >
-        Ajouter un registry
-      </button>
-      <button
-        class="w-full shadow-md rounded-xl bg-neptune-blue text-white px-3 py-2 col-span-3 lg:col-span-1"
         @click="openImagesModal = true"
       >
         Ajouter une image
@@ -554,23 +482,15 @@ export default {
           },
         },
       },
-      openRegistriesModal: false,
       openImagesModal: false,
-      registry: {
-        registry: '',
-        user: '',
-        password: '',
-      },
       imageName: undefined,
       isLoading: false
     }
   },
   computed: {
     ...mapState('statistics', ['stats', 'historicalStats', 'fiveImg']),
-    ...mapState('registries', ['registries']),
   },
   async mounted() {
-    await this.getRegistries()
     await this.getStats().then(() => {
       for (const [key, value] of Object.entries(this.stats.severities)) {
         this.vulnerabitily.chartOptions.labels.push(key)
@@ -615,7 +535,6 @@ export default {
       'getFiveImg',
     ]),
     ...mapActions('image', ['scanImages']),
-    ...mapActions('registries', ['getRegistries', 'sendRegistry']),
     convertDate(date) {
       const options = {
         year: 'numeric',
@@ -637,15 +556,6 @@ export default {
         case 3:
           return 'bg-green-500'
       }
-    },
-    async sendRegisteriesData() {
-      await this.sendRegistry(this.registry)
-      this.registry = {
-        url: '',
-        user: '',
-        password: '',
-      }
-      this.openRegistriesModal = false
     },
     async sendNewImage() {
       this.isLoading = true

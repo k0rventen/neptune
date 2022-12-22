@@ -3,7 +3,8 @@
     "home": "Dashboard",
     "images": "Images",
     "vulnerabilities": "CVE",
-    "dependencies": "Dépendances"
+    "dependencies": "Dépendances",
+    "registry": "Registre"
   },
   "card": {
     "image_vulnerability": "Image Vulnérable | Image Vulnérable | Images Vulnérables",
