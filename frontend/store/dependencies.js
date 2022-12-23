@@ -7,7 +7,7 @@ const state = () => ({
 const mutations = {
   setDependencies(state, data) {
     state.dependencies = data
-    data.forEach((dep) => {
+    data.items.forEach((dep) => {
       state.min_version[dep.name] = dep.minimum_version;
       state.notes[dep.name] = dep.notes;
     })
@@ -19,8 +19,8 @@ const mutations = {
 }
 
 const actions = {
-  async getDependencies({commit}) {
-    await this.$axios.get('/api/packages').then((response) => {
+  async getDependencies({commit}, {page, perPage}) {
+    await this.$axios.get(`/api/packages?page=${page}&per_page=${perPage}`).then((response) => {
       commit('setDependencies', response.data)
     })
   },

@@ -119,6 +119,9 @@
         <p>Paquet obsolète : {{ tag.outdated_packages }}</p>
       </div>
     </div>
+    <div class="w-full flex justify-center mt-2">
+      <Pagination v-model="page" :nbPages="nbPages" @change="getNewPage()" />
+    </div>
   </div>
 </template>
 
@@ -140,6 +143,9 @@ export default {
       backupTags: undefined,
       selectedOrder: 'ASC',
       openFilter: false,
+      page: 1,
+      perPage: 20,
+      nbPages: 0,
     }
   },
   computed: {
@@ -208,10 +214,11 @@ export default {
     },
   },
   async mounted() {
-    await this.getTags()
+    await this.getTags({page: this.page, perPage: this.perPage })
       .then(() => {
-        this.value = this.tags
-        this.backupTags = [...this.tags]
+        this.value = this.tags.items
+        this.nbPages = Math.ceil(this.tags.total / this.tags.per_page)
+        this.backupTags = [...this.tags.items]
       })
       .finally(() => {
         this.isLoading = false
@@ -219,7 +226,7 @@ export default {
   },
   methods: {
     ...mapActions('image', ['scanImages']),
-    ...mapActions('image', ['getImages', 'getTags']),
+    ...mapActions('image', ['getTags']),
     async sendImage() {
       await this.scanImages(this.imageToScan).then(() => {
         this.imageToScan = undefined
@@ -240,6 +247,13 @@ export default {
       await this.scanImages({image: this.imageName, return_error: false}).then(() => {
         this.imageName = undefined
         this.isLoading = false
+      })
+    },
+    getNewPage() {
+      this.getTags({page: this.page, perPage: this.perPage }).then(() => {
+        this.value = this.tags.items
+        this.nbPages = Math.ceil(this.tags.total / this.tags.per_page)
+        this.backupTags = [...this.tags.items]
       })
     }
   },

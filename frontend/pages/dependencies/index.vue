@@ -3,9 +3,14 @@
     <Loading v-if="isLoading" />
     <div class="w-full shadow-md rounded-xl bg-white overflow-x-auto px-3 py-3">
       <Table
-        v-if="dependencies.length > 0"
+        v-if="dependencies.items && dependencies.items?.length > 0"
+        :key="resfreshKey"
         :columns="[
-          { label: $t('dependencies.type'), name: 'type', sorter: (row1, row2) => row1.type.localeCompare(row2.type) },
+          {
+            label: $t('dependencies.type'),
+            name: 'type',
+            sorter: (row1, row2) => row1.type.localeCompare(row2.type),
+          },
           { label: $t('dependencies.name'), name: 'name' },
           { label: $t('dependencies.version'), name: 'version' },
           {
@@ -14,7 +19,7 @@
           },
           { label: $t('dependencies.notes'), name: 'notes' },
         ]"
-        :data="dependencies"
+        :data="dependencies.items"
       >
         <template slot="notes" slot-scope="{ item }">
           <input
@@ -33,36 +38,54 @@
           />
         </template>
         <template slot="version" slot-scope="{ item }">
-            <div class="flex gap-3">
-              <VDropdown :key="version.id" v-for="version in item.versions">
-                <button class="py-1 px-2 text-xs text-white rounded-md max-w-prose" :class="bgFinder(version)">
-                  <p>{{ removeUseless(version.version) }}</p>
-                </button>
+          <div class="flex gap-3">
+            <VDropdown :key="version.id" v-for="version in item.versions">
+              <button
+                class="py-1 px-2 text-xs text-white rounded-md max-w-prose"
+                :class="bgFinder(version)"
+              >
+                <p>{{ removeUseless(version.version) }}</p>
+              </button>
 
-                <template #popper>
-                  <div class="px-2 py-1 outline-none">
-                    <p class="text-center">{{ version.version }}</p>
-                    <hr v-if="version.vulnerabilities.length > 0">
-                    <a v-for="vuln in version.vulnerabilities" :key="vuln.id" :href="`https://www.google.com/search?client=firefox-b-d&q=${vuln.name}`">
-                      <p >
-                        {{  vuln.name }}
-                      </p>
-                    </a>
-                    
-                    <div class="mt-2">
-                      <p>Image(s) concerné(s) :</p>
-                      <hr>
-                        <p v-for="tag in version.tags" :key="tag.sha" class="cursor-pointer" @click="$router.push({ path: '/images/' + tag.sha })">
-                          {{ tag.name }}
-                        </p>
-                    </div>
-                    
+              <template #popper>
+                <div class="px-2 py-1 outline-none">
+                  <p class="text-center">{{ version.version }}</p>
+                  <hr v-if="version.vulnerabilities.length > 0" />
+                  <a
+                    v-for="vuln in version.vulnerabilities"
+                    :key="vuln.id"
+                    :href="`https://www.google.com/search?client=firefox-b-d&q=${vuln.name}`"
+                  >
+                    <p>
+                      {{ vuln.name }}
+                    </p>
+                  </a>
+
+                  <div class="mt-2">
+                    <p>Image(s) concerné(s) :</p>
+                    <hr />
+                    <p
+                      v-for="tag in version.tags"
+                      :key="tag.sha"
+                      class="cursor-pointer"
+                      @click="$router.push({ path: '/images/' + tag.sha })"
+                    >
+                      {{ tag.name }}
+                    </p>
                   </div>
-                </template>
-              </VDropdown>
+                </div>
+              </template>
+            </VDropdown>
           </div>
         </template>
       </Table>
+      <div class="w-full flex mt-2 justify-center">
+        <Pagination
+          v-model="page"
+          :nbPages="this.nbPages"
+          @change="getNewPages()"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -78,27 +101,33 @@ export default {
       copyMinVersion: [],
       copyNotes: [],
       page: 1,
-      isLoading: true
+      nbPages: 0,
+      perPage: 50,
+      isLoading: true,
+      resfreshKey: 0,
     }
   },
   computed: {
     ...mapState('dependencies', ['dependencies', 'min_version', 'notes']),
   },
   async mounted() {
-    await this.getDependencies().then(() => {
-      this.copyMinVersion = this.min_version
-      this.copyNotes = this.notes
-      this.isLoading = false
-    }).finally(() => {
-      if(this.$route.query.package) {
-        const rows = [...document.getElementById('c-table').rows]
-        rows.forEach((el) => {
-          if(el.cells[1].innerText === this.$route.query.package) {
-            el.scrollIntoView()
-          }
-        })
-      }
-    })
+    await this.getDependencies({ page: this.page, perPage: this.perPage })
+      .then(() => {
+        this.copyMinVersion = this.min_version
+        this.nbPages = Math.ceil(this.dependencies.total / this.perPage)
+        this.copyNotes = this.notes
+        this.isLoading = false
+      })
+      .finally(() => {
+        if (this.$route.query.package) {
+          const rows = [...document.getElementById('c-table').rows]
+          rows.forEach((el) => {
+            if (el.cells[1].innerText === this.$route.query.package) {
+              el.scrollIntoView()
+            }
+          })
+        }
+      })
   },
   methods: {
     ...mapActions('dependencies', [
@@ -122,7 +151,7 @@ export default {
     },
     removeUseless(version) {
       let res = version
-      if(res.includes('ubuntu')) {
+      if (res.includes('ubuntu')) {
         res = res.replace('ubuntu', '')
       }
       if (res.length > 13) {
@@ -130,7 +159,7 @@ export default {
       }
       return res
     },
-    bgFinder (version) {
+    bgFinder(version) {
       if (version.vulnerabilities.length > 0) {
         return 'bg-red-500'
       }
@@ -139,7 +168,18 @@ export default {
       } else {
         return 'bg-green-500'
       }
-    }
+    },
+    getNewPages() {
+      this.isLoading = true
+      this.getDependencies({ page: this.page, perPage: this.perPage }).then(
+        () => {
+          this.copyMinVersion = this.min_version
+          this.copyNotes = this.notes
+          this.isLoading = false
+          this.resfreshKey++
+        }
+      )
+    },
   },
 }
 </script>
