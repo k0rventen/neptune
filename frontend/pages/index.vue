@@ -1,5 +1,7 @@
 <template>
-  <div class="w-full pb-24 lg:pb-5 h-screen px-5 py-5 overflow-y-auto scrollbar-thin">
+  <div
+    class="w-full pb-24 lg:pb-5 h-screen px-5 py-5 overflow-y-auto scrollbar-thin"
+  >
     <Loading v-if="isLoading" />
     <div v-if="stats" class="grid grid-cols-4 gap-9">
       <div
@@ -146,7 +148,7 @@
             </div>
           </div>
         </div>
-        <div class="text-white grid grid-cols-4 gap-9">
+        <div class="text-white grid grid-cols-5 gap-9">
           <div
             v-for="(image, index) in fiveImg"
             :key="image.image_id"
@@ -214,6 +216,19 @@
                 d="M11.5 23l-8.5-4.535v-3.953l5.4 3.122 3.1-3.406v8.772zm1-.001v-8.806l3.162 3.343 5.338-2.958v3.887l-8.5 4.534zm-10.339-10.125l-2.161-1.244 3-3.302-3-2.823 8.718-4.505 3.215 2.385 3.325-2.385 8.742 4.561-2.995 2.771 2.995 3.443-2.242 1.241v-.001l-5.903 3.27-3.348-3.541 7.416-3.962-7.922-4.372-7.923 4.372 7.422 3.937v.024l-3.297 3.622-5.203-3.008-.16-.092-.679-.393v.002z"
               />
             </svg>
+            <svg
+              v-if="index === 4"
+              class="absolute opacity-20 right-0 -bottom-8"
+              fill="white"
+              xmlns="http://www.w3.org/2000/svg"
+              width="128"
+              height="128"
+              viewBox="0 0 24 24"
+            >
+              <path
+                d="M18.513 7.119c.958-1.143 1.487-2.577 1.487-4.036v-3.083h-16v3.083c0 1.459.528 2.892 1.487 4.035l3.086 3.68c.567.677.571 1.625.009 2.306l-3.13 3.794c-.936 1.136-1.452 2.555-1.452 3.995v3.107h16v-3.107c0-1.44-.517-2.858-1.453-3.994l-3.13-3.794c-.562-.681-.558-1.629.009-2.306l3.087-3.68zm-4.639 7.257l3.13 3.794c.652.792.996 1.726.996 2.83h-12c0-1.104.343-2.039.996-2.829l3.129-3.793c1.167-1.414 1.159-3.459-.019-4.864l-3.086-3.681c-.66-.785-1.02-1.736-1.02-2.834h12c0 1.101-.363 2.05-1.02 2.834l-3.087 3.68c-1.177 1.405-1.185 3.451-.019 4.863z"
+              />
+            </svg>
             <p>Nom de l'image : {{ image.image + ':' + image.tag }}</p>
             <p>Taille de l'image : {{ calcSize(image.size) }}</p>
             <p>Paquets : {{ image.packages }}</p>
@@ -245,8 +260,8 @@ export default {
               fontSize: '14px',
               fontWeight: 'regular',
               fontFamily: undefined,
-              color: '#263238'
-            }
+              color: '#263238',
+            },
           },
           chart: {
             type: 'donut',
@@ -294,8 +309,8 @@ export default {
               fontSize: '14px',
               fontWeight: 'regular',
               fontFamily: undefined,
-              color: '#263238'
-            }
+              color: '#263238',
+            },
           },
           colors: ['#008FFB', '#FF4560', '#FEB019'],
           chart: {
@@ -360,8 +375,8 @@ export default {
               fontSize: '14px',
               fontWeight: 'regular',
               fontFamily: undefined,
-              color: '#263238'
-            }
+              color: '#263238',
+            },
           },
           colors: [
             '#008FFB',
@@ -415,14 +430,14 @@ export default {
         ],
         chartOptions: {
           title: {
-            text: 'Suivi des stats d\'image',
+            text: "Suivi des stats d'image",
             align: 'center',
             style: {
               fontSize: '14px',
               fontWeight: 'regular',
               fontFamily: undefined,
-              color: '#263238'
-            }
+              color: '#263238',
+            },
           },
           colors: ['#008FFB', '#FF4560', '#FEB019'],
           chart: {
@@ -454,7 +469,7 @@ export default {
       },
       openImagesModal: false,
       imageName: undefined,
-      isLoading: false
+      isLoading: false,
     }
   },
   computed: {
@@ -524,6 +539,8 @@ export default {
           return 'bg-yellow-400'
         case 3:
           return 'bg-green-500'
+        case 4:
+          return 'bg-neptune-blue'
       }
     },
   },
