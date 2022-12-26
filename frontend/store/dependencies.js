@@ -19,8 +19,9 @@ const mutations = {
 }
 
 const actions = {
-  async getDependencies({commit}, {page, perPage}) {
-    await this.$axios.get(`/api/packages?page=${page}&per_page=${perPage}`).then((response) => {
+  async getDependencies({commit}, {page, perPage, filter}) {
+    const url = urlBuilder(page, perPage, filter)
+    await this.$axios.get(url).then((response) => {
       commit('setDependencies', response.data)
     })
   },
@@ -33,6 +34,18 @@ const actions = {
   async setNotes({commit}, { id, version, notes }) {
     await this.$axios.put(`/api/packages/${id}`, { minimum_version: version , notes })
   }
+}
+
+const urlBuilder = (page, perPage, filter) => {
+  let url = `/api/packages?page=${page}&per_page=${perPage}`
+  if(filter) {
+    Object.entries(filter).forEach(([key, value]) => {
+      if(value) {
+        url += `&${key}=${value}`
+      }
+    })
+  }  
+  return url
 }
 
 export default {
