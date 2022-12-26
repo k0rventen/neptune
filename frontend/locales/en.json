@@ -49,13 +49,19 @@
   },
   "images" : {
     "search": "Search ...",
-    "added_date": "Added date",
-    "size": "Size",
-    "vulnerability": "Vulnerability | Vulnerability | Vulnerabilities",
-    "package": "Package | Package | Packages",
-    "outdated_package": "Outdated package | Outdated package | Outdated packages",
     "add_image": "Add image",
-    "name_of_image": "Name of image"
+    "order_by": "Order by",
+    "none": "None",
+    "vulnerability": "Vulnerability",
+    "outdated": "Outdated",
+    "size": "Size",
+    "severity": "Severity",
+    "active_vulnerability": "Active vulnerabilities",
+    "image_name": "Image name",
+    "image_size": "Image size",
+    "package": "Package",
+    "vulnerabilities": "Vulnerabilities",
+    "outdated_packages": "Outdated packages"
   },
   "vulnerability" : {
     "name": "Name",

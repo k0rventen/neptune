@@ -47,13 +47,19 @@
   },
   "images" : {
     "search": "Rechercher ...",
-    "added_date": "Date d'ajout",
-    "size": "Taille",
-    "vulnerability": "Vulnérabilité | Vulnérabilité | Vulnérabilités",
-    "package": "Paquet | Paquet | Paquets",
-    "outdated_package": "Paquet obsolète | Paquet obsolète | Paquets obsolètes",
     "add_image": "Ajouter une image",
-    "name_of_image": "Nom de l'image"
+    "order_by": "Trier par",
+    "none": "Aucun",
+    "vulnerability": "Vulnérabilité",
+    "outdated": "Obsolète",
+    "size": "Taille",
+    "severity": "Sévérité",
+    "active_vulnerability": "Vulnérabilité(s) active(s)",
+    "image_name": "Nom de l'image",
+    "image_size": "Taille de l'image",
+    "package": "Paquets",
+    "vulnerabilities": "Vulnérabilité(s)",
+    "outdated_packages": "Paquet(s) obsolète(s)"
   },
   "vulnerability" : {
     "name": "Nom",
