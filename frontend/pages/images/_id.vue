@@ -5,18 +5,31 @@
       <div
         class="col-span-3 overflow-x-auto md:col-span-1 w-full cursor-pointer shadow-md bg-neptune-blue px-5 rounded-lg py-5 relative overflow-hidden bg-neptune-blue text-white"
       >
-        <p>
-          Nom de l'image : {{ currentImage.image + ':' + currentImage.tag }}
-        </p>
-        <p>Taille de l'image : {{ calcSize(currentImage.size) }}</p>
-        <p>
-          Date d'ajout :
-          {{
-            new Date(currentImage.date_added).toLocaleDateString('fr-FR') +
-            ' à ' +
-            new Date(currentImage.date_added).toLocaleTimeString('fr-FR')
-          }}
-        </p>
+      <div class="w-2/3 grid grid-cols-2">
+        <div>
+          <p>
+            Nom de l'image : {{ currentImage.image + ':' + currentImage.tag }}
+          </p>
+          <p>Taille de l'image : {{ calcSize(currentImage.size) }}</p>
+          <p>
+            Date d'ajout :
+            {{
+              new Date(currentImage.date_added).toLocaleDateString('fr-FR') +
+              ' à ' +
+              new Date(currentImage.date_added).toLocaleTimeString('fr-FR')
+            }}
+          </p>
+          <p>Distribution : {{ currentImage.distro }}</p>
+        </div>
+        <div>
+          <p>Paquets : {{ currentImage.packages.length }}</p>
+          <p>Vulnérabilité(s) : {{ currentImage.vulnerabilities.length }}</p>
+          <p>Vulnérabilité(s) active : {{ currentImage.active_vulnerabilities.length }}</p>
+          <p>Paquet obsolète : {{ currentImage.outdated_packages.length }}</p>
+        </div>
+      </div>
+        
+
         <svg
           class="absolute -bottom-2 right-0 opacity-20"
           xmlns="http://www.w3.org/2000/svg"
@@ -91,7 +104,7 @@
         >
         <p class="underline">Vulnérabilité(s) active(s) : </p>
           <Table
-            :data="vulnData"
+            :data="vulnActive"
             :columns="[
               { label: 'CVE', name: 'name' },
               { label: 'Package', name: 'affected_package' },
@@ -135,7 +148,7 @@
         >
           <p class="underline">Vulnérabilité(s): </p>
           <Table
-            :data="vulnActive"
+            :data="vulnData"
             :columns="[
               { label: 'CVE', name: 'name' },
               { label: 'Package', name: 'affected_package' },
