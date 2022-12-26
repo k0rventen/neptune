@@ -8,7 +8,7 @@
         class="bg-white px-3 py-3 shadow-md rounded-xl flex justify-between text-secondary col-span-4 lg:col-span-1"
       >
         <div>
-          <p>Nombre total de vulnérabilités</p>
+          <p>{{ $t('index.total_amount_vulnerability') }}</p>
           <p class="font-bold">{{ stats.vulnerabilities_total_count }}</p>
         </div>
         <div
@@ -32,7 +32,7 @@
         class="bg-white px-3 py-3 shadow-md rounded-xl flex justify-between text-secondary col-span-4 lg:col-span-1"
       >
         <div>
-          <p>Nombre total d'images</p>
+          <p>{{ $t('index.total_amount_image') }}</p>
           <p class="font-bold">{{ stats.tags_total_count }}</p>
         </div>
         <div
@@ -55,7 +55,7 @@
         class="bg-white px-3 py-3 shadow-md rounded-xl flex justify-between text-secondary col-span-4 lg:col-span-2"
       >
         <div>
-          <p>Nombre total de package</p>
+          <p>{{ $t('index.total_amount_package') }}</p>
           <p class="font-bold">{{ stats.packages_total_count }}</p>
         </div>
         <div
@@ -128,23 +128,27 @@
       </div>
       <div class="bg-white px-3 py-3 shadow-md rounded-xl col-span-4">
         <div class="w-full block md:flex justify-between">
-          <p class="mb-3 text-gray-400 underline">Images critiques :</p>
+          <p class="mb-3 text-gray-400 underline">{{ $t('index.top_image') }}</p>
           <div class="flex gap-3">
             <div class="flex items-center gap-1">
               <div class="h-3 w-3 rounded-sm bg-black"></div>
-              <p class="text-xs">Le plus de vulnérabilités actives</p>
+              <p class="text-xs">{{ $t('index.the_most_vulnerable_active') }}</p>
             </div>
             <div class="flex items-center gap-1">
               <div class="h-3 w-3 rounded-sm bg-red-500"></div>
-              <p class="text-xs">Le plus de vulnérabilités</p>
+              <p class="text-xs">{{ $t('index.the_most_vulnerable')}}</p>
             </div>
             <div class="flex items-center gap-1">
               <div class="h-3 w-3 rounded-sm bg-yellow-400"></div>
-              <p class="text-xs">Le plus de package obsolète</p>
+              <p class="text-xs">{{  $t('index.the_most_outdated') }}</p>
             </div>
             <div class="flex items-center gap-1">
               <div class="h-3 w-3 rounded-sm bg-green-500"></div>
-              <p class="text-xs">Le plus de package</p>
+              <p class="text-xs">{{ $t('index.the_most_package') }}</p>
+            </div>
+            <div class="flex items-center gap-1">
+              <div class="h-3 w-3 rounded-sm bg-neptune-blue"></div>
+              <p class="text-xs">{{ $t('index.the_most_recent') }}</p>
             </div>
           </div>
         </div>
@@ -229,11 +233,11 @@
                 d="M18.513 7.119c.958-1.143 1.487-2.577 1.487-4.036v-3.083h-16v3.083c0 1.459.528 2.892 1.487 4.035l3.086 3.68c.567.677.571 1.625.009 2.306l-3.13 3.794c-.936 1.136-1.452 2.555-1.452 3.995v3.107h16v-3.107c0-1.44-.517-2.858-1.453-3.994l-3.13-3.794c-.562-.681-.558-1.629.009-2.306l3.087-3.68zm-4.639 7.257l3.13 3.794c.652.792.996 1.726.996 2.83h-12c0-1.104.343-2.039.996-2.829l3.129-3.793c1.167-1.414 1.159-3.459-.019-4.864l-3.086-3.681c-.66-.785-1.02-1.736-1.02-2.834h12c0 1.101-.363 2.05-1.02 2.834l-3.087 3.68c-1.177 1.405-1.185 3.451-.019 4.863z"
               />
             </svg>
-            <p>Nom de l'image : {{ image.image + ':' + image.tag }}</p>
-            <p>Taille de l'image : {{ calcSize(image.size) }}</p>
-            <p>Paquets : {{ image.packages }}</p>
-            <p>Vulnérabilité : {{ image.vulnerabilities }}</p>
-            <p>Paquet obsolète : {{ image.outdated_packages }}</p>
+            <p>{{ $t('index.name_of_image') }} : {{ image.image + ':' + image.tag }}</p>
+            <p>{{ $t('index.size_of_image') }} : {{ calcSize(image.size) }}</p>
+            <p>{{ $t('index.packages')}} : {{ image.packages }}</p>
+            <p>{{ $t('index.vulnerabilities') }} : {{ image.vulnerabilities }}</p>
+            <p>{{ $t('index.outdated_packages') }} : {{ image.outdated_packages }}</p>
           </div>
         </div>
       </div>
@@ -254,7 +258,7 @@ export default {
         chartOptions: {
           labels: [],
           title: {
-            text: 'Sévérité des vulnérabilités',
+            text: this.$t('index.vuln_severity'),
             align: 'center',
             style: {
               fontSize: '14px',
@@ -289,21 +293,21 @@ export default {
       followVuln: {
         series: [
           {
-            name: 'Nombre de package',
+            name: this.$t('index.number_of_package'),
             data: [],
           },
           {
-            name: 'Package outdated',
+            name: this.$t('index.number_of_outdated_package'),
             data: [],
           },
           {
-            name: 'Package vulnérable',
+            name: this.$t('index.number_of_vulnerable_package'),
             data: [],
           },
         ],
         chartOptions: {
           title: {
-            text: 'Suivi des stats de package',
+            text: this.$t('index.package_stats'),
             align: 'center',
             style: {
               fontSize: '14px',
@@ -343,33 +347,33 @@ export default {
       severity: {
         series: [
           {
-            name: 'Vulnérabilitée total',
+            name: this.$t('index.total_vulnerability'),
             data: [],
           },
           {
-            name: 'Vulnérabiilitée active',
+            name: this.$t('index.active_vuln'),
             data: [],
           },
           {
-            name: 'Vulnérabilité basse',
+            name: this.$t('index.low_vuln'),
             data: [],
           },
           {
-            name: 'Vulnérabilité moyenne',
+            name: this.$t('index.medium_vuln'),
             data: [],
           },
           {
-            name: 'Vulnérabilité haute',
+            name: this.$t('index.high_vuln'),
             data: [],
           },
           {
-            name: 'Vulnérabilité critique',
+            name: this.$t('index.critical_vuln'),
             data: [],
           },
         ],
         chartOptions: {
           title: {
-            text: 'Suivi des vulnérabilités',
+            text: this.$t('index.follow_vuln'),
             align: 'center',
             style: {
               fontSize: '14px',
@@ -416,21 +420,21 @@ export default {
       tags: {
         series: [
           {
-            name: 'Images total',
+            name: this.$t('index.total_image'),
             data: [],
           },
           {
-            name: 'Images avec vulnerabilité',
+            name: this.$t('index.image_with_vuln'),
             data: [],
           },
           {
-            name: 'Images outdated',
+            name: this.$t('index.image_outdated'),
             data: [],
           },
         ],
         chartOptions: {
           title: {
-            text: "Suivi des stats d'image",
+            text: this.$t('index.follow_stats_image'),
             align: 'center',
             style: {
               fontSize: '14px',
