@@ -12,6 +12,7 @@
     <div class="w-full shadow-md rounded-xl bg-white px-3 py-3">
       <Table
         v-if="cveTable.length > 0"
+        :key="this.refreshKey"
         :columns="[
           {
             label: $t('vulnerability.acknowledged'),
@@ -55,7 +56,7 @@
         <template slot="severity" slot-scope="{ item }">
           <div class="w-full flex justify-center">
             <div
-              class="px-5 py-2 rounded-full text-white w-36 uppercase font-bold"
+              class="px-2 py-1 rounded-md text-white w-36 uppercase font-bold"
               :class="colorSeverity(item)"
             >
               <p>
@@ -81,18 +82,27 @@
           />
         </template>
         <template slot="source" slot-scope="{ item }">
-          <p>{{ item.affected_package.name + ':' + item.affected_package.version }}</p>
+          <p>
+            {{
+              item.affected_package.name + ':' + item.affected_package.version
+            }}
+          </p>
         </template>
         <template slot="affected_images" slot-scope="{ item }">
           <VDropdown :distance="6">
             <button
-              class="px-5 py-2 bg-[#A6D1E6] rounded-full text-white uppercase font-bold"
+              class="px-2 text-xs py-1 bg-[#A6D1E6] rounded-md text-white uppercase font-bold"
             >
               {{ item.affected_images.length }} {{ $t('vulnerability.tags') }}
             </button>
 
             <template #popper>
-              <div v-for="image in item.affected_images" :key="image.sha" class="px-2 py-2 hover:font-bold cursor-pointer" @click="$router.push({ path: '/images/' + image.sha })">
+              <div
+                v-for="image in item.affected_images"
+                :key="image.sha"
+                class="px-2 py-2 hover:font-bold cursor-pointer"
+                @click="$router.push({ path: '/images/' + image.sha })"
+              >
                 <p>
                   {{ image.name }}
                 </p>
@@ -102,7 +112,7 @@
         </template>
         <template slot="ack" slot-scope="{ item }">
           <button
-            class="px-5 py-2 bg-[#A6D1E6] rounded-full text-white uppercase font-bold"
+            class="px-2 py-1 rounded-md text-xs text-white uppercase font-bold"
             :class="item.active ? 'bg-green-600' : 'bg-gray-400'"
             @click="changeAckState(item)"
           >
@@ -114,6 +124,13 @@
           </button>
         </template>
       </Table>
+      <div class="w-full flex mt-3 justify-center">
+        <Pagination
+          v-model="pages"
+          :nbPages="this.nbPages"
+          @change="getNewPages()"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -129,15 +146,22 @@ export default {
       cveTable: [],
       search: undefined,
       pages: 1,
+      nbPages: 0,
+      perPage: 50,
+      refreshKey: 0,
     }
   },
   computed: {
     ...mapState('vulnerability', ['vuln', 'notes']),
   },
   async mounted() {
-    await this.getVulnerabilties().then(() => {
+    await this.getVulnerabilties({
+      page: this.pages,
+      perPage: this.perPage,
+    }).then(() => {
       this.copyNote = this.notes
-      this.cveTable = this.vuln
+      this.nbPages = Math.ceil(this.vuln.total / this.vuln.per_page)
+      this.cveTable = this.vuln.items
     })
   },
   methods: {
@@ -175,6 +199,16 @@ export default {
         notes: this.copyNote[item.name],
         active: !item.active,
       })
+    },
+    getNewPages() {
+      this.getVulnerabilties({ page: this.pages, perPage: this.perPage }).then(
+        () => {
+          this.copyNote = this.notes
+          this.cveTable = []
+          this.cveTable = this.vuln.items
+          this.refreshKey++
+        }
+      )
     },
   },
 }

@@ -46,8 +46,8 @@ const actions = {
     })
   },
 
-  async getTags({commit}) {
-    await this.$axios.get('/api/tags').then(({data}) => {
+  async getTags({commit}, {page, perPage}) {
+    await this.$axios.get(`/api/tags?page=${page}&per_page=${perPage}`).then(({data}) => {
       commit('setTags', data)
     })
   }
