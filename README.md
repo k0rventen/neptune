@@ -65,6 +65,8 @@ neptune:
 
 ## Roadmap
 
-- proper UI
 - authentification
-- schedules for fetching images
+
+## Example
+
+[screenshot](screenShot.png)
