@@ -1,12 +1,10 @@
 {
   "navbar": {
-    "home": "Dashboard",
+    "dashboard": "Dashboard",
     "images": "Images",
     "vulnerabilities": "CVE",
-    "dependencies": "Dependencies"
-  },
-  "dashboard": {
-
+    "dependencies": "Dependencies",
+    "registry": "Registry"
   },
   "card" : {
     "image_vulnerability": "Vulnerable image | Vulnerable image | Vulnerable images",
@@ -61,7 +59,21 @@
     "image_size": "Image size",
     "package": "Package",
     "vulnerabilities": "Vulnerabilities",
-    "outdated_packages": "Outdated packages"
+    "outdated_packages": "Outdated packages",
+    "modal": {
+      "add_image_directly": "Add image directly",
+      "send": "Send"
+    }
+  },
+  "image_id": {
+    "image_name": "Image name", 
+    "image_size": "Image size",
+    "package": "Package",
+    "vulnerabilities": "Vulnerabilities",
+    "outdated_packages": "Outdated packages",
+    "active_vulnerability": "Active vulnerabilities",
+    "add_date": "Add date",
+    "distro": "Distro"
   },
   "vulnerability" : {
     "name": "Name",
@@ -87,6 +99,14 @@
     "vulnerability": "Vulnerability",
     "version": "Version",
     "minimum_version": "Minimum version",
-    "notes": "Notes"
+    "notes": "Notes",
+    "search": "Search ...",
+    "concerned_image": "Concerned image"
+  },
+  "registry" : {
+    "url": "URL",
+    "username": "Username",
+    "password": "Password",
+    "send": "Send"
   }
 }

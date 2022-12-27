@@ -8,24 +8,24 @@
       <div class="w-2/3 grid grid-cols-2">
         <div>
           <p>
-            Nom de l'image : {{ currentImage.image + ':' + currentImage.tag }}
+            {{ $t('image_id.image_name')}} : {{ currentImage.image + ':' + currentImage.tag }}
           </p>
-          <p>Taille de l'image : {{ calcSize(currentImage.size) }}</p>
+          <p>{{ $t('image_id.image_size')}} : {{ calcSize(currentImage.size) }}</p>
           <p>
-            Date d'ajout :
+            {{  $t('image_id.add_date') }} :
             {{
               new Date(currentImage.date_added).toLocaleDateString('fr-FR') +
               ' à ' +
               new Date(currentImage.date_added).toLocaleTimeString('fr-FR')
             }}
           </p>
-          <p>Distribution : {{ currentImage.distro }}</p>
+          <p>{{$t('image_id.distro')}} : {{ currentImage.distro }}</p>
         </div>
         <div>
-          <p>Paquets : {{ currentImage.packages.length }}</p>
-          <p>Vulnérabilité(s) : {{ currentImage.vulnerabilities.length }}</p>
-          <p>Vulnérabilité(s) active : {{ currentImage.active_vulnerabilities.length }}</p>
-          <p>Paquet obsolète : {{ currentImage.outdated_packages.length }}</p>
+          <p>{{ $t('image_id.package') }} : {{ currentImage.packages.length }}</p>
+          <p>{{ $t('image_id.vulnerabilities') }} : {{ currentImage.vulnerabilities.length }}</p>
+          <p>{{ $t('image_id.active_vulnerability')}} : {{ currentImage.active_vulnerabilities.length }}</p>
+          <p>{{ $t('image_id.outdated_packages') }} : {{ currentImage.outdated_packages.length }}</p>
         </div>
       </div>
         
@@ -102,7 +102,7 @@
           <div
           class="w-full bg-white shadow-md rounded-xl px-3 py-3"
         >
-        <p class="underline">Vulnérabilité(s) active(s) : </p>
+        <p class="underline">{{ $t('image_id.active_vulnerability')}} : </p>
           <Table
             :data="vulnActive"
             :columns="[
@@ -146,7 +146,7 @@
         <div
           class="col-span-2 lg:col-span-1 w-full bg-white shadow-md rounded-xl px-3 py-3 overflow-x-auto"
         >
-          <p class="underline">Vulnérabilité(s): </p>
+          <p class="underline">{{ $t('images_id.vulnerabilities') }} : </p>
           <Table
             :data="vulnData"
             :columns="[

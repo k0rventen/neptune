@@ -1,17 +1,10 @@
 {
   "navbar": {
-    "home": "Dashboard",
+    "dashboard": "Dashboard",
     "images": "Images",
     "vulnerabilities": "CVE",
     "dependencies": "Dépendances",
     "registry": "Registre"
-  },
-  "card": {
-    "image_vulnerability": "Image Vulnérable | Image Vulnérable | Images Vulnérables",
-    "vulnerability": "Vulnérabilité",
-    "follow_up_vulnerability_package": "Suivi Vulnérabilité package",
-    "follow_up_vulnerability_tags": "Suivi Vulnérabilité Tags",
-    "follow_up_severity": "Suivi de la criticité"
   },
   "index": {
     "total_amount_vulnerability": "Nombre total de vulnérabilités",
@@ -59,7 +52,21 @@
     "image_size": "Taille de l'image",
     "package": "Paquets",
     "vulnerabilities": "Vulnérabilité(s)",
-    "outdated_packages": "Paquet(s) obsolète(s)"
+    "outdated_packages": "Paquet(s) obsolète(s)",
+    "modal": {
+      "add_image_directly": "Ajouter une image directement",
+      "send": "Envoyer"
+    }
+  },
+  "image_id": {
+    "image_name": "Nom de l'image", 
+    "image_size": "Taille de l'image",
+    "package": "Paquets",
+    "vulnerabilities": "Vulnérabilité(s)",
+    "outdated_packages": "Paquet(s) obsolète(s)",
+    "active_vulnerability": "Vulnérabilité(s) active(s)",
+    "add_date": "Date d'ajout",
+    "distro": "Distribution"
   },
   "vulnerability" : {
     "name": "Nom",
@@ -85,6 +92,14 @@
     "vulnerability": "Vulnérabilité",
     "version": "Version",
     "minimum_version": "Version minimale",
-    "notes": "Notes"
+    "notes": "Notes",
+    "search": "Rechercher ...",
+    "concerned_image": "Image concernée"
+  },
+  "registry" : {
+    "url": "URL",
+    "username": "Nom d'utilisateur",
+    "password": "Mot de passe",
+    "send": "Envoyer"
   }
 }

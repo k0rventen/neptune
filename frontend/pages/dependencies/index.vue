@@ -6,7 +6,7 @@
         v-model="filter.name_filter"
         type="text"
         class="w-full mb-5 px-6 py-3 rounded-full shadow-md outline-none"
-        placeholder="Rechercher ..."
+        :placeholder="$t('dependencies.search')"
       />
     </div>
 
@@ -72,7 +72,7 @@
                   </a>
 
                   <div class="mt-2">
-                    <p>Image(s) concerné(s) :</p>
+                    <p>{{ $t('dependencies.concerned_image') }} :</p>
                     <hr />
                     <p
                       v-for="tag in version.tags"

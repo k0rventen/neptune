@@ -5,11 +5,11 @@
     <Modal
       v-if="openImagesModal"
       v-model="openImagesModal"
-      title="Ajout d'une image en direct"
+      :title="$t('images.modal.add_image_directly')"
       class="text-gray-500"
     >
       <label for="" class="my-2 gap-3 block">
-        Nom de l'image :
+        {{$t('images.image_name')}} :
         <input
           v-model="imageName"
           type="text"
@@ -21,7 +21,7 @@
           class="px-3 py-1 rounded-md bg-neptune-blue text-white"
           @click="sendNewImage()"
         >
-          Envoyer
+          {{$t('images.send')}}
         </button>
       </template>
     </Modal>
