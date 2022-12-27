@@ -3,16 +3,16 @@
     class="w-full pb-24 lg:pb-5 h-screen px-5 py-5 overflow-y-auto scrollbar-thin"
   >
     <Loading v-if="isLoading" />
-    <div v-if="stats" class="grid grid-cols-4 gap-9">
+    <div v-if="stats" class="grid grid-cols-4 h-full gap-9">
       <div
-        class="bg-white px-3 py-3 shadow-md rounded-xl flex justify-between text-secondary col-span-4 lg:col-span-1"
+        class="bg-white px-3 py-3 shadow-md rounded-xl flex items-center justify-between text-secondary col-span-4 lg:col-span-1"
       >
         <div>
           <p>{{ $t('index.total_amount_vulnerability') }}</p>
           <p class="font-bold">{{ stats.vulnerabilities_total_count }}</p>
         </div>
         <div
-          class="bg-neptune-blue px-3 py-3 items-center justify-center rounded-xl max-h-fit"
+          class="bg-neptune-blue px-3 py-3 items-center justify-center rounded-xl h-14 w-14 flex"
         >
           <svg
             class="rotate-45"
@@ -29,14 +29,14 @@
         </div>
       </div>
       <div
-        class="bg-white px-3 py-3 shadow-md rounded-xl flex justify-between text-secondary col-span-4 lg:col-span-1"
+        class="bg-white px-3 py-3 shadow-md rounded-xl flex items-center justify-between text-secondary col-span-4 lg:col-span-1"
       >
         <div>
           <p>{{ $t('index.total_amount_image') }}</p>
           <p class="font-bold">{{ stats.tags_total_count }}</p>
         </div>
         <div
-          class="bg-neptune-blue px-3 py-3 items-center justify-center rounded-xl"
+          class="bg-neptune-blue px-3 py-3 items-center justify-center rounded-xl h-14 w-14 flex"
         >
           <svg
             width="24"
@@ -52,14 +52,14 @@
         </div>
       </div>
       <div
-        class="bg-white px-3 py-3 shadow-md rounded-xl flex justify-between text-secondary col-span-4 lg:col-span-2"
+        class="bg-white px-3 py-3 shadow-md rounded-xl flex items-center justify-between text-secondary col-span-4 lg:col-span-2"
       >
         <div>
           <p>{{ $t('index.total_amount_package') }}</p>
           <p class="font-bold">{{ stats.packages_total_count }}</p>
         </div>
         <div
-          class="bg-neptune-blue px-3 py-3 items-center justify-center rounded-xl"
+          class="bg-neptune-blue px-3 py-3 items-center justify-center rounded-xl h-14 w-14 flex"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -89,7 +89,7 @@
         />
       </div>
       <div
-        class="bg-white px-3 py-3 h-96 shadow-md rounded-xl flex justify-center items-center col-span-4 lg:col-span-2"
+        class="bg-white px-3 py-3 h-96 shadow-md rounded-xl flex justify-center items-center col-span-4 lg:col-span-1"
       >
         <apexchart
           height="90%"
@@ -97,6 +97,18 @@
           :options="vulnerabitily.chartOptions"
           :series="vulnerabitily.series"
         />
+      </div>
+      <div
+        class="col-span-4 lg:col-span-1 bg-white px-3 py-3 h-96 shadow-md rounded-xl"
+      >
+        <div
+          class="relative bg-neptune-blue rounded-md w-full h-full px-2 py-2 text-white overflow-hidden trnucate"
+        >
+          <h1 class="text-2xl mb-3 font-bold">{{ $t('index.title') }}</h1>
+          <p class="mb-2">{{ $t('index.explain') }}</p>
+          <p>{{ $t('index.explain2') }}</p>
+          <svg class="absolute grayscale opacity-20 -bottom-5 -right-5" xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 24 24" fill="white"><path d="M20 9.352c0-4.852-4.75-8.352-10-8.352-5.281 0-10 3.527-10 8.352 0 1.71.615 3.39 1.705 4.695.047 1.527-.85 3.719-1.66 5.312 2.168-.391 5.252-1.258 6.648-2.115 7.698 1.877 13.307-2.842 13.307-7.892zm-14.5 1.381c-.689 0-1.25-.56-1.25-1.25s.561-1.25 1.25-1.25 1.25.56 1.25 1.25-.561 1.25-1.25 1.25zm4.5 0c-.689 0-1.25-.56-1.25-1.25s.561-1.25 1.25-1.25 1.25.56 1.25 1.25-.561 1.25-1.25 1.25zm4.5 0c-.689 0-1.25-.56-1.25-1.25s.561-1.25 1.25-1.25 1.25.56 1.25 1.25-.561 1.25-1.25 1.25zm7.036 1.441c-.161.488-.361.961-.601 1.416 1.677 1.262 2.257 3.226.464 5.365-.021.745-.049 1.049.138 1.865-.892-.307-.979-.392-1.665-.813-2.127.519-4.265.696-6.089-.855-.562.159-1.145.278-1.74.364 1.513 1.877 4.298 2.897 7.577 2.1.914.561 2.933 1.127 4.352 1.385-.53-1.045-1.117-2.479-1.088-3.479 1.755-2.098 1.543-5.436-1.348-7.348z"/></svg>
+        </div>
       </div>
       <div
         class="bg-white px-3 py-3 h-96 shadow-md rounded-xl col-span-4 lg:col-span-2"
@@ -128,19 +140,23 @@
       </div>
       <div class="bg-white px-3 py-3 shadow-md rounded-xl col-span-4">
         <div class="w-full block md:flex justify-between">
-          <p class="mb-3 text-gray-400 underline">{{ $t('index.top_image') }}</p>
+          <p class="mb-3 text-gray-400 underline">
+            {{ $t('index.top_image') }}
+          </p>
           <div class="flex gap-3">
             <div class="flex items-center gap-1">
               <div class="h-3 w-3 rounded-sm bg-black"></div>
-              <p class="text-xs">{{ $t('index.the_most_vulnerable_active') }}</p>
+              <p class="text-xs">
+                {{ $t('index.the_most_vulnerable_active') }}
+              </p>
             </div>
             <div class="flex items-center gap-1">
               <div class="h-3 w-3 rounded-sm bg-red-500"></div>
-              <p class="text-xs">{{ $t('index.the_most_vulnerable')}}</p>
+              <p class="text-xs">{{ $t('index.the_most_vulnerable') }}</p>
             </div>
             <div class="flex items-center gap-1">
               <div class="h-3 w-3 rounded-sm bg-yellow-400"></div>
-              <p class="text-xs">{{  $t('index.the_most_outdated') }}</p>
+              <p class="text-xs">{{ $t('index.the_most_outdated') }}</p>
             </div>
             <div class="flex items-center gap-1">
               <div class="h-3 w-3 rounded-sm bg-green-500"></div>
@@ -156,7 +172,7 @@
           <div
             v-for="(image, index) in fiveImg"
             :key="image.image_id"
-            class="px-5 rounded-lg py-5 relative overflow-hidden cursor-pointer col-span-4 lg:col-span-1"
+            class="px-5 rounded-lg py-5 relative overflow-hidden cursor-pointer col-span-4 lg:col-span-1 w-full"
             :class="setBgColor(index)"
             @click="$router.push({ path: '/images/' + image.sha })"
           >
@@ -233,11 +249,19 @@
                 d="M18.513 7.119c.958-1.143 1.487-2.577 1.487-4.036v-3.083h-16v3.083c0 1.459.528 2.892 1.487 4.035l3.086 3.68c.567.677.571 1.625.009 2.306l-3.13 3.794c-.936 1.136-1.452 2.555-1.452 3.995v3.107h16v-3.107c0-1.44-.517-2.858-1.453-3.994l-3.13-3.794c-.562-.681-.558-1.629.009-2.306l3.087-3.68zm-4.639 7.257l3.13 3.794c.652.792.996 1.726.996 2.83h-12c0-1.104.343-2.039.996-2.829l3.129-3.793c1.167-1.414 1.159-3.459-.019-4.864l-3.086-3.681c-.66-.785-1.02-1.736-1.02-2.834h12c0 1.101-.363 2.05-1.02 2.834l-3.087 3.68c-1.177 1.405-1.185 3.451-.019 4.863z"
               />
             </svg>
-            <p>{{ $t('index.name_of_image') }} : {{ image.image + ':' + image.tag }}</p>
+            <p>
+              {{ $t('index.name_of_image') }} :
+              {{ image.image + ':' + image.tag }}
+            </p>
             <p>{{ $t('index.size_of_image') }} : {{ calcSize(image.size) }}</p>
-            <p>{{ $t('index.packages')}} : {{ image.packages }}</p>
-            <p>{{ $t('index.vulnerabilities') }} : {{ image.vulnerabilities }}</p>
-            <p>{{ $t('index.outdated_packages') }} : {{ image.outdated_packages }}</p>
+            <p>{{ $t('index.packages') }} : {{ image.packages }}</p>
+            <p>
+              {{ $t('index.vulnerabilities') }} : {{ image.vulnerabilities }}
+            </p>
+            <p>
+              {{ $t('index.outdated_packages') }} :
+              {{ image.outdated_packages }}
+            </p>
           </div>
         </div>
       </div>

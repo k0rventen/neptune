@@ -21,6 +21,9 @@
     "follow_up_severity": "Follow-up severity"
   },
   "index": {
+    "title": "What is Neptune ?",
+    "explain": "Neptune is a tool that scans Docker images for associated vulnerabilities and obsolete packages.",
+    "explain2": "Scans can be made through its UI, but it was initially designed to be called during a CI workflow where a container image is built (and optionnaly pushed to a registry). Operators can then check their dependencies and vulnerabilities inventory through the UI or the API.",
     "total_amount_vulnerability": "Total amount of vulnerabilities",
     "total_amount_image": "Total amount of images",
     "total_amount_package": "Total amount of packages",
