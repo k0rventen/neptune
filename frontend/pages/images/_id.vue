@@ -50,9 +50,9 @@
           <Table
             :data="tableData"
             :columns="[
-              { label: 'Package', name: 'package' },
-              { label: 'Version', name: 'version' },
-              { label: 'Obsolète', name: 'outdated' }
+              { label: $t('image_id.package'), name: 'package' },
+              { label: $t('image_id.version'), name: 'version' },
+              { label: $t('image_id.outdated'), name: 'outdated' }
             ]"
           >
             <template slot="outdated" slot-scope="{ item }">
@@ -106,9 +106,9 @@
           <Table
             :data="vulnActive"
             :columns="[
-              { label: 'CVE', name: 'name' },
-              { label: 'Package', name: 'affected_package' },
-              { label: 'Sévérité', name: 'severity' },
+              { label: $t('image_id.cve'), name: 'name' },
+              { label: $t('image_id.package'), name: 'affected_package' },
+              { label: $t('image_id.severity'), name: 'severity' },
               { label: $t('vulnerability.notes'), name: 'notes' },
             ]"
           >

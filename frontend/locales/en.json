@@ -80,7 +80,11 @@
     "outdated_packages": "Outdated packages",
     "active_vulnerability": "Active vulnerabilities",
     "add_date": "Add date",
-    "distro": "Distro"
+    "distro": "Distro",
+    "version": "Version",
+    "outdated": "Outdated",
+    "cve": "CVE",
+    "severity": "Severity"
   },
   "vulnerability" : {
     "name": "Name",

@@ -73,7 +73,11 @@
     "outdated_packages": "Paquet(s) obsolète(s)",
     "active_vulnerability": "Vulnérabilité(s) active(s)",
     "add_date": "Date d'ajout",
-    "distro": "Distribution"
+    "distro": "Distribution",
+    "version": "Version",
+    "outdated": "Obsolète",
+    "cve": "CVE",
+    "severity": "Sévérité"
   },
   "vulnerability" : {
     "name": "Nom",
