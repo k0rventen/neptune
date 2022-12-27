@@ -69,4 +69,4 @@ neptune:
 
 ## Example
 
-[screenshot](screenShot.png)
+![screenshot](screenShot.png)
