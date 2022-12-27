@@ -1,13 +1,49 @@
 <template>
   <div class="w-full h-screen overflow-y-auto scrollbar-thin px-5 py-5">
-    <label class="relative">
+    <div class="relative">
       <input
-        v-model="search"
+        v-model="filter.name_filter"
         type="text"
         class="w-full mb-5 px-6 py-3 rounded-full shadow-md outline-none"
         placeholder="Rechercher ..."
       />
-    </label>
+      <svg
+        class="absolute right-4 top-3 opacity-20"
+        width="26"
+        height="26"
+        clip-rule="evenodd"
+        fill-rule="evenodd"
+        stroke-linejoin="round"
+        stroke-miterlimit="2"
+        viewBox="0 0 24 24"
+        xmlns="http://www.w3.org/2000/svg"
+        @click="openFilter = !openFilter"
+      >
+        <path
+          d="m15.344 17.778c0-.414-.336-.75-.75-.75h-5.16c-.414 0-.75.336-.75.75s.336.75.75.75h5.16c.414 0 .75-.336.75-.75zm2.206-4c0-.414-.336-.75-.75-.75h-9.596c-.414 0-.75.336-.75.75s.336.75.75.75h9.596c.414 0 .75-.336.75-.75zm2.45-4c0-.414-.336-.75-.75-.75h-14.5c-.414 0-.75.336-.75.75s.336.75.75.75h14.5c.414 0 .75-.336.75-.75zm2-4c0-.414-.336-.75-.75-.75h-18.5c-.414 0-.75.336-.75.75s.336.75.75.75h18.5c.414 0 .75-.336.75-.75z"
+          fill-rule="nonzero"
+        />
+      </svg>
+    </div>
+
+    <div v-if="openFilter" class="w-full flex gap-3 mb-2">
+      <div class="w-1/6">
+        <label for="trie" class="block"> Filtre sévérité : </label>
+        <select
+          id="trie"
+          v-model="filter.severity_filter"
+          class="w-full px-3 py-1 rounded-md mb-2 shadow-md"
+          placeholder="Trier par"
+        >
+          <option :value="undefined">Aucun</option>
+          <option value="unknown">Inconnu</option>
+          <option value="low">Faible</option>
+          <option value="medium">Moyenne</option>
+          <option value="high">Eleve</option>
+          <option value="critical">Critique</option>
+        </select>
+      </div>
+    </div>
 
     <div class="w-full shadow-md rounded-xl bg-white px-3 py-3">
       <Table
@@ -144,20 +180,47 @@ export default {
     return {
       copyNote: [],
       cveTable: [],
-      search: undefined,
+      filter: {
+        name_filter: undefined,
+        severity_filter: undefined,
+      },
       pages: 1,
       nbPages: 0,
       perPage: 50,
       refreshKey: 0,
+      delayRequest: undefined,
+      openFilter: false,
     }
   },
   computed: {
     ...mapState('vulnerability', ['vuln', 'notes']),
   },
+  watch: {
+    filter: {
+      handler() {
+        if (this.delayRequest) clearTimeout(this.delayRequest)
+        this.page = 1
+        this.delayRequest = setTimeout(() => {
+          this.getVulnerabilties({
+            page: this.page,
+            perPage: this.perPage,
+            filter: this.filter,
+          }).then(() => {
+            this.copyNote = this.notes
+            this.nbPages = Math.ceil(this.vuln.total / this.vuln.per_page)
+            this.cveTable = this.vuln.items
+            this.refreshKey++
+          })
+        }, 1000)
+      },
+      deep: true,
+    },
+  },
   async mounted() {
     await this.getVulnerabilties({
       page: this.pages,
       perPage: this.perPage,
+      filter: this.filter,
     }).then(() => {
       this.copyNote = this.notes
       this.nbPages = Math.ceil(this.vuln.total / this.vuln.per_page)
@@ -201,14 +264,16 @@ export default {
       })
     },
     getNewPages() {
-      this.getVulnerabilties({ page: this.pages, perPage: this.perPage }).then(
-        () => {
-          this.copyNote = this.notes
-          this.cveTable = []
-          this.cveTable = this.vuln.items
-          this.refreshKey++
-        }
-      )
+      this.getVulnerabilties({
+        page: this.pages,
+        perPage: this.perPage,
+        filter: this.filter,
+      }).then(() => {
+        this.copyNote = this.notes
+        this.cveTable = []
+        this.cveTable = this.vuln.items
+        this.refreshKey++
+      })
     },
   },
 }

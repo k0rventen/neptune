@@ -1,10 +1,20 @@
 <template>
   <div class="w-full h-screen px-5 py-5 overflow-y-auto scrollbar-thin">
     <Loading v-if="isLoading" />
+    <div class="w-full relative">
+      <input
+        v-model="filter.name_filter"
+        type="text"
+        class="w-full mb-5 px-6 py-3 rounded-full shadow-md outline-none"
+        :placeholder="$t('dependencies.search')"
+      />
+    </div>
+
+
     <div class="w-full shadow-md rounded-xl bg-white overflow-x-auto px-3 py-3">
       <Table
         v-if="dependencies.items && dependencies.items?.length > 0"
-        :key="resfreshKey"
+        :key="refreshKey"
         :columns="[
           {
             label: $t('dependencies.type'),
@@ -62,7 +72,7 @@
                   </a>
 
                   <div class="mt-2">
-                    <p>Image(s) concerné(s) :</p>
+                    <p>{{ $t('dependencies.concerned_image') }} :</p>
                     <hr />
                     <p
                       v-for="tag in version.tags"
@@ -104,8 +114,33 @@ export default {
       nbPages: 0,
       perPage: 50,
       isLoading: true,
-      resfreshKey: 0,
+      refreshKey: 0,
+      delayRequest: undefined,
+      filter: {
+        name_filter: undefined,
+      }
     }
+  },
+  watch: {
+    filter: {
+      handler() {
+        if (this.delayRequest) clearTimeout(this.delayRequest)
+        this.page = 1
+        this.delayRequest = setTimeout(() => {
+          this.getDependencies({
+            page: this.page,
+            perPage: this.perPage,
+            filter: this.filter,
+          }).then(() => {
+            this.copyMinVersion = this.min_version
+            this.nbPages = Math.ceil(this.dependencies.total / this.perPage)
+            this.copyNotes = this.notes
+            this.refreshKey++
+          })
+        }, 1000)
+      },
+      deep: true,
+    },
   },
   computed: {
     ...mapState('dependencies', ['dependencies', 'min_version', 'notes']),
@@ -176,7 +211,7 @@ export default {
           this.copyMinVersion = this.min_version
           this.copyNotes = this.notes
           this.isLoading = false
-          this.resfreshKey++
+          this.refreshKey++
         }
       )
     },

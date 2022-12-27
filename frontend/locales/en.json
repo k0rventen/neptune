@@ -1,13 +1,18 @@
 {
   "navbar": {
-    "home": "Dashboard",
+    "dashboard": "Dashboard",
     "images": "Images",
     "vulnerabilities": "CVE",
-    "dependencies": "Dependencies"
+    "dependencies": "Dependencies",
+    "registry": "Registry"
   },
-  "dashboard": {
-
-  },
+  "loading": {
+    "wait1": "Patience is the key ...",
+    "wait2": "Unpacking the goods  ...",
+    "wait3": "Don't worry, it didn't crash ...",
+    "wait4": "Have a coffee, it happens ...",
+    "wait5": "We're coming ..."
+  },  
   "card" : {
     "image_vulnerability": "Vulnerable image | Vulnerable image | Vulnerable images",
     "vulnerability": "Vulnerabilities",
@@ -15,15 +20,67 @@
     "follow_up_vulnerability_tags": "Follow-up tags vulnerability",
     "follow_up_severity": "Follow-up severity"
   },
+  "index": {
+    "total_amount_vulnerability": "Total amount of vulnerabilities",
+    "total_amount_image": "Total amount of images",
+    "total_amount_package": "Total amount of packages",
+    "top_image": "Top 5 images",
+    "the_most_vulnerable": "Most vulnerable",
+    "the_most_vulnerable_active": "Most active vulnerability",
+    "the_most_outdated": "Most outdated packages",
+    "the_most_package": "Most packages",
+    "the_most_recent": "Most recent",
+    "name_of_image": "Name of image",
+    "size_of_image": "Size of image",
+    "packages": "Packages",
+    "vulnerabilities": "Vulnerabilities",
+    "outdated_packages": "Outdated packages",
+    "vuln_severity": "Severity",
+    "number_of_package": "Number of packages",
+    "number_of_outdated_package": "Number of outdated packages",
+    "number_of_vulnerable_package": "Number of vulnerable packages",
+    "package_stats": "Package stats",
+    "total_vulnerability": "Total number of vulnerability",
+    "active_vuln": "Active vulnerabilities",
+    "low_vuln": "Low vulnerabilities",
+    "medium_vuln": "Medium vulnerabilities",
+    "high_vuln": "High vulnerabilities",
+    "critical_vuln": "Critical vulnerabilities",
+    "follow_vuln": "Follow-up vulnerabilities",
+    "total_image": "Total number of images",
+    "image_with_vuln": "Images with vulnerabilities",
+    "image_outdated": "Images with outdated packages",
+    "follow_stats_image": "Follow-up stats for images"
+  },
   "images" : {
     "search": "Search ...",
-    "added_date": "Added date",
-    "size": "Size",
-    "vulnerability": "Vulnerability | Vulnerability | Vulnerabilities",
-    "package": "Package | Package | Packages",
-    "outdated_package": "Outdated package | Outdated package | Outdated packages",
     "add_image": "Add image",
-    "name_of_image": "Name of image"
+    "order_by": "Order by",
+    "none": "None",
+    "vulnerability": "Vulnerability",
+    "outdated": "Outdated",
+    "size": "Size",
+    "severity": "Severity",
+    "active_vulnerability": "Active vulnerabilities",
+    "image_name": "Image name",
+    "image_size": "Image size",
+    "package": "Package",
+    "vulnerabilities": "Vulnerabilities",
+    "outdated_packages": "Outdated packages",
+    "modal": {
+      "add_image_directly": "Add image directly",
+      "send": "Send"
+    }
+  },
+  "image_id": {
+    "image_name": "Image name", 
+    "image_size": "Image size",
+    "package": "Package",
+    "vulnerabilities": "Vulnerabilities",
+    "outdated_packages": "Outdated packages",
+    "active_vulnerability": "Active vulnerabilities",
+    "add_date": "Add date",
+    "distro": "Distro"
   },
   "vulnerability" : {
     "name": "Name",
@@ -49,6 +106,14 @@
     "vulnerability": "Vulnerability",
     "version": "Version",
     "minimum_version": "Minimum version",
-    "notes": "Notes"
+    "notes": "Notes",
+    "search": "Search ...",
+    "concerned_image": "Concerned image"
+  },
+  "registry" : {
+    "url": "URL",
+    "username": "Username",
+    "password": "Password",
+    "send": "Send"
   }
 }

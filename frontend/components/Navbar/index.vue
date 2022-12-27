@@ -13,6 +13,11 @@
       <p v-for="item in elements" :key="item.name" class="py-3 w-full" @click="$router.push(item.route); openNav = false">
         {{ item.name }}
       </p>
+      <select class="w-full border-current border-3 border-gray-400 px-3 py-2 outline-none border rounded-md bg-transparent" v-model="langage">
+        <option v-for="locale in availableLocales" :value="locale.code" :key="locale.code">
+          {{ locale.name }}
+        </option>
+      </select>
     </div>
   </div>
 </template>
@@ -26,10 +31,21 @@ export default {
       default: () => []
     }
   },
+  watch: {
+    langage (val) {
+      this.$i18n.locale = val
+    }
+  },
   data() {
     return {
       openNav: false,
+      langage: this.$i18n.locale
     }
-  }
+  },
+  computed: {
+    availableLocales () {
+      return this.$i18n.locales
+    }
+  },
 }
 </script>

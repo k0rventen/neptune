@@ -5,11 +5,11 @@
     <Modal
       v-if="openImagesModal"
       v-model="openImagesModal"
-      title="Ajout d'une image en direct"
+      :title="$t('images.modal.add_image_directly')"
       class="text-gray-500"
     >
       <label for="" class="my-2 gap-3 block">
-        Nom de l'image :
+        {{$t('images.image_name')}} :
         <input
           v-model="imageName"
           type="text"
@@ -21,7 +21,7 @@
           class="px-3 py-1 rounded-md bg-neptune-blue text-white"
           @click="sendNewImage()"
         >
-          Envoyer
+          {{$t('images.send')}}
         </button>
       </template>
     </Modal>
@@ -31,7 +31,7 @@
           v-model="search"
           type="text"
           class="w-full px-6 py-3 rounded-full shadow-md outline-none"
-          placeholder="Rechercher ..."
+          :placeholder="$t('images.search')"
         />
         <svg
           class="absolute right-4 top-1/4 opacity-20"
@@ -52,41 +52,24 @@
         </svg>
       </div>
       <button class="bg-neptune-blue text-white px-3 py-1 rounded-md mb-2" @click="openImagesModal = true">
-        Ajouter une image
+       {{ $t('images.add_image') }}
       </button>
 
       <div v-if="openFilter" class="w-full flex gap-3">
         <div class="w-1/6">
-          <label for="trie" class="block"> Trier par : </label>
+          <label for="trie" class="block">{{ $t('images.order_by') }} : </label>
           <select
             id="trie"
             v-model="selectedFilter"
             class="w-full px-3 py-1 rounded-md mb-2 shadow-md"
             placeholder="Trier par"
           >
-            <option value="0">Aucun</option>
-            <option value="1">Vulnerabilités</option>
-            <option value="2">Outdated</option>
-            <option value="3">Taille</option>
-            <option value="4">Sévérité</option>
-            <option value="5">Vulnérabilités actives</option>
-          </select>
-        </div>
-
-        <div
-          v-if="selectedFilter !== '0' && selectedFilter !== undefined"
-          class="w-1/6"
-        >
-          <label for="sorting" class="block"> Ordre : </label>
-          <select
-            id="sorting"
-            v-model="selectedOrder"
-            class="w-full px-3 py-1 rounded-md mb-2 shadow-md"
-            placeholder="ASC"
-            @change="() => (value = value.reverse())"
-          >
-            <option value="ASC">ASC</option>
-            <option value="DESC">DESC</option>
+            <option value="0">{{$t('images.none')}}</option>
+            <option value="1">{{ $t('images.vulnerability') }}</option>
+            <option value="2">{{ $t('images.outdated')}}</option>
+            <option value="3">{{ $t('images.size') }}</option>
+            <option value="4">{{ $t('images.severity')}}</option>
+            <option value="5">{{ $t('images.active_vulnerability') }}</option>
           </select>
         </div>
       </div>
@@ -111,12 +94,12 @@
             d="M11.5 23l-8.5-4.535v-3.953l5.4 3.122 3.1-3.406v8.772zm1-.001v-8.806l3.162 3.343 5.338-2.958v3.887l-8.5 4.534zm-10.339-10.125l-2.161-1.244 3-3.302-3-2.823 8.718-4.505 3.215 2.385 3.325-2.385 8.742 4.561-2.995 2.771 2.995 3.443-2.242 1.241v-.001l-5.903 3.27-3.348-3.541 7.416-3.962-7.922-4.372-7.923 4.372 7.422 3.937v.024l-3.297 3.622-5.203-3.008-.16-.092-.679-.393v.002z"
           />
         </svg>
-        <p>Nom de l'image : {{ tag.image + ':' + tag.tag }}</p>
-        <p>Taille de l'image : {{ calcSize(tag.size) }}</p>
-        <p>Paquets : {{ tag.packages }}</p>
-        <p>Vulnérabilité(s) : {{ tag.vulnerabilities }}</p>
-        <p>Vulnérabilité(s) active : {{ tag.active_vulnerabilities }}</p>
-        <p>Paquet obsolète : {{ tag.outdated_packages }}</p>
+        <p>{{  $t('images.image_name') }} : {{ tag.image + ':' + tag.tag }}</p>
+        <p>{{ $t('images.image_size') }} : {{ calcSize(tag.size) }}</p>
+        <p>{{ $t('images.package') }} : {{ tag.packages }}</p>
+        <p>{{ $t('images.vulnerabilities') }} : {{ tag.vulnerabilities }}</p>
+        <p>{{ $t('images.active_vulnerability') }} : {{ tag.active_vulnerabilities }}</p>
+        <p>{{ $t('images.outdated_packages') }} : {{ tag.outdated_packages }}</p>
       </div>
     </div>
     <div class="w-full flex justify-center mt-2">
