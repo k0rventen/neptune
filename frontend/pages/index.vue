@@ -75,7 +75,7 @@
         </div>
       </div>
       <div
-        class="bg-white px-3 py-3 h-96 shadow-md rounded-xl col-span-4 lg:col-span-2 text-secondary"
+        class="bg-white px-3 py-3 h-96 shadow-md rounded-xl col-span-4 lg:col-span-2"
       >
         <apexchart
           v-if="
@@ -89,7 +89,7 @@
         />
       </div>
       <div
-        class="bg-white px-3 py-3 h-96 shadow-md rounded-xl text-white flex justify-center items-center col-span-4 lg:col-span-2"
+        class="bg-white px-3 py-3 h-96 shadow-md rounded-xl flex justify-center items-center col-span-4 lg:col-span-2"
       >
         <apexchart
           height="90%"
@@ -99,7 +99,7 @@
         />
       </div>
       <div
-        class="bg-white px-3 py-3 h-96 shadow-md rounded-xl col-span-4 lg:col-span-2 text-white"
+        class="bg-white px-3 py-3 h-96 shadow-md rounded-xl col-span-4 lg:col-span-2"
       >
         <apexchart
           v-if="
@@ -113,7 +113,7 @@
         />
       </div>
       <div
-        class="bg-white px-3 py-3 h-96 shadow-md rounded-xl col-span-4 lg:col-span-2 text-white"
+        class="bg-white px-3 py-3 h-96 shadow-md rounded-xl col-span-4 lg:col-span-2"
       >
         <apexchart
           v-if="
