@@ -7,12 +7,11 @@ import json
 import uvicorn
 import requests
 
-from models import (Image, Tag, Package, PackageVersion, RegistryConfig,  Vulnerability, HistoricalStatistics,
-                    create_session)
+from models import (Tag, Package, PackageVersion, RegistryConfig,
+                    Vulnerability, HistoricalStatistics, create_session)
 
 stop_flag = threading.Event()
 scan_mutex = threading.Lock()
-
 
 class APIServer(uvicorn.Server):
     """custom uvicorn server
@@ -43,17 +42,22 @@ def Logger(name, level='INFO'):
     return log
 
 
-def paginate_query(query,limit,offset,full_serialize=False):
+def paginate_query(query, page, size, full_serialize=False):
+    """returns a properly paginated object from a given sqlalchemy query with offset and limits
+    """
     count = query.count()
+    offset = (page - 1) * size
+    limit = size
     paginated = query.limit(limit).offset(offset).all()
     response = {
-        "items":[i.serialize() for i in paginated],
-        "total":count,
-        "limit":limit,
-        "offset":offset
+        "items": [i.serialize() for i in paginated] if not full_serialize else [i.serialize(True) for i in paginated],
+        "total": count,
+        "current_page": page,
+        "per_page": size
     }
     return response
-    
+
+
 def human_readable_time(time_s: int) -> str:
     timestr = ""
     for timeunit in [(3600, "h"), (60, "m"), (1, "s")]:
@@ -99,16 +103,12 @@ def database_housekeeping():
     # now delete the remaining images & packages
     no_versions_packages = [p for p in session.query(
         Package).all() if len(p.versions) == 0]
-    no_tags_images = [i for i in session.query(
-        Image).all() if len(i.tags) == 0]
     for p in no_versions_packages:
         housekeeping_logger.info("deleting package %s", p.name)
         session.delete(p)
-    for i in no_tags_images:
-        housekeeping_logger.info("deleting image %s", i.name)
-        session.delete(i)
     housekeeping_logger.info("commiting !")
     session.commit()
+
 
 
 def create_statistics(save_to_db=True):
@@ -141,6 +141,7 @@ def create_statistics(save_to_db=True):
         return today_stats.serialize()
     session.add(today_stats)
     session.commit()
+    return None
 
 
 def startup_logins():
@@ -171,7 +172,7 @@ def skopeo_login(registry, user, passwd):
         tuple: (bool,str)
     """
     login = subprocess.run(
-        ["skopeo", "login", registry, "-u", user, "-p", passwd], capture_output=True)
+        ["skopeo", "login", registry, "-u", user, "-p", passwd], capture_output=True, check=False)
     if login.returncode == 0:
         return True, login.stdout.decode()
     return False, login.stdout.decode()+login.stderr.decode()
@@ -188,14 +189,15 @@ def skopeo_pull(url, local_path):
         tuple: (bool,str)
     """
     pull = subprocess.run(["skopeo", "copy", "docker://{}".format(url),
-                          "docker-archive:/tmp/{}".format(local_path)], capture_output=True)
+                          "docker-archive:/tmp/{}".format(local_path)], capture_output=True, check=False)
     if pull.returncode == 0:
         return True, pull.stdout.decode()
     return False, pull.stdout.decode()+pull.stderr.decode()
 
 
 def grype_update():
-    grype = subprocess.run(["grype", "db", "update"], capture_output=True)
+    grype = subprocess.run(["grype", "db", "update"],
+                           capture_output=True, check=False)
     if grype.returncode == 0:
         return True, grype.stdout.decode()
     return False, grype.stdout.decode()+grype.stderr.decode()
@@ -205,8 +207,7 @@ def db_sbom_rescan():
     app_session = create_session()
     all_tags = app_session.query(Tag).all()
     for t in all_tags:
-        r = requests.post('http://127.0.0.1:5000/api/rescan',
-                          json={"sha": t.sha})
+        requests.post('http://127.0.0.1:5000/api/rescan', json={"sha": t.sha})
 
 
 def grype_report(syft_report_path):
@@ -219,7 +220,7 @@ def grype_report(syft_report_path):
         tuple: (bool,str)
     """
     grype = subprocess.run(["grype", "-q", "-o", "json",
-                           "sbom:{}".format(syft_report_path)], capture_output=True)
+                           "sbom:{}".format(syft_report_path)], capture_output=True, check=False)
     if grype.returncode == 0:
         return True, json.loads(grype.stdout.decode())
     return False, grype.stdout.decode()+grype.stderr.decode()
@@ -236,7 +237,7 @@ def syft_report(local_image_path):
     """
     syft_report_path = f"/tmp/{local_image_path}_syft.json"
     syft = subprocess.run(["syft", "-q", "-o", "json", "--file", syft_report_path,
-                          "docker-archive:/tmp/{}".format(local_image_path)], capture_output=True)
+                          "docker-archive:/tmp/{}".format(local_image_path)], capture_output=True, check=False)
     if syft.returncode == 0:
         with open(syft_report_path) as f:
             return syft_report_path, json.load(f)

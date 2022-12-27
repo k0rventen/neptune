@@ -2,7 +2,7 @@
 """
 import re
 from datetime import datetime
-
+import time
 
 from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Integer, String, JSON,
                         Table, create_engine)
@@ -64,26 +64,6 @@ class RegistryConfig(Base):
         }
 
 
-class Image(Base):
-    """An Image is the path of the image that does not change, eg alpine.
-    """
-    __tablename__ = "images"
-    id = Column(Integer, primary_key=True)
-    name = Column(String(128), unique=True)
-    # so we can sort by updates without checking the tags
-    last_update = Column(DateTime, default=datetime.now)
-
-    tags = relationship("Tag")  # Each image can have multiple tags
-
-    def serialize(self, full=False):
-        return {
-            "id": self.id,
-            "name": self.name,
-            "last_update": self.last_update,
-            "tags": [t.serialize() for t in self.tags]
-        }
-
-
 class SBOMJson(Base):
     __tablename__ = "sboms"
     id = Column(Integer, primary_key=True)
@@ -99,16 +79,12 @@ class Tag(Base):
     """
     __tablename__ = "tags"
     sha = Column(String(64), primary_key=True)
+    image = Column(String(128))
     tag = Column(String(128))
     distro = Column(String(64))
-    distro_version = Column(String(64))
     size = Column(Integer)
     date_added = Column(DateTime, default=datetime.now)
     sbom = relationship("SBOMJson", uselist=False, back_populates="tag")
-
-    # base image of this tag
-    image_id = Column(Integer, ForeignKey('images.id'))
-    image = relationship("Image", back_populates="tags")
 
     # list of packages of that tag
     packages = relationship(
@@ -121,8 +97,18 @@ class Tag(Base):
         return any([p.outdated for p in self.packages])
 
     def has_vulnerabilities(self):
-        return any([len(p.vulnerabilities) > 0 for p in self.packages])
+        return any(len(p.vulnerabilities) > 0 for p in self.packages)
 
+    def number_of_vulns(self,only_active=False):
+        full_vuln_ids = set()
+        return sum([len(p.vulnerabilities) for p in self.packages])
+        for p in self.packages:
+            if only_active:
+                full_vuln_ids.update(v.id for v in p.vulnerabilities if v.active)
+            else:
+                full_vuln_ids.update(v.id for v in p.vulnerabilities)
+        return len(full_vuln_ids)
+      
     def vulnerabilities(self, only_active=False):
         full_vuln_ids = set()
         full_vulns = []
@@ -130,7 +116,7 @@ class Tag(Base):
             full_vulns += [v for v in p.vulnerabilities]
             if only_active:
                 full_vuln_ids.update(
-                    [v for v in p.vulnerabilities if v.active == True])
+                    [v for v in p.vulnerabilities if v.active])
             else:
                 full_vuln_ids.update([v.id for v in p.vulnerabilities])
 
@@ -142,14 +128,10 @@ class Tag(Base):
         spec = {
             "tag": self.tag,
             "sha": self.sha,
-            "distro": {
-                "name": self.distro,
-                "version": self.distro_version,
-            },
+            "distro": self.distro,
             "size": self.size,
             "date_added": self.date_added,
-            "image": self.image.name,
-            "image_id": self.image_id,
+            "image": self.image
         }
         if full:  # return the id of each related objects
             packages = self.packages
@@ -159,11 +141,10 @@ class Tag(Base):
                          "vulnerabilities": [v for v in vulns if not v['active']],
                          "active_vulnerabilities": [v for v in vulns if v['active']]})
         else:  # only return the len of the corresponding objects
-            vulns = self.vulnerabilities()
             spec.update({"packages": len(self.packages),
                          "outdated_packages": len(self.outdated_packages()),
-                         "vulnerabilities": len([v["id"] for v in vulns if not v['active']]),
-                         'active_vulnerabilities': len([v["id"] for v in vulns if v['active']])})
+                         "vulnerabilities": self.number_of_vulns(),
+                         'active_vulnerabilities': self.number_of_vulns(True)})
         return spec
 
 
@@ -249,7 +230,7 @@ class PackageVersion(Base):
             spec["vulnerabilities"] = [
                 {"id": v.id, "name": v.name} for v in self.vulnerabilities]
             spec["tags"] = [
-                {"sha": t.sha, "name": t.image.name + ":"+t.tag} for t in self.tags]
+                {"sha": t.sha, "name": t.image + ":"+t.tag} for t in self.tags]
         else:
             spec["vulnerabilities"] = [v.serialize()
                                        for v in self.vulnerabilities]
@@ -283,7 +264,7 @@ class Vulnerability(Base):
         }
         if full:
             spec["affected_images"] = [
-                {"sha": t.sha, "name": t.image.name + ":"+t.tag} for t in self.package.tags]
+                {"sha": t.sha, "name": t.image + ":"+t.tag} for t in self.package.tags]
             spec["affected_package"] = {
                 "name": self.package.package.name, "version": self.package.version, "id": self.package.id}
         return spec
