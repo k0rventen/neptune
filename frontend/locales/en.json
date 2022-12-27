@@ -6,6 +6,13 @@
     "dependencies": "Dependencies",
     "registry": "Registry"
   },
+  "loading": {
+    "wait1": "Patience is the key ...",
+    "wait2": "Unpacking the goods  ...",
+    "wait3": "Don't worry, it didn't crash ...",
+    "wait4": "Have a coffee, it happens ...",
+    "wait5": "We're coming ..."
+  },  
   "card" : {
     "image_vulnerability": "Vulnerable image | Vulnerable image | Vulnerable images",
     "vulnerability": "Vulnerabilities",

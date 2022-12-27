@@ -89,9 +89,12 @@
       </div>
     </div>
     <div>
-      <button class="w-full bg-neptune-blue">
-        Test
-      </button>
+      
+      <select class="w-full border-current border-3 border-gray-400 px-3 py-2 outline-none border rounded-md bg-transparent" v-model="langage">
+        <option v-for="locale in availableLocales" :value="locale.code" :key="locale.code">
+          {{ locale.name }}
+        </option>
+      </select>
     </div>
   </div>
 </template>
@@ -105,6 +108,21 @@ export default {
       default: () => [],
     },
   },
+  watch: {
+    langage (val) {
+      this.$i18n.locale = val
+    }
+  },
+  computed: {
+    availableLocales () {
+      return this.$i18n.locales
+    }
+  },
+  data() {
+    return {
+      langage: this.$i18n.locale
+    }
+  }
 }
 </script>
 

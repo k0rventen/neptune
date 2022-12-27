@@ -6,6 +6,13 @@
     "dependencies": "Dépendances",
     "registry": "Registre"
   },
+  "loading": {
+    "wait1": "Patience ça chauffe ...",
+    "wait2": "On déballe la marchandise ...",
+    "wait3": "Ne vous inquietez pas, ça n'a pas planté ...",
+    "wait4": "Prennez un café ça arrive ...",
+    "wait5": "Silence ça tourne ..."
+  },
   "index": {
     "total_amount_vulnerability": "Nombre total de vulnérabilités",
     "total_amount_image": "Nombre total d'images",
