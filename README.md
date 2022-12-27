@@ -1,5 +1,7 @@
 # neptune
 
+![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/k0rventen/neptune)
+
 ![header](header.png)
 neptune is a dependency & vulnerability inventory for containers. 
 
@@ -16,7 +18,7 @@ Operators can then check their dependencies and vulnerabilities inventory throug
 
 start neptune on port 5000
 ```
-docker run -v neptune_data:/app/data -p 5000:5000 k0rventen/neptune
+docker run -p 5000:5000 k0rventen/neptune
 ```
 
 let neptune scan itself

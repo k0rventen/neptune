@@ -1,0 +1,7 @@
+services:
+  neptune:
+    build: ../..
+    restart: "no"
+  tests:
+    build: .
+    restart: "no"

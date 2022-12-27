@@ -2,12 +2,15 @@
 """
 import re
 from datetime import datetime
-from itertools import chain
+import time
 
-from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Integer, String,
+from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Integer, String, JSON,
                         Table, create_engine)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
+
+engine = create_engine("sqlite:///data/neptune.db?check_same_thread=false")
+SessionLocal = sessionmaker(autoflush=True, bind=engine)
 
 Base = declarative_base()
 
@@ -61,24 +64,12 @@ class RegistryConfig(Base):
         }
 
 
-class Image(Base):
-    """An Image is the path of the image that does not change, eg alpine.
-    """
-    __tablename__ = "images"
+class SBOMJson(Base):
+    __tablename__ = "sboms"
     id = Column(Integer, primary_key=True)
-    name = Column(String(128), unique=True)
-    # so we can sort by updates without checking the tags
-    last_update = Column(DateTime, default=datetime.now)
-
-    tags = relationship("Tag")  # Each image can have multiple tags
-
-    def serialize(self, full=False):
-        return {
-            "id": self.id,
-            "name": self.name,
-            "last_update": self.last_update,
-            "tags": [t.serialize() for t in self.tags]
-        }
+    sbom = Column(JSON)
+    tag_sha = Column(Integer, ForeignKey('tags.sha'))
+    tag = relationship("Tag", back_populates="sbom")
 
 
 class Tag(Base):
@@ -88,16 +79,12 @@ class Tag(Base):
     """
     __tablename__ = "tags"
     sha = Column(String(64), primary_key=True)
-    # this will be "latest" for example. We can have multiple "latest" but their sha must differ
+    image = Column(String(128))
     tag = Column(String(128))
     distro = Column(String(64))
-    distro_version = Column(String(64))
     size = Column(Integer)
     date_added = Column(DateTime, default=datetime.now)
-
-    # base image of this tag
-    image_id = Column(Integer, ForeignKey('images.id'))
-    image = relationship("Image", back_populates="tags")
+    sbom = relationship("SBOMJson", uselist=False, back_populates="tag")
 
     # list of packages of that tag
     packages = relationship(
@@ -110,33 +97,41 @@ class Tag(Base):
         return any([p.outdated for p in self.packages])
 
     def has_vulnerabilities(self):
-        return any([len(p.vulnerabilities) > 0 for p in self.packages])
+        return any(len(p.vulnerabilities) > 0 for p in self.packages)
 
+    def number_of_vulns(self,only_active=False):
+        full_vuln_ids = set()
+        return sum([len(p.vulnerabilities) for p in self.packages])
+        for p in self.packages:
+            if only_active:
+                full_vuln_ids.update(v.id for v in p.vulnerabilities if v.active)
+            else:
+                full_vuln_ids.update(v.id for v in p.vulnerabilities)
+        return len(full_vuln_ids)
+      
     def vulnerabilities(self, only_active=False):
         full_vuln_ids = set()
         full_vulns = []
         for p in self.packages:
             full_vulns += [v for v in p.vulnerabilities]
             if only_active:
-                full_vuln_ids.update([v for v in p.vulnerabilities if v.active == True])
+                full_vuln_ids.update(
+                    [v for v in p.vulnerabilities if v.active])
             else:
                 full_vuln_ids.update([v.id for v in p.vulnerabilities])
-        
-        full_vulns_filter = list({v.id:v.serialize() for v in full_vulns if v.id in full_vuln_ids}.values())
+
+        full_vulns_filter = list(
+            {v.id: v.serialize() for v in full_vulns if v.id in full_vuln_ids}.values())
         return full_vulns_filter
 
     def serialize(self, full=False):
         spec = {
             "tag": self.tag,
             "sha": self.sha,
-            "distro": {
-                "name": self.distro,
-                "version": self.distro_version,
-            },
+            "distro": self.distro,
             "size": self.size,
             "date_added": self.date_added,
-            "image": self.image.name,
-            "image_id": self.image_id,
+            "image": self.image
         }
         if full:  # return the id of each related objects
             packages = self.packages
@@ -144,13 +139,12 @@ class Tag(Base):
             spec.update({"packages": [p.serialize() for p in packages if not p.outdated],
                          "outdated_packages": [p.serialize() for p in packages if p.outdated],
                          "vulnerabilities": [v for v in vulns if not v['active']],
-                         "active_vulnerabilities":[v for v in vulns if v['active']]})
+                         "active_vulnerabilities": [v for v in vulns if v['active']]})
         else:  # only return the len of the corresponding objects
-            vulns = self.vulnerabilities()
             spec.update({"packages": len(self.packages),
                          "outdated_packages": len(self.outdated_packages()),
-                         "vulnerabilities": len([v["id"] for v in vulns if not v['active']]),
-                         'active_vulnerabilities': len([v["id"] for v in vulns if v['active']])})
+                         "vulnerabilities": self.number_of_vulns(),
+                         'active_vulnerabilities': self.number_of_vulns(True)})
         return spec
 
 
@@ -233,8 +227,10 @@ class PackageVersion(Base):
             "outdated": self.outdated,
         }
         if not full:
-            spec["vulnerabilities"] = [{"id":v.id,"name":v.name} for v in self.vulnerabilities]
-            spec["tags"] = [{"sha":t.sha,"name":t.image.name +":"+t.tag} for t in self.tags]
+            spec["vulnerabilities"] = [
+                {"id": v.id, "name": v.name} for v in self.vulnerabilities]
+            spec["tags"] = [
+                {"sha": t.sha, "name": t.image + ":"+t.tag} for t in self.tags]
         else:
             spec["vulnerabilities"] = [v.serialize()
                                        for v in self.vulnerabilities]
@@ -267,21 +263,32 @@ class Vulnerability(Base):
             "affected_package": self.package.id,
         }
         if full:
-            spec["affected_images"]= [{"sha":t.sha,"name":t.image.name +":"+t.tag} for t in self.package.tags]
-            spec["affected_package"] = {"name":self.package.package.name,"version":self.package.version,"id":self.package.id}
+            spec["affected_images"] = [
+                {"sha": t.sha, "name": t.image + ":"+t.tag} for t in self.package.tags]
+            spec["affected_package"] = {
+                "name": self.package.package.name, "version": self.package.version, "id": self.package.id}
         return spec
 
 
 def create_db():
-    engine = create_engine("sqlite:///data/neptune.db?check_same_thread=false")
     Base.metadata.create_all(engine)
-    del engine
 
 
 def create_session():
-    """creates a sqlalchemy session
+    """creates a sqlalchemy session for tasks and other backend stuff
     """
-    engine = create_engine("sqlite:///data/neptune.db?check_same_thread=false")
-    Base.metadata.create_all(engine)
-    sqlite_session = sessionmaker(bind=engine)
-    return sqlite_session()
+    db = SessionLocal()
+    return db
+
+
+def get_db():
+    """wrapper for creating sessions for requests
+    """
+    db = SessionLocal()
+    try:
+        yield db
+    except:
+        db.rollback()
+    finally:
+        db.commit()
+        db.close()

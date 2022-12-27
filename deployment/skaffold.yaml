@@ -1,0 +1,12 @@
+apiVersion: skaffold/v4beta1
+kind: Config
+metadata:
+  name: neptune
+build:
+  artifacts:
+  - image: map:32000/neptune
+    docker:
+      dockerfile: Dockerfile
+manifests:
+  rawYaml:
+  - deployment/dev.yaml
