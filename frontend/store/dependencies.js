@@ -14,7 +14,17 @@ const mutations = {
   },
 
   setVersion(state, data) {
-    state.dependencies.find((dep) => dep.id === data.id).minimum_version = data.version
+    state.dependencies.items.find((dep) => dep.id === data.id).minimum_version = data.version
+  },
+
+  updateOutdated(state, data) {
+    state.dependencies.items.find((dep) => dep.id === data.id).versions.forEach((version) => {
+      if(version.version <= data.version) {
+        version.outdated = true
+      } else {
+        version.outdated = false
+      }
+    })
   }
 }
 

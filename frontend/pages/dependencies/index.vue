@@ -101,7 +101,7 @@
 </template>
 
 <script>
-import { mapActions, mapState } from 'vuex'
+import { mapActions, mapMutations, mapState } from 'vuex'
 
 export default {
   name: 'DependenciesPage',
@@ -112,7 +112,7 @@ export default {
       copyNotes: [],
       page: 1,
       nbPages: 0,
-      perPage: 50,
+      perPage: 25,
       isLoading: true,
       refreshKey: 0,
       delayRequest: undefined,
@@ -152,17 +152,12 @@ export default {
         this.nbPages = Math.ceil(this.dependencies.total / this.perPage)
         this.copyNotes = this.notes
         this.isLoading = false
-      })
-      .finally(() => {
-        if (this.$route.query.package) {
-          const rows = [...document.getElementById('c-table').rows]
-          rows.forEach((el) => {
-            if (el.cells[1].innerText === this.$route.query.package) {
-              el.scrollIntoView()
-            }
-          })
+      }).finally(() => {
+        if(this.$route.query.package) {
+          this.filter.name_filter = this.$route.query.package
         }
       })
+      
   },
   methods: {
     ...mapActions('dependencies', [
@@ -170,12 +165,18 @@ export default {
       'setVersion',
       'setNotes',
     ]),
+    ...mapMutations('dependencies', ['updateOutdated']),
     sendNewVersion(item) {
       this.setVersion({
         id: item.id,
         version: this.copyMinVersion[item.name],
         notes: item.notes,
       })
+      this.updateOutdated({
+        id: item.id,
+        version: this.copyMinVersion[item.name],
+      })
+      this.refreshKey++
     },
     sendNewNotes(item) {
       this.setNotes({
