@@ -33,46 +33,10 @@
           class="w-full px-6 py-3 rounded-full shadow-md outline-none"
           :placeholder="$t('images.search')"
         />
-        <svg
-          class="absolute right-4 top-1/4 opacity-20"
-          width="26"
-          height="26"
-          clip-rule="evenodd"
-          fill-rule="evenodd"
-          stroke-linejoin="round"
-          stroke-miterlimit="2"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-          @click="openFilter = !openFilter"
-        >
-          <path
-            d="m15.344 17.778c0-.414-.336-.75-.75-.75h-5.16c-.414 0-.75.336-.75.75s.336.75.75.75h5.16c.414 0 .75-.336.75-.75zm2.206-4c0-.414-.336-.75-.75-.75h-9.596c-.414 0-.75.336-.75.75s.336.75.75.75h9.596c.414 0 .75-.336.75-.75zm2.45-4c0-.414-.336-.75-.75-.75h-14.5c-.414 0-.75.336-.75.75s.336.75.75.75h14.5c.414 0 .75-.336.75-.75zm2-4c0-.414-.336-.75-.75-.75h-18.5c-.414 0-.75.336-.75.75s.336.75.75.75h18.5c.414 0 .75-.336.75-.75z"
-            fill-rule="nonzero"
-          />
-        </svg>
       </div>
       <button class="bg-neptune-blue text-white px-3 py-1 rounded-md mb-2" @click="openImagesModal = true">
        {{ $t('images.add_image') }}
       </button>
-
-      <div v-if="openFilter" class="w-full flex gap-3">
-        <div class="w-1/6">
-          <label for="trie" class="block">{{ $t('images.order_by') }} : </label>
-          <select
-            id="trie"
-            v-model="selectedFilter"
-            class="w-full px-3 py-1 rounded-md mb-2 shadow-md"
-            placeholder="Trier par"
-          >
-            <option value="0">{{$t('images.none')}}</option>
-            <option value="1">{{ $t('images.vulnerability') }}</option>
-            <option value="2">{{ $t('images.outdated')}}</option>
-            <option value="3">{{ $t('images.size') }}</option>
-            <option value="4">{{ $t('images.severity')}}</option>
-            <option value="5">{{ $t('images.active_vulnerability') }}</option>
-          </select>
-        </div>
-      </div>
     </div>
     <div class="w-full grid grid-cols-3 gap-3 lg:gap-9">
       <div
