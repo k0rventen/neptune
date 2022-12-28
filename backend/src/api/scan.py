@@ -1,56 +1,59 @@
 """scan endpoints"""
+import json
 import time
 from typing import Optional
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
-
-from models import (Package, PackageVersion,
-                    SBOMJson, Tag, Vulnerability, get_db)
+from models import (Package, PackageVersion, SBOMJson, Tag, Vulnerability,
+                    get_db)
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from utils import (Logger, cleanup_images, grype_report, human_readable_size,
-                   human_readable_time, scan_mutex, database_housekeeping,
+from utils import (Logger, cleanup_images, database_housekeeping, grype_report,
+                   human_readable_size, human_readable_time, scan_mutex,
                    skopeo_login, skopeo_pull, syft_report)
 
 
 class ImageScanRequest(BaseModel):
-    image: str
+    image: Optional[str]
+    sha: Optional[str]
     return_error: Optional[bool]
-
-
-class SHAReScanRequest(BaseModel):
-    sha: str
-    return_error: Optional[bool]
-
 
 logger = Logger("api")
 api_router = APIRouter(prefix='/api')
 
-
 @api_router.post("/scan", tags=['config'])
 def scan_image(scan_request: ImageScanRequest, session: Session = Depends(get_db)):
-    """add a new image to neptune"""
-    image = scan_request.image
-    logger.info("Processing %s", image)
-    t0 = time.time()
-    image_uuid = str(uuid4())
-    logger.info("pulling image..")
-    pull_ok, message = skopeo_pull(image, image_uuid)
-    if not pull_ok:
-        raise HTTPException(status_code=400, detail=message)
+    """add a new image to neptune, or rescan an already inventoried sha."""
+    if scan_request.image:
+        image = scan_request.image
+        logger.info("Processing %s", image)
+        t0 = time.time()
+        image_uuid = str(uuid4())
+        logger.info("pulling image..")
+        pull_ok, message = skopeo_pull(image, image_uuid)
+        if not pull_ok:
+            raise HTTPException(status_code=400, detail=message)
+        logger.info("grabbing SBOM")
+        syft_report_path, sbom_json = syft_report(image_uuid)
+        if not syft_report_path:
+            raise HTTPException(status_code=400, detail=sbom_json)
+        sbom = [{"name": a['name'],
+                "version":a["version"],
+                "type":a["type"]}
+                for a in sbom_json["artifacts"]]
+        logger.info("fetched %s packages", len(sbom))
 
-    logger.info("grabbing SBOM")
-    syft_report_path, sbom_json = syft_report(image_uuid)
-    if not syft_report_path:
-        raise HTTPException(status_code=400, detail=sbom_json)
+    elif scan_request.sha:
+        spec_image = session.query(Tag).filter(
+            Tag.sha == scan_request.sha).first()
+        logger.info(f"rescanning {spec_image.image}:{spec_image.tag} ({spec_image.sha})")
+        scan_uuid = uuid4()
+        syft_report_path = f'/tmp/{scan_uuid}_syftreport.json'
+        with open(syft_report_path, 'w+') as f:
+            json.dump(spec_image.sbom.sbom, f)
 
-    sbom = [{"name": a['name'],
-             "version":a["version"],
-             "type":a["type"]}
-            for a in sbom_json["artifacts"]]
-    logger.info("fetched %s packages", len(sbom))
 
     logger.info("checking vulns")
     grype_ok, vuln_json = grype_report(syft_report_path)
@@ -65,58 +68,62 @@ def scan_image(scan_request: ImageScanRequest, session: Session = Depends(get_db
              for v in vuln_json["matches"]]
     logger.info("found %s vulns", len(vulns))
 
-    image_details = vuln_json["source"]["target"]
-    image_sha = image_details["imageID"]
-    image_size = image_details["imageSize"]
-    image_distro = sbom_json["distro"].get(
-        "name", "distroless")+":"+sbom_json["distro"].get("versionID", "unknown")
-    try:
-        image_name, image_tag = image.split(":")
-    except ValueError:
-        image_name, image_tag = image, "latest"
+    if scan_request.image:
+        image_details = vuln_json["source"]["target"]
+        image_sha = image_details["imageID"]
+        image_size = image_details["imageSize"]
+        image_distro = sbom_json["distro"].get(
+            "name", "distroless")+":"+sbom_json["distro"].get("versionID", "unknown")
+        try:
+            image_name, image_tag = image.split(":")
+        except ValueError:
+            image_name, image_tag = image, "latest"
 
     # mutex here to avoid race conditions when adding records concurrently
     with scan_mutex:
-        sha_already_scanned = session.query(
-            Tag).filter(Tag.sha == image_sha).one_or_none()
-        if sha_already_scanned:
-            logger.warning(
-                "This image (%s) was already inventoried. deleting the record.", image_sha)
-            session.delete(sha_already_scanned)
-        # create tag
-        s_sbom = SBOMJson(sbom=sbom_json)
-        s_image = Tag(tag=image_tag,
-                      image=image_name,
-                      distro=image_distro,
-                      sha=image_sha,
-                      size=image_size,
-                      sbom=s_sbom,
-                      packages=[])
+        if scan_request.image:
+            sha_already_scanned = session.query(
+                Tag).filter(Tag.sha == image_sha).one_or_none()
+            if sha_already_scanned:
+                logger.warning(
+                    "This image (%s) was already inventoried. deleting the record.", image_sha)
+                session.delete(sha_already_scanned)
+            # create tag
+            s_sbom = SBOMJson(sbom=sbom_json)
+            s_image = Tag(tag=image_tag,
+                        image=image_name,
+                        distro=image_distro,
+                        sha=image_sha,
+                        size=image_size,
+                        sbom=s_sbom,
+                        packages=[])
 
-        # packages
-        for p in sbom:
-            # check for base package
-            package = session.query(Package).filter(Package.name == p["name"]).filter(
-                Package.type == p["type"]).one_or_none()
+            # packages
+            for p in sbom:
+                # check for base package
+                package = session.query(Package).filter(Package.name == p["name"]).filter(
+                    Package.type == p["type"]).one_or_none()
 
-            if not package:
-                package = Package(name=p["name"], type=p["type"])
-                session.add(package)
-            # check for version
-            if p["version"] not in [p.version for p in package.versions]:
-                version = PackageVersion(version=p["version"])
-                package.versions.append(version)
+                if not package:
+                    package = Package(name=p["name"], type=p["type"])
+                    session.add(package)
+                # check for version
+                if p["version"] not in [p.version for p in package.versions]:
+                    version = PackageVersion(version=p["version"])
+                    package.versions.append(version)
 
-            else:
-                version = [
-                    v for v in package.versions if v.version == p["version"]][0]
-            s_image.packages.append(version)
+                else:
+                    version = [
+                        v for v in package.versions if v.version == p["version"]][0]
+                s_image.packages.append(version)
 
         # vulns
+        new_vulns = []
         for v in vulns:
             is_referenced = session.query(Vulnerability).filter(
                 Vulnerability.name == v["id"]).one_or_none()
             if not is_referenced:
+                logger.info(f"new vuln {v['id']} !")
                 # find the linked package
                 _, version = session.query(Package, PackageVersion).filter(Package.id == PackageVersion.package_id).filter(
                     Package.name == v["artifact_name"]).filter(Package.type == v["artifact_type"]).filter(PackageVersion.version == v["artifact_version"]).one_or_none()
@@ -125,6 +132,8 @@ def scan_image(scan_request: ImageScanRequest, session: Session = Depends(get_db
                     version.vulnerabilities.append(v)
                     version.refresh_outdated_status()
                     session.add(version)
+        if scan_request.sha:
+            return {'new_vulns': new_vulns}
         session.add(s_image)
         logger.info("commiting to DB")
 
@@ -144,50 +153,3 @@ def scan_image(scan_request: ImageScanRequest, session: Session = Depends(get_db
                 "packages": len(s_image.packages),
                 "vulnerabilities": active_vulns}
     return JSONResponse(response, status_code=400 if active_vulns and scan_request.return_error else 200)
-
-
-@api_router.post("/grype_update", tags=['internal'])
-def update_grype_db():
-    database_housekeeping()
-    return update_grype_db()
-
-
-@api_router.post("/rescan", tags=['internal'])
-def rescan_image(rescan_request: SHAReScanRequest, session: Session = Depends(get_db)):
-    spec_image = session.query(Tag).filter(
-        Tag.sha == rescan_request.sha).first()
-    logger.info(f"rescanning {spec_image.tag} ({spec_image.sha})")
-    scan_uuid = uuid4()
-    syft_report_path = f'/tmp/{scan_uuid}_syftreport.json'
-    with open(syft_report_path, 'w+') as f:
-        json.dump(spec_image.sbom.sbom, f)
-
-    grype_ok, vuln_json = grype_report(syft_report_path)
-    if not grype_ok:
-        raise HTTPException(status_code=400, detail=vuln_json)
-    vulns = [{"id": v["vulnerability"]["id"],
-              "severity":v["vulnerability"]["severity"],
-              "description":v["vulnerability"].get("description", ""),
-              "artifact_name":v["artifact"]["name"],
-              "artifact_type":v["artifact"]["type"],
-              "artifact_version":v["artifact"]["version"]}
-             for v in vuln_json["matches"]]
-
-    # mutex here to avoid race conditions when adding records concurrently
-    with scan_mutex:
-        # vulns
-        new_vulns = []
-        for v in vulns:
-            is_referenced = session.query(Vulnerability).filter(
-                Vulnerability.name == v["id"]).one_or_none()
-            if not is_referenced:
-                logger.info(f"new vuln {v['id']} !")
-                # find the linked package
-                _, version = session.query(Package, PackageVersion).filter(Package.id == PackageVersion.package_id).filter(
-                    Package.name == v["artifact_name"]).filter(Package.type == v["artifact_type"]).filter(PackageVersion.version == v["artifact_version"]).one_or_none()
-                if version:
-                    v = Vulnerability(name=v["id"], severity=v["severity"])
-                    version.vulnerabilities.append(v)
-                    version.refresh_outdated_status()
-                    session.add(version)
-        return {'new_vulns': new_vulns}

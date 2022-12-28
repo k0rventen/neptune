@@ -14,7 +14,7 @@ class UserTasks(SequentialTaskSet):
 
     @task
     def scan_images(self):
-        for image in ["k0rventen/macaque"]:
+        for image in ["k0rventen/neptune"]:
             scanned_image = self.client.post(
                 "/api/scan", json={"image": image})
             if scanned_image.status_code == 200:

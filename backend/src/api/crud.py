@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from models import (HistoricalStatistics, Package,
                     RegistryConfig, Tag, Vulnerability, get_db)
-from utils import (Logger, create_statistics, paginate_query, skopeo_login)
+from utils import (Logger, create_statistics, paginate_query, skopeo_login,database_housekeeping)
 
 
 class RegistryConfigRequest(BaseModel):
@@ -30,13 +30,6 @@ class VulnPut(BaseModel):
 class PackagePut(BaseModel):
     notes: Optional[str]
     minimum_version: Optional[str]
-
-
-class PackageFilter(BaseModel):
-    type: Optional[str]
-    name: Optional[str]
-    outdated: Optional[bool]
-
 
 logger = Logger("api")
 api_router = APIRouter(prefix='/api')
@@ -139,7 +132,10 @@ def get_tag(sha: str, session: Session = Depends(get_db)):
 @api_router.delete("/tags/{sha}", tags=['images'])
 def delete_tag(sha: str, session: Session = Depends(get_db)):
     tag = session.query(Tag).filter(Tag.sha == sha).first()
-    if tag: session.delete(tag)
+    if tag: 
+        session.delete(tag)
+        database_housekeeping()
+        create_statistics()
     return {}
 
 
@@ -188,14 +184,17 @@ def set_vuln_notes(cve_id: int, vuln_def: VulnPut, session: Session = Depends(ge
 
 
 @api_router.get("/packages", tags=['packages'])
-def packages(session: Session = Depends(get_db), name_filter: str = None, type_filter: str = None, page: int = 1, per_page: int = 20):
+def packages(session: Session = Depends(get_db), name_filter: str = None, type_filter: str = None, with_outdated_versions: bool = None,with_vulnerable_versions: bool = None,page: int = 1, per_page: int = 20):
     """returns all packages that match the filters"""
     filters = []
     if name_filter:
         filters.append(Package.name.ilike(f"%{name_filter}%"))
     if type_filter:
         filters.append(Package.type.ilike(f"%{type_filter}%"))
-
+    if with_outdated_versions is not None:
+        filters.append(Package.has_outdated_packages == with_outdated_versions)
+    if with_vulnerable_versions is not None:
+        filters.append(Package.has_vulnerable_versions == with_vulnerable_versions)
     query = session.query(Package).filter(*filters)
     return paginate_query(query, page, per_page)
 
