@@ -8,6 +8,7 @@ from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Integer, String, 
                         Table, create_engine)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
+from sqlalchemy.ext.hybrid import hybrid_property
 
 engine = create_engine("sqlite:///data/neptune.db?check_same_thread=false")
 SessionLocal = sessionmaker(autoflush=True, bind=engine)
@@ -162,6 +163,23 @@ class Package(Base):
     # list of versions of this package
     versions = relationship("PackageVersion")
 
+    @hybrid_property
+    def has_outdated_packages(self):
+        return any([p.outdated for p in self.versions])
+
+    @has_outdated_packages.expression
+    def has_outdated_packages(cls):
+        return cls.versions.any(outdated=True)
+
+    @hybrid_property
+    def has_vulnerable_versions(self):
+        return any([len(p.vulnerabilities) for p in self.versions])
+
+    @has_vulnerable_versions.expression
+    def has_vulnerable_versions(cls):
+        return cls.versions.any(has_vulnerabilities=True)
+
+
     def serialize(self):
         return {
             'id': self.id,
@@ -193,6 +211,15 @@ class PackageVersion(Base):
 
     def refresh_outdated_status(self):
         self.outdated = self.is_outdated()
+
+    @hybrid_property
+    def has_vulnerabilities(self):
+        return len(self.vulnerabilities) > 0
+
+    @has_vulnerabilities.expression
+    def has_vulnerabilities(cls):
+        return cls.vulnerabilities.any()
+
 
     def is_outdated(self) -> bool:
         """is this specific version < the package minimum version
