@@ -1,6 +1,6 @@
 <template>
   <div
-    class="w-full pb-24 lg:pb-5 h-screen px-5 py-5 overflow-y-auto scrollbar-thin"
+    class="w-full pb-24 lg:pb-5 h-screen px-5 py-5 overflow-y-auto overflow-x-hidden scrollbar-thin"
   >
     <Loading v-if="isLoading" />
     <div v-if="stats" class="grid grid-cols-4 h-full gap-9">
