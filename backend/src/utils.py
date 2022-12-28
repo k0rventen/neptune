@@ -89,24 +89,15 @@ def database_housekeeping():
     session = create_session()
     housekeeping_logger = Logger("housekeeping")
     housekeeping_logger.info("Cleaning up the base")
-    # delete package version with no tags
-    no_tags_packages = [p for p in session.query(
-        PackageVersion).all() if len(p.tags) == 0]
+    no_tags_packages = session.query(PackageVersion).filter(~PackageVersion.tags.any()).all()
     for p in no_tags_packages:
         for v in p.vulnerabilities:
-            housekeeping_logger.info("deleting vulnerability %s", v.name)
             session.delete(v)
-        housekeeping_logger.info(
-            "deleting packageversion %s==%s", p.package.name, p.version)
         session.delete(p)
 
-    # now delete the remaining images & packages
-    no_versions_packages = [p for p in session.query(
-        Package).all() if len(p.versions) == 0]
-    for p in no_versions_packages:
-        housekeeping_logger.info("deleting package %s", p.name)
+    for p in session.query(Package).filter(~Package.versions.any()).all():
         session.delete(p)
-    housekeeping_logger.info("commiting !")
+    housekeeping_logger.info("done cleaning up !")
     session.commit()
 
 
@@ -207,7 +198,7 @@ def db_sbom_rescan():
     app_session = create_session()
     all_tags = app_session.query(Tag).all()
     for t in all_tags:
-        requests.post('http://127.0.0.1:5000/api/rescan', json={"sha": t.sha})
+        requests.post('http://127.0.0.1:5000/api/scan', json={"sha": t.sha})
 
 
 def grype_report(syft_report_path):
