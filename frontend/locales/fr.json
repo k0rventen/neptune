@@ -117,7 +117,9 @@
     "minimum_version": "Version minimale",
     "notes": "Notes",
     "search": "Rechercher ...",
-    "concerned_image": "Image concernée"
+    "concerned_image": "Image concernée",
+    "with_outdated_version": "Avec au moins une version obsolète",
+    "with_vulnerable_version": "Avec au moins une version vulnérable"
   },
   "registry" : {
     "url": "URL",

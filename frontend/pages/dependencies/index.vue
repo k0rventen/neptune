@@ -5,12 +5,17 @@
       <input
         v-model="filter.name_filter"
         type="text"
-        class="w-full mb-5 px-6 py-3 rounded-full shadow-md outline-none"
+        class="w-full mb-2 px-6 py-3 rounded-full shadow-md outline-none"
         :placeholder="$t('dependencies.search')"
       />
     </div>
-
-
+    <div class="mb-2">
+      <input v-model="filter.with_outdated_versions" type="checkbox" id="outdatedV" name="outdatedV">
+      <label for="outdatedV">{{  $t('dependencies.with_outdated_version') }}</label>
+      <input v-model="filter.with_vulnerable_versions" type="checkbox" id="vulnerableV" name="vulnerableV">
+      <label for="vulnerableV">{{  $t('dependencies.with_vulnerable_version') }}</label>
+    </div>
+    
     <div class="w-full shadow-md rounded-xl bg-white overflow-x-auto px-3 py-3">
       <Table
         v-if="dependencies.items && dependencies.items?.length > 0"
@@ -118,6 +123,8 @@ export default {
       delayRequest: undefined,
       filter: {
         name_filter: undefined,
+        with_outdated_versions: undefined,
+        with_vulnerable_versions: undefined,
       }
     }
   },
