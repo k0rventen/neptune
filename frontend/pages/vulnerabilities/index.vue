@@ -28,7 +28,9 @@
 
     <div v-if="openFilter" class="w-full flex gap-3 mb-2">
       <div class="w-1/6">
-        <label for="trie" class="block"> {{ $t('images.severity_filter')}} </label>
+        <label for="trie" class="block">
+          {{ $t('images.severity_filter') }}
+        </label>
         <select
           id="trie"
           v-model="filter.severity_filter"
@@ -43,7 +45,9 @@
         </select>
       </div>
       <div class="w-1/6">
-        <label for="trie" class="block"> {{ $t('images.state_filter') }} </label>
+        <label for="trie" class="block">
+          {{ $t('images.state_filter') }}
+        </label>
         <select
           id="state"
           v-model="filter.active_filter"
@@ -111,11 +115,13 @@
           />
         </template>
         <template slot="source" slot-scope="{ item }">
-          <p>
-            {{
-              item.affected_package.name + ':' + item.affected_package.version
-            }}
-          </p>
+          <NuxtLink :to="'/dependencies?package=' + item.affected_package.name">
+            <p>
+              {{
+                item.affected_package.name + ':' + item.affected_package.version
+              }}
+            </p>
+          </NuxtLink>
         </template>
         <template slot="affected_images" slot-scope="{ item }">
           <VDropdown :distance="6">
@@ -195,7 +201,6 @@ export default {
         if (this.delayRequest) clearTimeout(this.delayRequest)
         this.page = 1
         this.delayRequest = setTimeout(() => {
-          console.log('JE SUIS LA')
           this.getVulnerabilties({
             page: this.page,
             perPage: this.perPage,
@@ -216,17 +221,18 @@ export default {
       page: this.pages,
       perPage: this.perPage,
       filter: this.filter,
-    }).then(() => {
-      this.copyNote = this.notes
-      this.nbPages = Math.ceil(this.vuln.total / this.vuln.per_page)
-      this.cveTable = this.vuln.items
-    }).finally(() => {
-      if(this.$route.query.name) {
-      this.filter.name_filter = this.$route.query.name
-      this.refreshKey++
-      }
     })
-
+      .then(() => {
+        this.copyNote = this.notes
+        this.nbPages = Math.ceil(this.vuln.total / this.vuln.per_page)
+        this.cveTable = this.vuln.items
+      })
+      .finally(() => {
+        if (this.$route.query.name) {
+          this.filter.name_filter = this.$route.query.name
+          this.refreshKey++
+        }
+      })
   },
   methods: {
     ...mapActions('vulnerability', [

@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full h-screen px-5 py-5 overflow-y-auto scrollbar-thin">
+  <div class="w-full h-screen pt-5 pb-24 px-5 lg:pb-5 overflow-y-auto scrollbar-thin">
     <Loading v-if="isLoading" />
     <div class="w-full relative">
       <input
@@ -66,15 +66,15 @@
                 <div class="px-2 py-1 outline-none">
                   <p class="text-center">{{ version.version }}</p>
                   <hr v-if="version.vulnerabilities.length > 0" />
-                  <a
+                  <NuxtLink
                     v-for="vuln in version.vulnerabilities"
                     :key="vuln.id"
-                    :href="`https://www.google.com/search?client=firefox-b-d&q=${vuln.name}`"
+                    :to="`/vulnerabilities?name=${vuln.name}`"
                   >
                     <p>
                       {{ vuln.name }}
                     </p>
-                  </a>
+                  </NuxtLink>
 
                   <div class="mt-2">
                     <p>{{ $t('dependencies.concerned_image') }} :</p>

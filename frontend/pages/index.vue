@@ -102,7 +102,7 @@
         class="col-span-4 lg:col-span-1 bg-white px-3 py-3 h-96 shadow-md rounded-xl"
       >
         <div
-          class="relative bg-neptune-blue rounded-md w-full h-full px-2 py-2 text-white 3xl:overflow-x-hidden 3xl:overflow-y-hidden overflow-y-scroll overflow-x-hidden scrollbar-thin scrollbar"
+          class="relative bg-neptune-blue rounded-md w-full h-full px-2 py-2 text-white 3xl:overflow-x-hidden 3xl:overflow-y-hidden overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar"
         >
           <h1 class="text-2xl mb-3 font-bold">{{ $t('index.title') }}</h1>
           <p class="mb-2">{{ $t('index.explain') }}</p>
