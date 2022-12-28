@@ -28,19 +28,30 @@
 
     <div v-if="openFilter" class="w-full flex gap-3 mb-2">
       <div class="w-1/6">
-        <label for="trie" class="block"> Filtre sévérité : </label>
+        <label for="trie" class="block"> {{ $t('images.severity_filter')}} </label>
         <select
           id="trie"
           v-model="filter.severity_filter"
           class="w-full px-3 py-1 rounded-md mb-2 shadow-md"
-          placeholder="Trier par"
         >
-          <option :value="undefined">Aucun</option>
-          <option value="unknown">Inconnu</option>
-          <option value="low">Faible</option>
-          <option value="medium">Moyenne</option>
-          <option value="high">Eleve</option>
-          <option value="critical">Critique</option>
+          <option :value="undefined">{{ $t('images.none') }}</option>
+          <option value="unknown">{{ $t('images.unknown') }}</option>
+          <option value="low">{{ $t('images.low') }}</option>
+          <option value="medium">{{ $t('images.medium') }}</option>
+          <option value="high">{{ $t('images.high') }}</option>
+          <option value="critical">{{ $t('images.critical') }}</option>
+        </select>
+      </div>
+      <div class="w-1/6">
+        <label for="trie" class="block"> {{ $t('images.state_filter') }} </label>
+        <select
+          id="state"
+          v-model="filter.active_filter"
+          class="w-full px-3 py-1 rounded-md mb-2 shadow-md"
+        >
+          <option :value="undefined">{{ $t('images.none') }}</option>
+          <option value="true">{{ $t('images.active') }}</option>
+          <option value="false">{{ $t('images.inactive') }}</option>
         </select>
       </div>
     </div>
@@ -53,37 +64,19 @@
           {
             label: $t('vulnerability.acknowledged'),
             name: 'ack',
-            sorter: (row1, row2) => (row1.ack === row2.ack ? 0 : x ? -1 : 1),
           },
           {
             label: $t('vulnerability.name'),
             name: 'name',
-            sorter: (row1, row2) => row1.name.localeCompare(row2.name),
           },
           {
             label: $t('vulnerability.severity'),
             name: 'severity',
-            sorter: (row1, row2) => {
-              const severity = {
-                critical: 1,
-                high: 2,
-                medium: 3,
-                low: 4,
-                negligible: 5,
-                unknown: 6,
-              }
-              return (
-                severity[row1.severity.toLowerCase()] -
-                severity[row2.severity.toLowerCase()]
-              )
-            },
           },
           { label: $t('vulnerability.source'), name: 'source' },
           {
             label: $t('vulnerability.affected_tags'),
             name: 'affected_images',
-            sorter: (row1, row2) =>
-              row1.affected_images.length - row2.affected_images.length,
           },
           { label: $t('vulnerability.notes'), name: 'notes' },
         ]"
@@ -183,6 +176,7 @@ export default {
       filter: {
         name_filter: undefined,
         severity_filter: undefined,
+        active_filter: undefined,
       },
       pages: 1,
       nbPages: 0,
@@ -201,6 +195,7 @@ export default {
         if (this.delayRequest) clearTimeout(this.delayRequest)
         this.page = 1
         this.delayRequest = setTimeout(() => {
+          console.log('JE SUIS LA')
           this.getVulnerabilties({
             page: this.page,
             perPage: this.perPage,
@@ -225,7 +220,13 @@ export default {
       this.copyNote = this.notes
       this.nbPages = Math.ceil(this.vuln.total / this.vuln.per_page)
       this.cveTable = this.vuln.items
+    }).finally(() => {
+      if(this.$route.query.name) {
+      this.filter.name_filter = this.$route.query.name
+      this.refreshKey++
+      }
     })
+
   },
   methods: {
     ...mapActions('vulnerability', [
