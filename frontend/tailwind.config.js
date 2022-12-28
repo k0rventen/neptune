@@ -25,7 +25,11 @@ module.exports = {
     },
   },
   variants: {
-    extend: {},
+    extend: {
+      screens: {
+        '3xl': '1900px',
+      }
+    },
   },
   plugins: [
     require('tailwind-scrollbar'),
