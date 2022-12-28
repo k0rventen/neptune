@@ -45,10 +45,11 @@ export default {
   ],
 
   i18n: {
+    strategy: 'no_prefix',
     defaultLocale: 'fr',
     locales: [
-      { code: 'fr', iso: 'fr-FR', file: 'fr.json' },
-      { code: 'en', iso: 'en-EN', file: 'en.json' }
+      { code: 'fr', iso: 'fr-FR', file: 'fr.json', name: 'Français' },
+      { code: 'en', iso: 'en-EN', file: 'en.json', name: 'English' }
     ],
     langDir: '~/locales/'
   },
@@ -57,7 +58,7 @@ export default {
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
   axios: {
     // Workaround to avoid enforcing hard-coded localhost:3000: https://github.com/nuxt-community/axios-module/issues/308
-    baseURL: 'https://neptune.map.interact-systemes-nancy.fr/'
+    baseURL: '/'
   },
 
   // Build Configuration: https://go.nuxtjs.dev/config-build
