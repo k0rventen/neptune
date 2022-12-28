@@ -1,10 +1,14 @@
 <template>
-  <div class="w-full h-full bg-white shadow-md flex flex-col px-8 relative justify-between py-3">
+  <div
+    class="w-full h-full bg-white shadow-md flex flex-col px-8 relative justify-between py-3"
+  >
     <div>
-      <div class="w-full flex justify-center items-center h-24">
-        <img class="w-12 h-12" src="@/assets/img/logo.png" alt="" />
-        <p class="ml-2 text-2xl">Neptune</p>
-      </div>
+      <NuxtLink to="/">
+        <div class="w-full flex justify-center items-center h-24">
+          <img class="w-12 h-12" src="@/assets/img/logo.png" alt="" />
+          <p class="ml-2 text-2xl">Neptune</p>
+        </div>
+      </NuxtLink>
       <hr
         class="h-[1px] border-none bg-gradient-to-r from-transparent via-secondary to-transparent"
       />
@@ -89,9 +93,15 @@
       </div>
     </div>
     <div>
-      
-      <select class="w-full border-current border-3 border-gray-400 px-3 py-2 outline-none border rounded-md bg-transparent" v-model="langage">
-        <option v-for="locale in availableLocales" :value="locale.code" :key="locale.code">
+      <select
+        class="w-full border-current border-3 border-gray-400 px-3 py-2 outline-none border rounded-md bg-transparent"
+        v-model="langage"
+      >
+        <option
+          v-for="locale in availableLocales"
+          :value="locale.code"
+          :key="locale.code"
+        >
           {{ locale.name }}
         </option>
       </select>
@@ -109,20 +119,20 @@ export default {
     },
   },
   watch: {
-    langage (val) {
+    langage(val) {
       this.$i18n.locale = val
-    }
+    },
   },
   computed: {
-    availableLocales () {
+    availableLocales() {
       return this.$i18n.locales
-    }
+    },
   },
   data() {
     return {
-      langage: this.$i18n.locale
+      langage: this.$i18n.locale,
     }
-  }
+  },
 }
 </script>
 
