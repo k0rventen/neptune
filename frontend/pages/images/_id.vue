@@ -113,12 +113,11 @@
             ]"
           >
             <template slot="name" slot-scope="{ item }">
-              <a
-                :href="`https://www.google.com/search?q=${item.name}`"
-                target="_blank"
+              <NuxtLink
+               :to="`/vulnerabilities?name=${item.name}`"
               >
                 <p>{{ item.name }}</p>
-              </a>
+              </NuxtLink>
             </template>
             <template slot="severity" slot-scope="{ item }">
               <p>
@@ -146,23 +145,22 @@
         <div
           class="col-span-2 lg:col-span-1 w-full bg-white shadow-md rounded-xl px-3 py-3 overflow-x-auto"
         >
-          <p class="underline">{{ $t('images_id.vulnerabilities') }} : </p>
+          <p class="underline">{{ $t('image_id.vulnerabilities') }} : </p>
           <Table
             :data="vulnData"
             :columns="[
-              { label: 'CVE', name: 'name' },
-              { label: 'Package', name: 'affected_package' },
-              { label: 'Sévérité', name: 'severity' },
+              { label: $t('image_id.cve'), name: 'name' },
+              { label: $t('image_id.package'), name: 'affected_package' },
+              { label: $t('image_id.severity'), name: 'severity' },
               { label: $t('vulnerability.notes'), name: 'notes' },
             ]"
           >
             <template slot="name" slot-scope="{ item }">
-              <a
-                :href="`https://www.google.com/search?q=${item.name}`"
-                target="_blank"
+              <NuxtLink
+               :to="`/vulnerabilities?name=${item.name}`"
               >
                 <p>{{ item.name }}</p>
-              </a>
+              </NuxtLink>
             </template>
             <template slot="severity" slot-scope="{ item }">
               <p>
