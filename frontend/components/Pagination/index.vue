@@ -36,6 +36,15 @@ export default {
             offset : 0
         }
     },
+    watch : {
+        currentPage() {
+            if(this.currentPage > this.offset + 5) {
+                this.offset = this.currentPage - 5
+            } else if(this.currentPage <= this.offset) {
+                this.offset = this.currentPage - 1
+            }
+        }
+    },
     methods: {
         downgradeOffset() {
             if(this.currentPage - 1 > 0) {
