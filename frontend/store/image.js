@@ -23,11 +23,6 @@ const mutations = {
 }
 
 const actions = {
-  async getImages({commit}) {
-    await this.$axios.get('/api/images').then((response) => {
-      commit('setImage', response.data)
-    })
-  },
 
   async deleteImage({commit}, data) {
     await this.$axios.delete(`/api/tags/${data}`).then(async () => {
@@ -49,8 +44,9 @@ const actions = {
     })
   },
 
-  async getTags({commit}, {page, perPage}) {
-    await this.$axios.get(`/api/tags?page=${page}&per_page=${perPage}`).then(({data}) => {
+  async getTags({commit}, {page, perPage, filter}) {
+    const url = urlBuilder(page, perPage, filter)
+    await this.$axios.get(url).then(({data}) => {
       commit('setTags', data)
     })
   },
@@ -59,6 +55,18 @@ const actions = {
     await this.$axios.delete(`/api/tags/${sha}`)
     commit('unsetImage', sha)
   }
+}
+
+const urlBuilder = (page, perPage, filter) => {
+  let url = `/api/tags?page=${page}&per_page=${perPage}`
+  if(filter) {
+    Object.entries(filter).forEach(([key, value]) => {
+      if(value) {
+        url += `&${key}=${value}`
+      }
+    })
+  }
+  return url
 }
 
 export default {

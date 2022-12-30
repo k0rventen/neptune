@@ -28,7 +28,7 @@
     <div class="text-gray-400">
       <div class="relative mb-2">
         <input
-          v-model="search"
+          v-model="filter.name_filter"
           type="text"
           class="w-full px-6 py-3 rounded-full shadow-md outline-none"
           :placeholder="$t('images.search')"
@@ -82,7 +82,6 @@ export default {
   data() {
     return {
       value: undefined,
-      imageToScan: undefined,
       search: undefined,
       openImagesModal: false,
       isLoading: true,
@@ -91,6 +90,11 @@ export default {
       selectedOrder: 'ASC',
       openFilter: false,
       page: 1,
+      imageName: undefined,
+      filter: {
+        name_filter: undefined,
+      },
+      delayRequest: undefined,
       perPage: 20,
       nbPages: 0,
     }
@@ -99,15 +103,19 @@ export default {
     ...mapState('image', ['images', 'tags']),
   },
   watch: {
-    search(newValue) {
-      if (newValue === '') {
-        this.value = this.tags
-      } else {
-        this.value = this.tags.filter((el) => {
-          const fullname = el.image + ':' + el.tag
-          return fullname.toLowerCase().includes(newValue.toLowerCase())
-        })
-      }
+    filter: {
+      handler() {
+        clearTimeout(this.delayRequest)
+        this.delayRequest = setTimeout(() => {
+          this.getTags({page: this.page, perPage: this.perPage, filter: this.filter }).then(() => {
+            this.value = this.tags.items
+            this.nbPages = Math.ceil(this.tags.total / this.tags.per_page)
+            this.backupTags = [...this.tags.items]
+            this.page = 1
+          })
+        }, 1000)
+      },
+      deep: true,
     },
     selectedFilter(newValue) {
       this.selectedOrder = 'ASC'
@@ -161,7 +169,7 @@ export default {
     },
   },
   async mounted() {
-    await this.getTags({page: this.page, perPage: this.perPage })
+    await this.getTags({page: this.page, perPage: this.perPage, filter: this.filter })
       .then(() => {
         this.value = this.tags.items
         this.nbPages = Math.ceil(this.tags.total / this.tags.per_page)
@@ -174,11 +182,6 @@ export default {
   methods: {
     ...mapActions('image', ['scanImages']),
     ...mapActions('image', ['getTags']),
-    async sendImage() {
-      await this.scanImages(this.imageToScan).then(() => {
-        this.imageToScan = undefined
-      })
-    },
     selectColor(vuln, outdated) {
       if (vuln > 0) {
         return 'bg-red-400'

@@ -209,6 +209,7 @@ export default {
             this.copyNote = this.notes
             this.nbPages = Math.ceil(this.vuln.total / this.vuln.per_page)
             this.cveTable = this.vuln.items
+            this.pages = 1
             this.refreshKey++
           })
         }, 1000)
