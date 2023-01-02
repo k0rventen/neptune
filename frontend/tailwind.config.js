@@ -20,7 +20,8 @@ module.exports = {
       colors: {
         'primary': '#f8f9fb',
         'secondary': '#919191',
-        'neptune-blue': '#559cc4'
+        'neptune-blue': '#559cc4',
+        'orange-500': '#fb923c'
       }
     },
   },
@@ -28,7 +29,7 @@ module.exports = {
     extend: {
       screens: {
         '3xl': '1900px',
-      }
+      },
     },
   },
   plugins: [
