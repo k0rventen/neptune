@@ -19,6 +19,32 @@ const mutations = {
   },
   unsetImage(state, sha) {
     state.tags.items = state.tags.items.filter((image) => image.sha !== sha)
+  },
+  changeVulnState(state, {active , id}) {
+    let backup
+    if(state.currentImage) {
+      if(active) {
+        state.currentImage.vulnerabilities = state.currentImage.vulnerabilities.filter((vuln) => {
+          if(vuln.id === id) {
+            backup = vuln
+            return false
+          }
+          return true
+        })
+        backup.active = active
+        state.currentImage.active_vulnerabilities.push(backup)
+      } else {
+        state.currentImage.active_vulnerabilities = state.currentImage.active_vulnerabilities.filter((vuln) => {
+          if(vuln.id === id) {
+            backup = vuln
+            return false
+          }
+          return true
+        })
+        backup.active = active
+        state.currentImage.vulnerabilities.push(backup)
+      }
+    }
   }
 }
 
@@ -29,6 +55,15 @@ const actions = {
       await this.$axios.get('/api/images').then((response) => {
         commit('setImage', response.data)
       })
+    })
+  },
+
+  async setAckState({commit}, {id, notes, active}) {
+    await this.$axios.put(`api/vulnerabilities/${id}`, {
+      notes,
+      active
+    }).then(() => {
+      commit('changeVulnState', {active, id})
     })
   },
 

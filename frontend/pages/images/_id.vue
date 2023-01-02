@@ -27,25 +27,60 @@
           </div>
           <div>
             <p>
-              {{ $tc('image_id.package', currentImage.packages.length) }} : {{ currentImage.packages.length }}
+              {{ $tc('image_id.package', currentImage.packages.length) }} :
+              {{ currentImage.packages.length }}
             </p>
             <p>
-              {{ $tc('image_id.vulnerabilities', currentImage.vulnerabilities.length) }} :
+              {{
+                $tc(
+                  'image_id.vulnerabilities',
+                  currentImage.vulnerabilities.length
+                )
+              }}
+              :
               {{ currentImage.vulnerabilities.length }}
             </p>
             <p>
-              {{ $tc('image_id.active_vulnerability', currentImage.active_vulnerabilities.length) }} :
+              {{
+                $tc(
+                  'image_id.active_vulnerability',
+                  currentImage.active_vulnerabilities.length
+                )
+              }}
+              :
               {{ currentImage.active_vulnerabilities.length }}
             </p>
             <p>
-              {{ $tc('image_id.outdated_packages', currentImage.outdated_packages.length) }} :
+              {{
+                $tc(
+                  'image_id.outdated_packages',
+                  currentImage.outdated_packages.length
+                )
+              }}
+              :
               {{ currentImage.outdated_packages.length }}
             </p>
           </div>
         </div>
 
-        <div v-tooltip="`Supprimer l'image`" class="bg-white bg-opacity-20 absolute h-5 w-5 rounded-full right-3 top-3" @click="deleteImg()">
-          <svg clip-rule="evenodd" fill-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="white"><path d="m12 10.93 5.719-5.72c.146-.146.339-.219.531-.219.404 0 .75.324.75.749 0 .193-.073.385-.219.532l-5.72 5.719 5.719 5.719c.147.147.22.339.22.531 0 .427-.349.75-.75.75-.192 0-.385-.073-.531-.219l-5.719-5.719-5.719 5.719c-.146.146-.339.219-.531.219-.401 0-.75-.323-.75-.75 0-.192.073-.384.22-.531l5.719-5.719-5.72-5.719c-.146-.147-.219-.339-.219-.532 0-.425.346-.749.75-.749.192 0 .385.073.531.219z"/></svg>
+        <div
+          v-tooltip="`Supprimer l'image`"
+          class="bg-white bg-opacity-20 absolute h-5 w-5 rounded-full right-3 top-3"
+          @click="deleteImg()"
+        >
+          <svg
+            clip-rule="evenodd"
+            fill-rule="evenodd"
+            stroke-linejoin="round"
+            stroke-miterlimit="2"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="white"
+          >
+            <path
+              d="m12 10.93 5.719-5.72c.146-.146.339-.219.531-.219.404 0 .75.324.75.749 0 .193-.073.385-.219.532l-5.72 5.719 5.719 5.719c.147.147.22.339.22.531 0 .427-.349.75-.75.75-.192 0-.385-.073-.531-.219l-5.719-5.719-5.719 5.719c-.146.146-.339.219-.531.219-.401 0-.75-.323-.75-.75 0-.192.073-.384.22-.531l5.719-5.719-5.72-5.719c-.146-.147-.219-.339-.219-.532 0-.425.346-.749.75-.749.192 0 .385.073.531.219z"
+            />
+          </svg>
         </div>
       </div>
       <div class="w-full grid grid-cols-2 gap-3 mt-3">
@@ -62,7 +97,21 @@
           >
             <template slot="outdated" slot-scope="{ item }">
               <div class="flex justify-center items-center">
-                <svg v-if="item.outdated" clip-rule="evenodd" fill-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="2" width="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m2.095 19.886 9.248-16.5c.133-.237.384-.384.657-.384.272 0 .524.147.656.384l9.248 16.5c.064.115.096.241.096.367 0 .385-.309.749-.752.749h-18.496c-.44 0-.752-.36-.752-.749 0-.126.031-.252.095-.367zm9.907-6.881c-.414 0-.75.336-.75.75v3.5c0 .414.336.75.75.75s.75-.336.75-.75v-3.5c0-.414-.336-.75-.75-.75zm-.002-3c-.552 0-1 .448-1 1s.448 1 1 1 1-.448 1-1-.448-1-1-1z" fill-rule="nonzero"/></svg>
+                <svg
+                  v-if="item.outdated"
+                  clip-rule="evenodd"
+                  fill-rule="evenodd"
+                  stroke-linejoin="round"
+                  stroke-miterlimit="2"
+                  width="24"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="m2.095 19.886 9.248-16.5c.133-.237.384-.384.657-.384.272 0 .524.147.656.384l9.248 16.5c.064.115.096.241.096.367 0 .385-.309.749-.752.749h-18.496c-.44 0-.752-.36-.752-.749 0-.126.031-.252.095-.367zm9.907-6.881c-.414 0-.75.336-.75.75v3.5c0 .414.336.75.75.75s.75-.336.75-.75v-3.5c0-.414-.336-.75-.75-.75zm-.002-3c-.552 0-1 .448-1 1s.448 1 1 1 1-.448 1-1-.448-1-1-1z"
+                    fill-rule="nonzero"
+                  />
+                </svg>
               </div>
             </template>
             <template slot="package" slot-scope="{ item }">
@@ -77,16 +126,33 @@
           class="col-span-2 lg:col-span-1 w-full flex flex-col gap-3 overflow-x-auto"
         >
           <div class="w-full bg-white shadow-md rounded-xl px-3 py-3">
-            <p class="underline">{{ $tc('image_id.active_vulnerability', 2) }} :</p>
+            <p class="underline">
+              {{ $tc('image_id.active_vulnerability', 2) }} :
+            </p>
             <Table
               :data="vulnActive"
               :columns="[
+                { label: $t('vulnerability.acknowledged'), name: 'ack' },
                 { label: $t('image_id.cve'), name: 'name' },
                 { label: $tc('image_id.package', 2), name: 'affected_package' },
                 { label: $t('image_id.severity'), name: 'severity' },
                 { label: $t('vulnerability.notes'), name: 'notes' },
               ]"
+              :key="refreshKey"
             >
+              <template slot="ack" slot-scope="{ item }">
+                <button
+                  class="px-2 py-1 rounded-md text-xs text-white uppercase font-bold"
+                  :class="item.active ? 'bg-green-600' : 'bg-gray-400'"
+                  @click="changeAckState(item)"
+                >
+                  {{
+                    item.active
+                      ? $t('vulnerability.acknowledged')
+                      : $t('vulnerability.not_acknowledged')
+                  }}
+                </button>
+              </template>
               <template slot="name" slot-scope="{ item }">
                 <NuxtLink :to="`/vulnerabilities?name=${item.name}`">
                   <p>{{ item.name }}</p>
@@ -137,12 +203,27 @@
             <Table
               :data="vulnData"
               :columns="[
+                { label: $t('vulnerability.acknowledged'), name: 'ack' },
                 { label: $t('image_id.cve'), name: 'name' },
                 { label: $tc('image_id.package', 2), name: 'affected_package' },
                 { label: $t('image_id.severity'), name: 'severity' },
                 { label: $t('vulnerability.notes'), name: 'notes' },
               ]"
+              :key="refreshKey"
             >
+              <template slot="ack" slot-scope="{ item }">
+                <button
+                  class="px-2 py-1 rounded-md text-xs text-white uppercase font-bold"
+                  :class="item.active ? 'bg-green-600' : 'bg-gray-400'"
+                  @click="changeAckState(item)"
+                >
+                  {{
+                    item.active
+                      ? $t('vulnerability.acknowledged')
+                      : $t('vulnerability.not_acknowledged')
+                  }}
+                </button>
+              </template>
               <template slot="name" slot-scope="{ item }">
                 <NuxtLink :to="`/vulnerabilities?name=${item.name}`">
                   <p>{{ item.name }}</p>
@@ -197,6 +278,7 @@ export default {
     return {
       isLoading: true,
       copyNote: [],
+      refreshKey: 0,
     }
   },
   computed: {
@@ -217,34 +299,28 @@ export default {
     })
   },
   methods: {
-    ...mapActions('image', ['getCurrentImage', 'removeImg']),
-    ...mapActions('vulnerability', ['setNotes']),
-    selectColor(vuln, outdated) {
-      if (vuln > 0) {
-        return 'bg-red-400'
-      }
-      if (outdated > 0) {
-        return 'bg-yellow-400'
-      }
-      return 'bg-green-400'
-    },
+    ...mapActions('image', ['getCurrentImage', 'removeImg', 'setAckState']),
     async deleteImg() {
       await this.removeImg(this.$route.params.id).then(() => {
         setTimeout(() => this.$router.push('/images'), 1500)
       })
     },
-    sendNewNotes(item) {
-      this.setNotes({
-        cve: item.id,
-        notes: this.copyNote[item.name],
-        active: true,
-      })
-    },
-    changeAckState(item) {
-      this.setAckState({
-        cve: item.id,
+    async changeAckState(item) {
+      await this.setAckState({
+        id: item.id,
         notes: this.copyNote[item.name],
         active: !item.active,
+      }).then(() => {
+        this.tableData = [
+          ...this.currentImage.outdated_packages,
+          ...this.currentImage.packages,
+        ]
+        this.vulnData = [...this.currentImage.vulnerabilities]
+        this.vulnActive = [...this.currentImage.active_vulnerabilities]
+        this.vulnData.forEach((vuln) => {
+          this.copyNote[vuln.name] = vuln.notes
+        })
+        this.refreshKey++
       })
     },
     colorSeverity(item) {
