@@ -43,7 +43,7 @@
         v-for="(tag, index) in value"
         :key="index"
         class="col-span-3 md:col-span-1 w-full cursor-pointer shadow-md bg-neptune-blue px-5 rounded-lg py-5 relative overflow-hidden"
-        :class="selectColor(tag.vulnerabilities, tag.outdated_packages)"
+        :class="selectColor(tag.active_vulnerabilities, tag.outdated_packages)"
         @click="$router.push({ path: '/images/' + tag.sha })"
       >
         <svg
@@ -60,10 +60,10 @@
         </svg>
         <p>{{  $t('images.image_name') }} : {{ tag.image + ':' + tag.tag }}</p>
         <p>{{ $t('images.image_size') }} : {{ calcSize(tag.size) }}</p>
-        <p>{{ $t('images.package') }} : {{ tag.packages }}</p>
-        <p>{{ $t('images.vulnerabilities') }} : {{ tag.vulnerabilities }}</p>
-        <p>{{ $t('images.active_vulnerability') }} : {{ tag.active_vulnerabilities }}</p>
-        <p>{{ $t('images.outdated_packages') }} : {{ tag.outdated_packages }}</p>
+        <p>{{ $tc('images.package', tag.packages) }} : {{ tag.packages }}</p>
+        <p>{{ $tc('images.vulnerabilities', tag.vulnerabilities) }} : {{ tag.vulnerabilities }}</p>
+        <p>{{ $tc('images.active_vulnerability', tag.active_vulnerabilities) }} : {{ tag.active_vulnerabilities }}</p>
+        <p>{{ $tc('images.outdated_packages', tag.outdated_packages) }} : {{ tag.outdated_packages }}</p>
       </div>
     </div>
     <div class="w-full flex justify-center mt-2">
@@ -85,7 +85,6 @@ export default {
       search: undefined,
       openImagesModal: false,
       isLoading: true,
-      selectedFilter: '0',
       backupTags: undefined,
       selectedOrder: 'ASC',
       openFilter: false,
@@ -116,56 +115,6 @@ export default {
         }, 1000)
       },
       deep: true,
-    },
-    selectedFilter(newValue) {
-      this.selectedOrder = 'ASC'
-      if (newValue === '0') {
-        this.value = this.tags
-      } else if (newValue === '1') {
-        this.value = this.backupTags.sort((a, b) =>
-          a.vulnerabilities > b.vulnerabilities
-            ? 1
-            : b.vulnerabilities > a.vulnerabilities
-            ? -1
-            : 0
-        )
-      } else if (newValue === '2') {
-        this.value = this.backupTags.sort((a, b) =>
-          a.outdated_packages > b.outdated_packages
-            ? 1
-            : b.outdated_packages > a.outdated_packages
-            ? -1
-            : 0
-        )
-      } else if (newValue === '3') {
-        this.value = this.backupTags.sort((a, b) =>
-          a.size > b.size ? 1 : b.size > a.size ? -1 : 0
-        )
-      } else if (newValue === '4') {
-        this.value = this.backupTags.sort((a, b) => {
-          if (a.vulnerabilities > 0) {
-            return 1
-          } else if (b.vulnerabilities > 0) {
-            return -1
-          }
-
-          if (a.outdated_packages > 0) {
-            return 1
-          } else if (b.outdated_packages > 0) {
-            return -1
-          } else {
-            return 0
-          }
-        })
-      } else if (newValue === '5') {
-        this.value = this.backupTags.sort((a, b) =>
-          a.active_vulnerabilities > b.active_vulnerabilities
-            ? 1
-            : b.active_vulnerabilities > a.active_vulnerabilities
-            ? -1
-            : 0
-        )
-      }
     },
   },
   async mounted() {

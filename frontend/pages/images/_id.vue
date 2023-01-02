@@ -27,18 +27,18 @@
           </div>
           <div>
             <p>
-              {{ $t('image_id.package') }} : {{ currentImage.packages.length }}
+              {{ $tc('image_id.package', currentImage.packages.length) }} : {{ currentImage.packages.length }}
             </p>
             <p>
-              {{ $t('image_id.vulnerabilities') }} :
+              {{ $tc('image_id.vulnerabilities', currentImage.vulnerabilities.length) }} :
               {{ currentImage.vulnerabilities.length }}
             </p>
             <p>
-              {{ $t('image_id.active_vulnerability') }} :
+              {{ $tc('image_id.active_vulnerability', currentImage.active_vulnerabilities.length) }} :
               {{ currentImage.active_vulnerabilities.length }}
             </p>
             <p>
-              {{ $t('image_id.outdated_packages') }} :
+              {{ $tc('image_id.outdated_packages', currentImage.outdated_packages.length) }} :
               {{ currentImage.outdated_packages.length }}
             </p>
           </div>
@@ -55,7 +55,7 @@
           <Table
             :data="tableData"
             :columns="[
-              { label: $t('image_id.package'), name: 'package' },
+              { label: $tc('image_id.package', 2), name: 'package' },
               { label: $t('image_id.version'), name: 'version' },
               { label: $t('image_id.outdated'), name: 'outdated' },
             ]"
@@ -77,12 +77,12 @@
           class="col-span-2 lg:col-span-1 w-full flex flex-col gap-3 overflow-x-auto"
         >
           <div class="w-full bg-white shadow-md rounded-xl px-3 py-3">
-            <p class="underline">{{ $t('image_id.active_vulnerability') }} :</p>
+            <p class="underline">{{ $tc('image_id.active_vulnerability', 2) }} :</p>
             <Table
               :data="vulnActive"
               :columns="[
                 { label: $t('image_id.cve'), name: 'name' },
-                { label: $t('image_id.package'), name: 'affected_package' },
+                { label: $tc('image_id.package', 2), name: 'affected_package' },
                 { label: $t('image_id.severity'), name: 'severity' },
                 { label: $t('vulnerability.notes'), name: 'notes' },
               ]"
@@ -133,12 +133,12 @@
           <div
             class="col-span-2 lg:col-span-1 w-full bg-white shadow-md rounded-xl px-3 py-3 overflow-x-auto"
           >
-            <p class="underline">{{ $t('image_id.vulnerabilities') }} :</p>
+            <p class="underline">{{ $tc('image_id.vulnerabilities', 2) }} :</p>
             <Table
               :data="vulnData"
               :columns="[
                 { label: $t('image_id.cve'), name: 'name' },
-                { label: $t('image_id.package'), name: 'affected_package' },
+                { label: $tc('image_id.package', 2), name: 'affected_package' },
                 { label: $t('image_id.severity'), name: 'severity' },
                 { label: $t('vulnerability.notes'), name: 'notes' },
               ]"
