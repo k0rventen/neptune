@@ -3,7 +3,7 @@
     class="w-full pb-24 lg:pb-5 h-screen px-5 py-5 overflow-y-auto overflow-x-hidden scrollbar-thin"
   >
     <Loading v-if="isLoading" />
-    <div v-if="stats" class="grid grid-cols-4 h-full gap-9">
+    <div v-if="stats && historicalStats" class="grid grid-cols-4 h-full gap-9">
       <div
         class="bg-white px-3 py-3 shadow-md rounded-xl flex items-center justify-between text-secondary col-span-4 lg:col-span-1"
       >
@@ -107,7 +107,18 @@
           <h1 class="text-2xl mb-3 font-bold">{{ $t('index.title') }}</h1>
           <p class="mb-2">{{ $t('index.explain') }}</p>
           <p>{{ $t('index.explain2') }}</p>
-          <svg class="absolute opacity-20 -bottom-0 -right-5" xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 24 24" fill="white"><path d="M20 9.352c0-4.852-4.75-8.352-10-8.352-5.281 0-10 3.527-10 8.352 0 1.71.615 3.39 1.705 4.695.047 1.527-.85 3.719-1.66 5.312 2.168-.391 5.252-1.258 6.648-2.115 7.698 1.877 13.307-2.842 13.307-7.892zm-14.5 1.381c-.689 0-1.25-.56-1.25-1.25s.561-1.25 1.25-1.25 1.25.56 1.25 1.25-.561 1.25-1.25 1.25zm4.5 0c-.689 0-1.25-.56-1.25-1.25s.561-1.25 1.25-1.25 1.25.56 1.25 1.25-.561 1.25-1.25 1.25zm4.5 0c-.689 0-1.25-.56-1.25-1.25s.561-1.25 1.25-1.25 1.25.56 1.25 1.25-.561 1.25-1.25 1.25zm7.036 1.441c-.161.488-.361.961-.601 1.416 1.677 1.262 2.257 3.226.464 5.365-.021.745-.049 1.049.138 1.865-.892-.307-.979-.392-1.665-.813-2.127.519-4.265.696-6.089-.855-.562.159-1.145.278-1.74.364 1.513 1.877 4.298 2.897 7.577 2.1.914.561 2.933 1.127 4.352 1.385-.53-1.045-1.117-2.479-1.088-3.479 1.755-2.098 1.543-5.436-1.348-7.348z"/></svg>
+          <svg
+            class="absolute opacity-20 -bottom-0 -right-5"
+            xmlns="http://www.w3.org/2000/svg"
+            width="256"
+            height="256"
+            viewBox="0 0 24 24"
+            fill="white"
+          >
+            <path
+              d="M20 9.352c0-4.852-4.75-8.352-10-8.352-5.281 0-10 3.527-10 8.352 0 1.71.615 3.39 1.705 4.695.047 1.527-.85 3.719-1.66 5.312 2.168-.391 5.252-1.258 6.648-2.115 7.698 1.877 13.307-2.842 13.307-7.892zm-14.5 1.381c-.689 0-1.25-.56-1.25-1.25s.561-1.25 1.25-1.25 1.25.56 1.25 1.25-.561 1.25-1.25 1.25zm4.5 0c-.689 0-1.25-.56-1.25-1.25s.561-1.25 1.25-1.25 1.25.56 1.25 1.25-.561 1.25-1.25 1.25zm4.5 0c-.689 0-1.25-.56-1.25-1.25s.561-1.25 1.25-1.25 1.25.56 1.25 1.25-.561 1.25-1.25 1.25zm7.036 1.441c-.161.488-.361.961-.601 1.416 1.677 1.262 2.257 3.226.464 5.365-.021.745-.049 1.049.138 1.865-.892-.307-.979-.392-1.665-.813-2.127.519-4.265.696-6.089-.855-.562.159-1.145.278-1.74.364 1.513 1.877 4.298 2.897 7.577 2.1.914.561 2.933 1.127 4.352 1.385-.53-1.045-1.117-2.479-1.088-3.479 1.755-2.098 1.543-5.436-1.348-7.348z"
+            />
+          </svg>
         </div>
       </div>
       <div
@@ -170,14 +181,15 @@
         </div>
         <div class="text-white grid grid-cols-5 gap-9">
           <div
-            v-for="(image, index) in fiveImg"
-            :key="image.image_id"
             class="px-5 rounded-lg py-5 relative overflow-hidden cursor-pointer col-span-4 lg:col-span-1 w-full"
-            :class="setBgColor(index)"
-            @click="$router.push({ path: '/images/' + image.sha })"
+            :class="setBgColor(0)"
+            @click="
+              $router.push({
+                path: '/images/' + fiveImg.most_active_vulnerabilities.sha,
+              })
+            "
           >
             <svg
-              v-if="index === 0"
               class="absolute opacity-20 right-0 -bottom-2"
               enable-background="new 0 0 274.989 274.989"
               version="1.1"
@@ -191,8 +203,41 @@
                 fill="white"
               />
             </svg>
+            <p>
+              {{ $t('index.name_of_image') }} :
+              {{
+                fiveImg.most_active_vulnerabilities.image +
+                ':' +
+                fiveImg.most_active_vulnerabilities.tag
+              }}
+            </p>
+            <p>
+              {{ $t('index.size_of_image') }} :
+              {{ calcSize(fiveImg.most_active_vulnerabilities.size) }}
+            </p>
+            <p>
+              {{ $t('index.packages') }} :
+              {{ fiveImg.most_active_vulnerabilities.packages }}
+            </p>
+            <p>
+              {{ $t('index.vulnerabilities') }} :
+              {{ fiveImg.most_active_vulnerabilities.vulnerabilities }}
+            </p>
+            <p>
+              {{ $t('index.outdated_packages') }} :
+              {{ fiveImg.most_active_vulnerabilities.outdated_packages }}
+            </p>
+          </div>
+          <div
+            class="px-5 rounded-lg py-5 relative overflow-hidden cursor-pointer col-span-4 lg:col-span-1 w-full"
+            :class="setBgColor(1)"
+            @click="
+              $router.push({
+                path: '/images/' + fiveImg.most_vulnerabilities.sha,
+              })
+            "
+          >
             <svg
-              v-if="index === 1"
               class="absolute opacity-20 right-0 -bottom-2"
               width="128"
               height="128"
@@ -206,8 +251,41 @@
                 d="M21.167 21h1.833v2h-22v-2h1.833l7.334-20h3.666l7.334 20zm-4.527-7h-9.274l-1.005 3h11.328l-1.049-3zm-2.919-8h-3.471l-1.005 3h5.525l-1.049-3z"
               />
             </svg>
+            <p>
+              {{ $t('index.name_of_image') }} :
+              {{
+                fiveImg.most_vulnerabilities.image +
+                ':' +
+                fiveImg.most_vulnerabilities.tag
+              }}
+            </p>
+            <p>
+              {{ $t('index.size_of_image') }} :
+              {{ calcSize(fiveImg.most_vulnerabilities.size) }}
+            </p>
+            <p>
+              {{ $t('index.packages') }} :
+              {{ fiveImg.most_vulnerabilities.packages }}
+            </p>
+            <p>
+              {{ $t('index.vulnerabilities') }} :
+              {{ fiveImg.most_vulnerabilities.vulnerabilities }}
+            </p>
+            <p>
+              {{ $t('index.outdated_packages') }} :
+              {{ fiveImg.most_vulnerabilities.outdated_packages }}
+            </p>
+          </div>
+          <div
+            class="px-5 rounded-lg py-5 relative overflow-hidden cursor-pointer col-span-4 lg:col-span-1 w-full"
+            :class="setBgColor(2)"
+            @click="
+              $router.push({
+                path: '/images/' + fiveImg.most_outdated_packages.sha,
+              })
+            "
+          >
             <svg
-              v-if="index === 2"
               class="absolute opacity-20 right-0 -bottom-3"
               width="128"
               height="128"
@@ -223,6 +301,40 @@
                 fill-rule="nonzero"
               />
             </svg>
+            <p>
+              {{ $t('index.name_of_image') }} :
+              {{
+                fiveImg.most_outdated_packages.image +
+                ':' +
+                fiveImg.most_outdated_packages.tag
+              }}
+            </p>
+            <p>
+              {{ $t('index.size_of_image') }} :
+              {{ calcSize(fiveImg.most_outdated_packages.size) }}
+            </p>
+            <p>
+              {{ $t('index.packages') }} :
+              {{ fiveImg.most_outdated_packages.packages }}
+            </p>
+            <p>
+              {{ $t('index.vulnerabilities') }} :
+              {{ fiveImg.most_outdated_packages.vulnerabilities }}
+            </p>
+            <p>
+              {{ $t('index.outdated_packages') }} :
+              {{ fiveImg.most_outdated_packages.outdated_packages }}
+            </p>
+          </div>
+          <div
+            class="px-5 rounded-lg py-5 relative overflow-hidden cursor-pointer col-span-4 lg:col-span-1 w-full"
+            :class="setBgColor(3)"
+            @click="
+              $router.push({
+                path: '/images/' + fiveImg.most_packages.sha,
+              })
+            "
+          >
             <svg
               v-if="index === 3"
               class="absolute opacity-20 right-0 -bottom-8"
@@ -236,8 +348,37 @@
                 d="M11.5 23l-8.5-4.535v-3.953l5.4 3.122 3.1-3.406v8.772zm1-.001v-8.806l3.162 3.343 5.338-2.958v3.887l-8.5 4.534zm-10.339-10.125l-2.161-1.244 3-3.302-3-2.823 8.718-4.505 3.215 2.385 3.325-2.385 8.742 4.561-2.995 2.771 2.995 3.443-2.242 1.241v-.001l-5.903 3.27-3.348-3.541 7.416-3.962-7.922-4.372-7.923 4.372 7.422 3.937v.024l-3.297 3.622-5.203-3.008-.16-.092-.679-.393v.002z"
               />
             </svg>
+            <p>
+              {{ $t('index.name_of_image') }} :
+              {{
+                fiveImg.most_packages.image + ':' + fiveImg.most_packages.tag
+              }}
+            </p>
+            <p>
+              {{ $t('index.size_of_image') }} :
+              {{ calcSize(fiveImg.most_packages.size) }}
+            </p>
+            <p>
+              {{ $t('index.packages') }} :
+              {{ fiveImg.most_packages.packages }}
+            </p>
+            <p>
+              {{ $t('index.vulnerabilities') }} :
+              {{ fiveImg.most_packages.vulnerabilities }}
+            </p>
+            <p>
+              {{ $t('index.outdated_packages') }} :
+              {{ fiveImg.most_packages.outdated_packages }}
+            </p>
+          </div>
+          <div
+            class="px-5 rounded-lg py-5 relative overflow-hidden cursor-pointer col-span-4 lg:col-span-1 w-full"
+            :class="setBgColor(4)"
+            @click="
+              $router.push({ path: '/images/' + fiveImg.most_recent.sha })
+            "
+          >
             <svg
-              v-if="index === 4"
               class="absolute opacity-20 right-0 -bottom-8"
               fill="white"
               xmlns="http://www.w3.org/2000/svg"
@@ -251,16 +392,23 @@
             </svg>
             <p>
               {{ $t('index.name_of_image') }} :
-              {{ image.image + ':' + image.tag }}
+              {{ fiveImg.most_recent.image + ':' + fiveImg.most_recent.tag }}
             </p>
-            <p>{{ $t('index.size_of_image') }} : {{ calcSize(image.size) }}</p>
-            <p>{{ $t('index.packages') }} : {{ image.packages }}</p>
             <p>
-              {{ $t('index.vulnerabilities') }} : {{ image.vulnerabilities }}
+              {{ $t('index.size_of_image') }} :
+              {{ calcSize(fiveImg.most_recent.size) }}
+            </p>
+            <p>
+              {{ $t('index.packages') }} :
+              {{ fiveImg.most_recent.packages }}
+            </p>
+            <p>
+              {{ $t('index.vulnerabilities') }} :
+              {{ fiveImg.most_recent.vulnerabilities }}
             </p>
             <p>
               {{ $t('index.outdated_packages') }} :
-              {{ image.outdated_packages }}
+              {{ fiveImg.most_recent.outdated_packages }}
             </p>
           </div>
         </div>
