@@ -5,8 +5,8 @@
       <div
         class="col-span-3 overflow-x-auto md:col-span-1 w-full shadow-md bg-neptune-blue px-5 rounded-lg py-5 relative overflow-hidden bg-neptune-blue text-white"
       >
-        <div class="w-2/3 grid grid-cols-2">
-          <div>
+        <div class="w-3/4 grid grid-cols-2">
+          <div class="col-span-2 lg:col-span-1">
             <p>
               {{ $t('image_id.image_name') }} :
               {{ currentImage.image + ':' + currentImage.tag }}
@@ -19,13 +19,15 @@
               {{ $t('image_id.add_date') }} :
               {{
                 new Date(currentImage.date_added).toLocaleDateString('fr-FR') +
-                ' à ' +
+                ' ' +
+                $t('image_id.at') +
+                ' ' +
                 new Date(currentImage.date_added).toLocaleTimeString('fr-FR')
               }}
             </p>
             <p>{{ $t('image_id.distro') }} : {{ currentImage.distro }}</p>
           </div>
-          <div>
+          <div class="col-span-3 lg:col-span-1">
             <p>
               {{ $tc('image_id.package', currentImage.packages.length) }} :
               {{ currentImage.packages.length }}
@@ -131,6 +133,7 @@
             </p>
             <Table
               :data="vulnActive"
+              :key="refreshKey"
               :columns="[
                 { label: $t('vulnerability.acknowledged'), name: 'ack' },
                 { label: $t('image_id.cve'), name: 'name' },
@@ -138,7 +141,6 @@
                 { label: $t('image_id.severity'), name: 'severity' },
                 { label: $t('vulnerability.notes'), name: 'notes' },
               ]"
-              :key="refreshKey"
             >
               <template slot="ack" slot-scope="{ item }">
                 <button
@@ -202,6 +204,7 @@
             <p class="underline">{{ $tc('image_id.vulnerabilities', 2) }} :</p>
             <Table
               :data="vulnData"
+              :key="refreshKey"
               :columns="[
                 { label: $t('vulnerability.acknowledged'), name: 'ack' },
                 { label: $t('image_id.cve'), name: 'name' },
@@ -209,7 +212,6 @@
                 { label: $t('image_id.severity'), name: 'severity' },
                 { label: $t('vulnerability.notes'), name: 'notes' },
               ]"
-              :key="refreshKey"
             >
               <template slot="ack" slot-scope="{ item }">
                 <button

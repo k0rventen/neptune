@@ -64,6 +64,8 @@
         <p>{{ $tc('images.vulnerabilities', tag.vulnerabilities) }} : {{ tag.vulnerabilities }}</p>
         <p>{{ $tc('images.active_vulnerability', tag.active_vulnerabilities) }} : {{ tag.active_vulnerabilities }}</p>
         <p>{{ $tc('images.outdated_packages', tag.outdated_packages) }} : {{ tag.outdated_packages }}</p>
+        <p>{{ $t('images.add_date') }} : {{ new Date(tag.date_added).toLocaleDateString('fr-FR') + ' ' + $t('images.at') + ' ' + new Date(tag.date_added).toLocaleTimeString('fr-FR')  }}</p>
+        <p>{{ $t('images.sha') }} : {{ shaCut(tag.sha) }}</p>
       </div>
     </div>
     <div class="w-full flex justify-center mt-2">
@@ -154,7 +156,10 @@ export default {
         this.nbPages = Math.ceil(this.tags.total / this.tags.per_page)
         this.backupTags = [...this.tags.items]
       })
-    }
+    },
+    shaCut(sha) {
+      return sha.split(':')[1].substring(0, 10)
+    },
   },
 }
 </script>

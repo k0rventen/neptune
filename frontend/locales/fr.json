@@ -52,6 +52,9 @@
     "send": "Envoyer",
     "search": "Rechercher ...",
     "add_image": "Ajouter une image",
+    "add_date": "Date d'ajout",
+    "sha": "SHA",
+    "at": "à",
     "order_by": "Trier par",
     "severity_filter": "Filtrer par sévérité :",
     "state_filter": "Filtrer par état :",
@@ -90,7 +93,9 @@
     "version": "Version",
     "outdated": "Obsolète",
     "cve": "CVE",
-    "severity": "Sévérité"
+    "severity": "Sévérité",
+    "sha": "SHA",
+    "at": "à"
   },
   "vulnerability" : {
     "name": "Nom",

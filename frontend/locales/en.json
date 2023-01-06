@@ -57,8 +57,11 @@
   },
   "images" : {
     "send": "Send",
+    "sha": "SHA",
     "search": "Search ...",
     "add_image": "Add image",
+    "add_date": "Date d'ajout",
+    "at": "at",
     "order_by": "Order by",
     "severity_filter": "Severity filter :",
     "state_filter": "State filter :",
@@ -97,7 +100,9 @@
     "version": "Version",
     "outdated": "Outdated",
     "cve": "CVE",
-    "severity": "Severity"
+    "severity": "Severity",
+    "sha": "SHA",
+    "at": "at"
   },
   "vulnerability" : {
     "name": "Name",
