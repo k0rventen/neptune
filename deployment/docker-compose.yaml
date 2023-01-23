@@ -1,0 +1,10 @@
+services:
+  neptune:
+    image: k0rventen/neptune
+    build: ../
+    ports:
+      - 5000:5000
+    volumes:
+      - neptune_data:/app/data
+volumes:
+  neptune_data:
