@@ -3,13 +3,12 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
-
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from models import (HistoricalStatistics, Package,
                     RegistryConfig, Tag, Vulnerability, get_db)
-from utils import (Logger, create_statistics, paginate_query, skopeo_login,database_housekeeping)
+from utils import (Logger, create_statistics, paginate_query, skopeo_login,database_housekeeping,auth_required)
 
 
 class RegistryConfigRequest(BaseModel):
@@ -32,8 +31,8 @@ class PackagePut(BaseModel):
     minimum_version: Optional[str]
 
 logger = Logger("api")
-api_router = APIRouter(prefix='/api')
 
+api_router = APIRouter(prefix='/api',dependencies=[Depends(auth_required)])
 
 @api_router.post("/registries", tags=['config'])
 def post_config(new_config: RegistryConfigRequest, session: Session = Depends(get_db)):
@@ -119,7 +118,7 @@ def get_featured_tags(session: Session = Depends(get_db)):
             if tag[feature] > response["most_"+feature].get(feature, -1):
                 response["most_"+feature] = tag
     response["most_recent"] = most_recent_tag_serialized
-    return list(response.values())
+    return response
 
 
 @api_router.get("/tags/{sha}", tags=['images'])

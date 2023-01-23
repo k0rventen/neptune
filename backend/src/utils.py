@@ -9,7 +9,8 @@ import requests
 
 from models import (Tag, Package, PackageVersion, RegistryConfig,
                     Vulnerability, HistoricalStatistics, create_session)
-
+from fastapi import Depends, HTTPException
+from fastapi.security import APIKeyHeader
 stop_flag = threading.Event()
 scan_mutex = threading.Lock()
 
@@ -22,6 +23,16 @@ class APIServer(uvicorn.Server):
     def handle_exit(self, sig: int, frame) -> None:
         stop_flag.set()
         return super().handle_exit(sig, frame)
+
+
+NEPTUNE_SECURITY_KEY = os.getenv("NEPTUNE_SECURITY_KEY")
+if NEPTUNE_SECURITY_KEY:
+    api_key_header = APIKeyHeader(name="x-neptune-key")
+    async def auth_required(x_api_key: str = Depends(api_key_header)):
+        if x_api_key != NEPTUNE_SECURITY_KEY:
+            raise HTTPException(status_code=401, detail="neptune-key Header is invalid")
+else:
+    async def auth_required(): pass
 
 
 def Logger(name, level='INFO'):
@@ -233,3 +244,6 @@ def syft_report(local_image_path):
         with open(syft_report_path) as f:
             return syft_report_path, json.load(f)
     return False, syft.stdout.decode()+syft.stderr.decode()
+
+def vulnerability_alert():
+    pass
