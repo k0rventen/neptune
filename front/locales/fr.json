@@ -1,0 +1,117 @@
+{
+    "sidebar": {
+        "dashboard": "Dashboard",
+        "images": "Images",
+        "vulnerabilities": "Vulnérabilités",
+        "dependencies": "Dépendances",
+        "registry": "Registre"
+    },
+    "index": {
+        "img_follow": "Suivis des stats d'images",
+        "img_total": "Nombre total d'image",
+        "img_w_vuln": "Image avec vulnérabilités",
+        "img_w_outdated": "Images avec paquets obsolètes",
+        "img_follow_vuln": "Suivis des vulnérabilités",
+        "amount_of_vuln": "Nombre total de vulnérabilités",
+        "active_vuln": "Vulnérabilités actives",
+        "low_vuln": "Vulnérabilités faibles",
+        "medium_vuln": "Vulnérabilités moyennes",
+        "high_vuln": "Vulnérabilités élevées",
+        "critic_vuln": "Vulnérabilités critiques",
+        "package_stat": "Statistiques des paquets",
+        "total_img": "Nombre total d'images",
+        "card": {
+            "amount_vuln": "Nombre de vulnérabilités",
+            "amount_img": "Nombre d'image avec vulnérabilités",
+            "amount_pkg": "Nombre de paquets",
+            "img_name": "Nom de l'image",
+            "img_size": "Taille de l'image",
+            "packages": "Paquets",
+            "vulnerabilities": "Vulnérabilités",
+            "outdated_package": "Paquets obsolètes"
+        },
+        "topfiveimg": "Top 5 des images",
+        "the_most_vulnerable_active": "Plus gros nombre de vulnérabilités active",
+        "the_most_vulnerable": "Plus gros nombre de vulnérabilités",
+        "the_most_outdated": "Plus de paquets obsolètes",
+        "the_most_package": "Plus de paquets",
+        "the_most_recent": "Plus récente"
+    },
+    "images": {
+        "img_name": "Nom de l'image",
+        "modal": {
+            "title": "Ajouter une image",
+            "img_name": "Nom de l'image",
+            "add": "Ajouter"
+        },
+        "add_img": "Ajouter une image",
+        "card": {
+            "img_name": "Nom de l'image",
+            "img_size": "Taille de l'image",
+            "packages": "Paquets",
+            "vulnerabilities": "Vulnérabilités",
+            "active_vuln": "Vulnérabilités actives",
+            "outdated_package": "Paquets obsolètes",
+            "img_add": "Image ajouté le"
+        }
+    },
+    "vulnerabilities": {
+        "active": "Actif",
+        "inactive": "Inactif",
+        "cve": "CVE",
+        "severity": "Sévérité",
+        "source": "Source",
+        "affected_tags": "Tags affecté",
+        "notes": "Notes",
+        "vuln_name": "Nom de la vulnérabilitée",
+        "severity_filter": "Filtre par sévérité",
+        "no_filter": "Aucun filtre",
+        "unknown": "Inconnu",
+        "negligible": "Négligeable",
+        "low": "Faible",
+        "medium": "Moyennes",
+        "high": "Élevé",
+        "critical": "Critique",
+        "filter_state": "Filtrer par état",
+        "state": {
+            "unknown": "Inconnu",
+            "low": "Faible",
+            "medium": "Moyennes",
+            "high": "Élevé",
+            "critical": "Critique",
+            "negligible": "Négligeable"
+        }
+    },
+    "dependencies": {
+        "name": "Nom",
+        "type": "Type",
+        "added_date": "Date d'ajout",
+        "versions": "Versions",
+        "dependency_name": "Nom de la dépendence",
+        "dependency_w_outdated": "Dépendence avec paquets obsolètes",
+        "dependency_w_vuln": "Dépendence avec des vulnérabilites"
+    },
+    "registry": {
+        "url": "URL",
+        "username": "Nom d'utilisateur",
+        "password": "Mot de passe",
+        "added": "Ajouter"
+    },
+    "img_detail": {
+        "package": "Paquet",
+        "version": "Version",
+        "uptodate": "A jour",
+        "active": "Actif",
+        "cve": "CVE",
+        "packages": "Paquets",
+        "severity": "Sévérité",
+        "notes": "Notes",
+        "img_name":"Nom de l'image",
+        "img_size":"Taille de l'image",
+        "vulnerabilities": "Vulnérabilités",
+        "added_date":"Date d'ajout",
+        "active_vuln":"Vulnérabilités actives",
+        "distro": "Distribution",
+        "outdated_package":"Paquets obsolètes"
+    }
+}
