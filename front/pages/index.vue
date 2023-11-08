@@ -241,7 +241,7 @@ await store.getHistoricalStat().then(() => {
 </script>
 
 <template>
-    <div class="w-full grid grid-cols-4 grid-row-layout gap-5 h-full">
+    <div class="w-full grid grid-cols-4 grid-rows-layout gap-5 h-full">
         <div
             class="w-full p-5 bg-white shadow-md flex justify-between items-center col-span-4 lg:col-span-1">
             <div>
