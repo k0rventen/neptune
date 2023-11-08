@@ -17,19 +17,19 @@ const openSidebar = (state) => {
                 <img class="ml-3" src="@/assets/img/dashboard.svg" alt="">
                 <p class="transition-all ease-in" :class="isOpen ? 'opacity-100' : 'opacity-0'">{{ $t('sidebar.dashboard') }}</p>
             </nuxt-link>
-            <nuxt-link class="flex flex-nowrap grow items-center gap-3 py-2" to="images">
+            <nuxt-link class="flex flex-nowrap grow items-center gap-3 py-2" to="/images">
                 <img class="ml-3" src="@/assets/img/box.svg" alt="">
                 <p class="transition-all ease-in" :class="isOpen ? 'opacity-100' : 'opacity-0'">{{ $t('sidebar.images') }}</p>
             </nuxt-link>
-            <nuxt-link class="flex flex-nowrap grow items-center gap-3 py-2" to="vulnerabilities">
+            <nuxt-link class="flex flex-nowrap grow items-center gap-3 py-2" to="/vulnerabilities">
                 <img class="ml-3" src="@/assets/img/vulnerability.svg" alt="">
                 <p class="transition-all ease-in" :class="isOpen ? 'opacity-100' : 'opacity-0'">{{ $t('sidebar.vulnerabilities') }}</p>
             </nuxt-link>
-            <nuxt-link class="flex flex-nowrap grow items-center gap-3 py-2" to="dependencies">
+            <nuxt-link class="flex flex-nowrap grow items-center gap-3 py-2" to="/dependencies">
                 <img class="ml-3" src="@/assets/img/paperclip.svg" alt="">
                 <p class="transition-all ease-in" :class="isOpen ? 'opacity-100' : 'opacity-0'">{{ $t('sidebar.dependencies') }}</p>
             </nuxt-link>
-            <nuxt-link class="flex flex-nowrap grow items-center gap-3 py-2" to="registry">
+            <nuxt-link class="flex flex-nowrap grow items-center gap-3 py-2" to="/registry">
                 <img class="ml-3" src="@/assets/img/inbox.svg" alt="">
                 <p class="transition-all ease-in" :class="isOpen ? 'opacity-100' : 'opacity-0'">{{ $t('sidebar.registry') }}</p>
             </nuxt-link>

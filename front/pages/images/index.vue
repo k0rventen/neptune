@@ -20,7 +20,7 @@ const openModal = ref(false)
 
 
 const sendNewImg = async () => {
-    await imageStore.scanImage(image)
+    await imageStore.scanImage(image.value)
 }
 
 const delay = ref(undefined)

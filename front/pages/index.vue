@@ -243,7 +243,7 @@ await store.getHistoricalStat().then(() => {
 <template>
     <div class="w-full grid grid-cols-4 grid-row-layout gap-5 h-full">
         <div
-            class="w-full p-5 bg-white dark:bg-[#303030] dark:text-white shadow-md flex justify-between items-center col-span-4 lg:col-span-1">
+            class="w-full p-5 bg-white shadow-md flex justify-between items-center col-span-4 lg:col-span-1">
             <div>
                 <p>{{ $t('index.card.amount_vuln') }}</p>
                 <p>{{ store.stats.vulnerabilities_total_count }}</p>
@@ -257,7 +257,7 @@ await store.getHistoricalStat().then(() => {
             </div>
         </div>
         <div
-            class="w-full h-full p-5 bg-white dark:bg-[#303030] dark:text-white shadow-md flex justify-between items-center col-span-4 lg:col-span-1">
+            class="w-full h-full p-5 bg-white shadow-md flex justify-between items-center col-span-4 lg:col-span-1">
             <div>
                 <p>{{ $t('index.card.amount_img') }}</p>
                 <p>{{ store.stats.tags_total_count }}</p>
@@ -271,7 +271,7 @@ await store.getHistoricalStat().then(() => {
             </div>
         </div>
         <div
-            class="w-full h-full p-5 bg-white dark:bg-[#303030] dark:text-white shadow-md flex justify-between items-center col-span-4 lg:col-span-2">
+            class="w-full h-full p-5 bg-white shadow-md flex justify-between items-center col-span-4 lg:col-span-2">
             <div>
                 <p>{{ $t('index.card.amount_pkg') }}</p>
                 <p>{{ store.stats.packages_total_count }}</p>
@@ -284,25 +284,25 @@ await store.getHistoricalStat().then(() => {
             </div>
         </div>
         <div
-            class="w-full h-full max-h-fit p-5 bg-white dark:bg-[#303030] dark:text-white shadow-md flex justify-between items-center col-span-4 md:col-span-2">
+            class="w-full h-full max-h-fit p-5 bg-white shadow-md flex justify-between items-center col-span-4 md:col-span-2">
             <apexchart class="w-full" height="100%" type="line" :options="tags.options" :series="tags.series" />
         </div>
         <div
-            class="w-full h-full max-h-fit p-5 bg-white dark:bg-[#303030] dark:text-white shadow-md flex justify-between items-center col-span-4 md:col-span-2">
+            class="w-full h-full max-h-fit p-5 bg-white shadow-md flex justify-between items-center col-span-4 md:col-span-2">
 
         </div>
         <div
-            class="w-full h-full max-h-fit p-5 bg-white dark:bg-[#303030] dark:text-white shadow-md flex justify-between items-center col-span-4 md:col-span-2">
+            class="w-full h-full max-h-fit p-5 bg-white shadow-md flex justify-between items-center col-span-4 md:col-span-2">
             <apexchart class="w-full" height="100%" type="line" :options="vuln.options" :series="vuln.series" />
         </div>
         <div
-            class="w-full h-full max-h-fit p-5 bg-white dark:bg-[#303030] dark:text-white shadow-md flex justify-between items-center col-span-4 md:col-span-2">
+            class="w-full h-full max-h-fit p-5 bg-white shadow-md flex justify-between items-center col-span-4 md:col-span-2">
             <apexchart class="w-full" height="100%" type="line" :options="packages.options" :series="packages.series" />
         </div>
-        <div class="w-full h-full p-5 bg-white dark:bg-[#303030] dark:text-white shadow-md col-span-4 text-white">
+        <div class="w-full h-full p-5 bg-white shadow-md col-span-4 text-white">
             <div class="lg:flex items-center justify-between">
-                <p class="text-black dark:text-white underline underline-offset-4">{{ $t('index.topfiveimg')}}</p>
-                <div class="text-black dark:text-white flex flex-col lg:flex-row mt-3 lg:mt-0 gap-3">
+                <p class="text-black underline underline-offset-4">{{ $t('index.topfiveimg')}}</p>
+                <div class="text-black flex flex-col lg:flex-row mt-3 lg:mt-0 gap-3">
                     <div class="flex items-center gap-1">
                         <div class="h-3 w-3 rounded-sm bg-black"></div>
                         <p class="text-xs">
