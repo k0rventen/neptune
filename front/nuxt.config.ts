@@ -4,7 +4,7 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      apiBase: ''
+      apiBase: '/api'
     }
   },
 
