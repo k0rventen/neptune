@@ -18,7 +18,6 @@
     "@pinia/nuxt": "^0.4.11",
     "apexcharts": "^3.42.0",
     "floating-vue": "^2.0.0-beta.24",
-    "pinia": "^2.1.7",
     "vue3-apexcharts": "^1.4.4"
   }
 }

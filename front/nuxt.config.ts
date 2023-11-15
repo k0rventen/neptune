@@ -28,5 +28,9 @@ export default defineNuxtConfig({
 
   plugins: [
     { src: '@/plugins/apexcharts.ts', mode: 'client' },
-  ]
+  ],
+
+  alias: {
+    pinia: "/node_modules/@pinia/nuxt/node_modules/pinia/dist/pinia.mjs"
+  },
 })
