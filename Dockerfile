@@ -2,8 +2,8 @@
 FROM debian:bullseye as bin-downloader
 RUN apt update && apt install upx-ucl curl ca-certificates -y --no-install-recommends
 WORKDIR /download
-ARG SYFT_VERSION=v0.95.0
-ARG GRYPE_VERSION=v0.73.0
+ARG SYFT_VERSION=v0.96.0
+ARG GRYPE_VERSION=v0.73.1
 RUN curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b . ${SYFT_VERSION}
 RUN curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b . ${GRYPE_VERSION}
 RUN upx grype syft
