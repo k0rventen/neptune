@@ -54,7 +54,8 @@
             "active_vuln": "Vulnerabilità Attive",
             "outdated_package": "Pacchetti Obsoleti",
             "img_add": "Immagine Aggiunta il"
-        }
+        },
+        "with_vuln": "Con vulnerabilità"
     },
     "vulnerabilities": {
         "active": "Attive",
@@ -85,12 +86,12 @@
     },
     "dependencies": {
         "name": "Nome",
-        "type": "Tipo",
         "added_date": "Data di Aggiunta",
         "versions": "Versioni",
         "dependency_name": "Nome della Dipendenza",
         "dependency_w_outdated": "Dipendenze con Pacchetti Obsoleti",
-        "dependency_w_vuln": "Dipendenze con Vulnerabilità"
+        "dependency_w_vuln": "Dipendenze con Vulnerabilità",
+        "type": "Tipo di dipendenza"
     },
     "registry": {
         "url": "URL",

@@ -54,7 +54,8 @@
             "active_vuln": "Active Vulnerabilities",
             "outdated_package": "Outdated Packages",
             "img_add": "Image Added On"
-        }
+        },
+        "with_vuln": "With vulnerabilities"
     },
     "vulnerabilities": {
         "active": "Active",
@@ -85,12 +86,12 @@
     },
     "dependencies": {
         "name": "Name",
-        "type": "Type",
         "added_date": "Added Date",
         "versions": "Versions",
         "dependency_name": "Dependency Name",
         "dependency_w_outdated": "Dependencies with Outdated Packages",
-        "dependency_w_vuln": "Dependencies with Vulnerabilities"
+        "dependency_w_vuln": "Dependencies with Vulnerabilities",
+        "type": "Type of dependencies"
     },
     "registry": {
         "url": "URL",

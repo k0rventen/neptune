@@ -1,4 +1,6 @@
 <script setup>
+const localPath = useLocalePath()
+
 const props = defineProps({
     image: {
         type: Object,
@@ -19,7 +21,7 @@ const selectColor = (vuln, outdated) => {
 
 <template>
     <nuxt-link class="w-full h-full rounded p-3 text-light-gray font-light relative overflow-hidden"
-        :class="selectColor(props.image.vulnerabilities, props.image.outdated_packages)" :to="`/images/${props.image.sha}`">
+        :class="selectColor(props.image.vulnerabilities, props.image.outdated_packages)" :to="localPath(`/images/${props.image.sha}`)">
         <svg class="absolute opacity-20 right-0 -bottom-8" width="128" height="128" viewBox="0 0 24 24"
             xmlns="http://www.w3.org/2000/svg" fill="white">
             <path

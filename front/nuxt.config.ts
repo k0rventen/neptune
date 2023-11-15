@@ -22,7 +22,11 @@ export default defineNuxtConfig({
   i18n: {
     strategy: 'prefix_except_default',
     defaultLocale: 'en',
-    locales : ['fr', 'en', 'it'],
+    locales : [
+      {code: 'fr', name: '🇫🇷' }, 
+      {code: 'en', name: '🇬🇧' },
+      {code: 'it', name: '🇮🇹'}
+    ],
     vueI18n: './i18n.config.ts'
   },
 
