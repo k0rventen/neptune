@@ -87,7 +87,7 @@ def statistics(session: Session = Depends(get_db), current: bool = False):
 
 
 @api_router.get("/tags", tags=['images'])
-def get_all_tags(session: Session = Depends(get_db), name_filter: str = None, tag_filter: str = None,distro_filter: str = None, has_vuln: bool = None page: int = 1, per_page: int = 20):
+def get_all_tags(session: Session = Depends(get_db), name_filter: str = None, tag_filter: str = None,distro_filter: str = None, has_vuln: bool = None, page: int = 1, per_page: int = 20):
     """list of tags"""
     filters = []
     if tag_filter:
@@ -96,7 +96,8 @@ def get_all_tags(session: Session = Depends(get_db), name_filter: str = None, ta
         filters.append(Tag.image.ilike(f"%{name_filter}%"))
     if distro_filter:
         filters.append(Tag.distro.ilike(f"%{distro_filter}%"))
-    if has_vuln
+    if has_vuln:
+        pass
     query = session.query(Tag).order_by(Tag.date_added.desc()).filter(*filters)
     return paginate_query(query, page, per_page)
 
