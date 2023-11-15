@@ -2,7 +2,7 @@
 """
 import time
 
-from schedule import every, repeat, run_pending
+from schedule import every, repeat, run_pending, run_all
 
 from utils import (Logger, cleanup_images, create_statistics,
                    database_housekeeping, db_sbom_rescan, grype_update,
@@ -13,7 +13,6 @@ tasks_logger = Logger("tasks")
 
 def tasks_thread():
     tasks_logger.info("Starting background tasks thread")
-    startup_logins()
     while not stop_flag.is_set():
         run_pending()
         time.sleep(1)
@@ -21,9 +20,14 @@ def tasks_thread():
 
 
 @repeat(every().day.at("20:00"))
-def daily_housekeeping():
+def daily_rescan():
+    tasks_logger.info("starting complete inventory rescan..")
     grype_update()
     db_sbom_rescan()
+
+@repeat(every().day.at("23:00"))
+def daily_housekeeping():
+    tasks_logger.info("starting housekeeping chores..")
     database_housekeeping()
     cleanup_images()
     create_statistics()

@@ -23,12 +23,12 @@ spec:
       volumes:
         - name: data
           persistentVolumeClaim:
-            claimName: neptune-data
+            claimName: neptune--perstistent-data
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: neptune-data
+  name: neptune--perstistent-data
 spec:
   resources:
     requests:
