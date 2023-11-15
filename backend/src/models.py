@@ -157,7 +157,6 @@ class Package(Base):
     name = Column(String(64))
     type = Column(String(64))
     minimum_version = Column(String(16), default="0.0.0")
-    notes = Column(String(256), default="")
     date_added = Column(DateTime, default=datetime.now)
 
     # list of versions of this package
@@ -187,7 +186,6 @@ class Package(Base):
             'type': self.type,
             'minimum_version': self.minimum_version,
             'configured': self.minimum_version != '0.0.0',
-            'notes': self.notes,
             "date_added": self.date_added,
             'versions': [v.serialize() for v in self.versions]
         }
@@ -276,6 +274,7 @@ class Vulnerability(Base):
     notes = Column(String(1024), default="")
     date_added = Column(DateTime, default=datetime.now)
     active = Column(Boolean, default=True)
+    discovered_during_rescan = Column(Boolean, nullable=True,default=False)
 
     package_id = Column(Integer, ForeignKey('packageversions.id'))
     package = relationship("PackageVersion", back_populates="vulnerabilities")
@@ -288,6 +287,7 @@ class Vulnerability(Base):
             "notes": self.notes,
             "active": self.active,
             "affected_package": self.package.id,
+            "discovered_during_rescan": self.discovered_during_rescan
         }
         if full:
             spec["affected_images"] = [

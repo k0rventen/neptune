@@ -6,11 +6,21 @@ import threading
 import json
 import uvicorn
 import requests
+from uvicorn.config import LOGGING_CONFIG
 
 from models import (Tag, Package, PackageVersion, RegistryConfig,
                     Vulnerability, HistoricalStatistics, create_session)
 from fastapi import Depends, HTTPException
 from fastapi.security import APIKeyHeader
+
+# uvicorn logging setup
+LOGGING_CONFIG["formatters"]["default"]["fmt"] = "%(asctime)s :: uvicorn :: %(levelname)s :: %(message)s"
+LOGGING_CONFIG["formatters"]["default"]["datefmt"] = "%Y-%m-%d %H:%M:%S"
+
+# disable uvicorn access logger
+LOGGING_CONFIG["loggers"]["uvicorn.access"]["handlers"] = []
+
+
 stop_flag = threading.Event()
 scan_mutex = threading.Lock()
 
@@ -113,8 +123,9 @@ def database_housekeeping():
 
 
 
-def create_statistics(save_to_db=True):
-    session = create_session()
+def create_statistics(session=None,save_to_db=True):
+    if not session:
+        session = create_session()
 
     all_tags = session.query(Tag).all()
 

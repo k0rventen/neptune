@@ -4,21 +4,22 @@ import time
 from typing import Optional
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from fastapi.responses import JSONResponse
 from models import (Package, PackageVersion, SBOMJson, Tag, Vulnerability,
                     get_db)
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from utils import (Logger, cleanup_images, database_housekeeping, grype_report,
+from utils import (Logger, cleanup_images, database_housekeeping, grype_report,create_statistics,
                    human_readable_size, human_readable_time, scan_mutex,
                    skopeo_login, skopeo_pull, syft_report)
 
 
 class ImageScanRequest(BaseModel):
-    image: Optional[str]
-    sha: Optional[str]
-    return_error: Optional[bool]
+    image: str | None = None
+    sha: str | None = None
+    return_error: bool | None = False
+
 
 logger = Logger("api")
 api_router = APIRouter(prefix='/api')
@@ -48,6 +49,8 @@ def scan_image(scan_request: ImageScanRequest, session: Session = Depends(get_db
     elif scan_request.sha:
         spec_image = session.query(Tag).filter(
             Tag.sha == scan_request.sha).first()
+        if not spec_image:
+            raise HTTPException(status_code=404, detail="SHA does not exists")
         logger.info(f"rescanning {spec_image.image}:{spec_image.tag} ({spec_image.sha})")
         scan_uuid = uuid4()
         syft_report_path = f'/tmp/{scan_uuid}_syftreport.json'
@@ -85,9 +88,9 @@ def scan_image(scan_request: ImageScanRequest, session: Session = Depends(get_db
             sha_already_scanned = session.query(
                 Tag).filter(Tag.sha == image_sha).one_or_none()
             if sha_already_scanned:
-                logger.warning(
-                    "This image (%s) was already inventoried. deleting the record.", image_sha)
-                session.delete(sha_already_scanned)
+                logger.warning("This specific image %s:%s (%s) was already inventoried, skipping.", image_name,image_tag,image_sha)
+                return JSONResponse({"detail":"sha already scanned"},status_code=202)
+                #session.delete(sha_already_scanned)
             # create tag
             s_sbom = SBOMJson(sbom=sbom_json)
             s_image = Tag(tag=image_tag,
@@ -97,6 +100,7 @@ def scan_image(scan_request: ImageScanRequest, session: Session = Depends(get_db
                         size=image_size,
                         sbom=s_sbom,
                         packages=[])
+            session.add(s_image)
 
             # packages
             for p in sbom:
@@ -152,4 +156,8 @@ def scan_image(scan_request: ImageScanRequest, session: Session = Depends(get_db
                 "scan_time": human_readable_time(int(t1)),
                 "packages": len(s_image.packages),
                 "vulnerabilities": active_vulns}
+
+    # ask for a new stats point to be c reated in the bg
+    create_statistics(session=session)
+
     return JSONResponse(response, status_code=400 if active_vulns and scan_request.return_error else 200)

@@ -1,0 +1,3 @@
+[submodule "frontend2"]
+	path = frontend2
+	url = https://github.com/Kalv1/neptune.git

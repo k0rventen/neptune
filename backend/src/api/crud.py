@@ -22,13 +22,13 @@ class RegistryConfigDelete(BaseModel):
 
 
 class VulnPut(BaseModel):
-    notes: Optional[str]
-    active: Optional[bool]
+    notes: str | None = None
+    active: bool | None = None
 
 
 class PackagePut(BaseModel):
-    notes: Optional[str]
-    minimum_version: Optional[str]
+    notes: str | None = None
+    minimum_version: str | None = None
 
 logger = Logger("api")
 
@@ -76,20 +76,18 @@ def statistics(session: Session = Depends(get_db), current: bool = False):
     """statistics about the inventory
     if current is True, only returns the last element
     """
+    base_query = session.query(HistoricalStatistics)
     if current:
-        last_stat_json = create_statistics(save_to_db=False)
-        last_stat_json.pop("timestamp")
-        last_stat_json["severities"] = {k: session.query(Vulnerability).filter(Vulnerability.severity == k).count(
-        ) for k in ["Low", "Medium", "High", "Critical", "Negligible", "Unknown"]}
-        return last_stat_json
-    stats = session.query(HistoricalStatistics).order_by(
-        HistoricalStatistics.timestamp.asc()).all()
+        last_stats = base_query.order_by(HistoricalStatistics.timestamp.desc()).first()
+        return last_stats.serialize() if last_stats else None
+         
+    stats = base_query.order_by(HistoricalStatistics.timestamp.asc()).all()
     stats = [s.serialize() for s in stats]
     return stats
 
 
 @api_router.get("/tags", tags=['images'])
-def get_all_tags(session: Session = Depends(get_db), name_filter: str = None, tag_filter: str = None,distro_filter: str = None, page: int = 1, per_page: int = 20):
+def get_all_tags(session: Session = Depends(get_db), name_filter: str = None, tag_filter: str = None,distro_filter: str = None, has_vuln: bool = None page: int = 1, per_page: int = 20):
     """list of tags"""
     filters = []
     if tag_filter:
@@ -98,6 +96,7 @@ def get_all_tags(session: Session = Depends(get_db), name_filter: str = None, ta
         filters.append(Tag.image.ilike(f"%{name_filter}%"))
     if distro_filter:
         filters.append(Tag.distro.ilike(f"%{distro_filter}%"))
+    if has_vuln
     query = session.query(Tag).order_by(Tag.date_added.desc()).filter(*filters)
     return paginate_query(query, page, per_page)
 
@@ -125,8 +124,9 @@ def get_featured_tags(session: Session = Depends(get_db)):
 def get_tag(sha: str, session: Session = Depends(get_db)):
     """specific image:tag"""
     spec_image = session.query(Tag).filter(Tag.sha == sha).first()
-    return spec_image.serialize(full=True)
-
+    if spec_image:
+        return spec_image.serialize(full=True)
+    return HTTPException(status_code=404, detail="sha does not exist")
 
 @api_router.delete("/tags/{sha}", tags=['images'])
 def delete_tag(sha: str, session: Session = Depends(get_db)):
@@ -139,7 +139,7 @@ def delete_tag(sha: str, session: Session = Depends(get_db)):
 
 
 @api_router.get("/vulnerabilities", tags=['vulnerabilities'])
-def all_vulnerabilities(session: Session = Depends(get_db), name_filter: str = None, severity_filter: str = None, notes_filter: str = None, active_filter: bool = None, page: int = 1, per_page: int = 20):
+def all_vulnerabilities(session: Session = Depends(get_db), name_filter: str = None, severity_filter: str = None, notes_filter: str = None, active_filter: bool = None, scan_filter: bool = None, page: int = 1, per_page: int = 20):
     """vulnerabilities interface"""
     filters = []
     if name_filter:
@@ -150,7 +150,8 @@ def all_vulnerabilities(session: Session = Depends(get_db), name_filter: str = N
         filters.append(Vulnerability.notes.ilike(f"%{notes_filter}%"))
     if active_filter is not None:
         filters.append(Vulnerability.active.is_(active_filter))
-
+    if scan_filter is not None:
+        filters.append(Vulnerability.discovered_during_rescan.is_(scan_filter))
     query = session.query(Vulnerability).filter(*filters)
     return paginate_query(query, page, per_page, full_serialize=True)
 

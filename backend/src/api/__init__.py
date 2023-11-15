@@ -8,8 +8,8 @@ from .scan import api_router as scan_router
 
 neptune_api = FastAPI(
     title="Neptune API",
-    version="0.4.0",
-    description="Containers SBOM & vulnerability management",
+    version="0.6.0",
+    description="Containers SBOM & vulnerability management system",
     redoc_url=None,
     docs_url="/api",
     openapi_url="/api/openapi.json"
