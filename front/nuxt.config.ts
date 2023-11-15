@@ -2,6 +2,12 @@
 export default defineNuxtConfig({
   ssr: false,
 
+  app: {
+    head: {
+      title: 'Neptune | SBOM platform'
+    }
+  },
+
   runtimeConfig: {
     public: {
       apiBase: '/api'
@@ -34,7 +40,4 @@ export default defineNuxtConfig({
     { src: '@/plugins/apexcharts.ts', mode: 'client' },
   ],
 
-  alias: {
-    pinia: "/node_modules/@pinia/nuxt/node_modules/pinia/dist/pinia.mjs"
-  },
 })
