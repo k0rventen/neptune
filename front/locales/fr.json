@@ -4,7 +4,8 @@
         "images": "Images",
         "vulnerabilities": "Vulnérabilités",
         "dependencies": "Dépendances",
-        "registry": "Registre"
+        "registry": "Registre",
+        "new_vuln": "Nouvelle vulnérabilités"
     },
     "index": {
         "img_follow": "Suivis des stats d'images",

@@ -1,10 +1,11 @@
 {
     "sidebar": {
-        "dashboard": "Dashboard",
+        "dashboard": "Pannello di controllo",
         "images": "Immagini",
         "vulnerabilities": "Vulnerabilità",
         "dependencies": "Dipendenze",
-        "registry": "Registro"
+        "registry": "Registro",
+        "new_vuln": "Nuove vulnerabilità"
     },
     "index": {
         "img_follow": "Tracciamento Immagini",

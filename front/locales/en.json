@@ -4,7 +4,8 @@
         "images": "Images",
         "vulnerabilities": "Vulnerabilities",
         "dependencies": "Dependencies",
-        "registry": "Registry"
+        "registry": "Registry",
+        "new_vuln": "New vulnerabilities"
     },
     "index": {
         "img_follow": "Image Tracking",

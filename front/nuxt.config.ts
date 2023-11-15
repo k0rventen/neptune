@@ -8,10 +8,6 @@ export default defineNuxtConfig({
     }
   },
 
-  alias: {
-    pinia: "/node_modules/@pinia/nuxt/node_modules/pinia/dist/pinia.mjs"
-  },
-
   css: [
     '@/assets/css/main.css'
   ],
@@ -24,6 +20,7 @@ export default defineNuxtConfig({
   ],
 
   i18n: {
+    strategy: 'prefix_except_default',
     defaultLocale: 'en',
     locales : ['fr', 'en', 'it'],
     vueI18n: './i18n.config.ts'

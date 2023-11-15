@@ -34,7 +34,8 @@ const pagination = reactive({
 const filter = reactive({
     name_filter: undefined,
     with_outdated_versions: undefined,
-    with_vulnerable_versions: undefined
+    with_vulnerable_versions: undefined,
+    type_filter: undefined
 })
 
 const columns = [
@@ -57,12 +58,23 @@ const columns = [
 ]
 
 const delay = ref(undefined)
+const delayTypeTime = ref(undefined)
 const openParam = ref(false)
 
 const delaySearch = (input) => {
     clearTimeout(delay.value)
     delay.value = setTimeout(async () => {
         filter.name_filter = input.target.value
+        await depStore.getPackages({ ...pagination, filter })
+        pagination.page = 1
+        refresh.value++
+    }, 750)
+}
+
+const delayType = (input) => {
+    clearTimeout(delay.value)
+    delayTypeTime.value = setTimeout(async () => {
+        filter.type_filter = input.target.value
         await depStore.getPackages({ ...pagination, filter })
         pagination.page = 1
         refresh.value++
@@ -133,11 +145,19 @@ watch(filter, async () => {
             </svg>
         </div>
 
-        <div v-if="openParam">
-            <input v-model="filter.with_outdated_versions" type="checkbox" id="outdatedV" name="outdatedV">
-            <label for="outdatedV">{{  $t('dependencies.dependency_w_outdated') }}</label>
-            <input v-model="filter.with_vulnerable_versions" class="ml-3" type="checkbox" id="vulnerableV" name="vulnerableV">
-            <label for="vulnerableV">{{  $t('dependencies.dependency_w_vuln') }}</label>
+        <div v-if="openParam" class="py-2">
+            <div class="flex gap-2">
+                <label for="outdatedV">{{  $t('dependencies.dependency_w_outdated') }}</label>
+                <input v-model="filter.with_outdated_versions" type="checkbox" id="outdatedV" name="outdatedV">
+            </div>
+            <div class="flex gap-2">
+                <label for="vulnerableV">{{  $t('dependencies.dependency_w_vuln') }}</label>
+                <input v-model="filter.with_vulnerable_versions" type="checkbox" id="vulnerableV" name="vulnerableV">
+            </div>
+            <div class="flex gap-2 items-center">
+                <label for="vulnerableV">{{  $t('dependencies.dependency_w_vuln') }}</label>
+                <input @input="delayType" class="ml-3 border border-2 border-[#8f8f9d] rounded outline-none" type="text" id="package" name="package">
+            </div>
         </div>
         </div>
         <div class="bg-white p-5 mt-5 rounded shadow">
