@@ -97,8 +97,14 @@ class Tag(Base):
     def has_outdated_packages(self):
         return any([p.outdated for p in self.packages])
 
+    @hybrid_property
     def has_vulnerabilities(self):
         return any(len(p.vulnerabilities) > 0 for p in self.packages)
+
+    @has_vulnerabilities.expression
+    def has_vulnerabilities(cls):
+        return cls.packages.any(has_vulnerabilities=True)
+
 
     def number_of_vulns(self,only_active=False):
         full_vuln_ids = set()

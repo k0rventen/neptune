@@ -96,8 +96,8 @@ def get_all_tags(session: Session = Depends(get_db), name_filter: str = None, ta
         filters.append(Tag.image.ilike(f"%{name_filter}%"))
     if distro_filter:
         filters.append(Tag.distro.ilike(f"%{distro_filter}%"))
-    if has_vuln:
-        pass
+    if has_vuln is not None:
+        filters.append(Tag.has_vulnerabilities== has_vuln)
     query = session.query(Tag).order_by(Tag.date_added.desc()).filter(*filters)
     return paginate_query(query, page, per_page)
 

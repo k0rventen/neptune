@@ -16,10 +16,8 @@ from fastapi.security import APIKeyHeader
 # uvicorn logging setup
 LOGGING_CONFIG["formatters"]["default"]["fmt"] = "%(asctime)s :: uvicorn :: %(levelname)s :: %(message)s"
 LOGGING_CONFIG["formatters"]["default"]["datefmt"] = "%Y-%m-%d %H:%M:%S"
-
-# disable uvicorn access logger
+# tweak uvicorn access logger
 LOGGING_CONFIG["loggers"]["uvicorn.access"]["handlers"] = []
-
 
 stop_flag = threading.Event()
 scan_mutex = threading.Lock()
@@ -132,7 +130,7 @@ def create_statistics(session=None,save_to_db=True):
     today_stats = HistoricalStatistics(
         tags_total_count=len(all_tags),
         vulnerable_tags_count=len(
-            [tag for tag in all_tags if tag.has_vulnerabilities()]),
+            [tag for tag in all_tags if tag.has_vulnerabilities]),
         outdated_tags_count=len(
             [tag for tag in all_tags if tag.has_outdated_packages()]),
         packages_total_count=session.query(PackageVersion).count(),
