@@ -1,6 +1,8 @@
 <script setup>
 import { useDepStore } from '@/store/dependencies.store'
 
+const localPath = useLocalePath()
+
 const depStore = useDepStore()
 
 const { t } = useI18n()
@@ -155,7 +157,7 @@ watch(filter, async () => {
                 <input v-model="filter.with_vulnerable_versions" type="checkbox" id="vulnerableV" name="vulnerableV">
             </div>
             <div class="flex gap-2 items-center">
-                <label for="vulnerableV">{{  $t('dependencies.dependency_w_vuln') }}</label>
+                <label for="vulnerableV">{{  $t('dependencies.type') }}</label>
                 <input @input="delayType" class="ml-3 border border-2 border-[#8f8f9d] rounded outline-none" type="text" id="package" name="package">
             </div>
         </div>
@@ -178,7 +180,7 @@ watch(filter, async () => {
                             <NuxtLink
                                 v-for="vuln in version.vulnerabilities"
                                 :key="vuln.id"
-                                :to="`/vulnerabilities?name=${vuln.name}`"
+                                :to="localPath(`/vulnerabilities?name=${vuln.name}`)"
                             >
                                 <p>
                                 {{ vuln.name }}

@@ -2,6 +2,7 @@
 import { useVulnerabilitiesStore } from '~/store/vulnerabilities.store';
 
 const { t } = useI18n()
+const localPath = useLocalePath()
 
 const columns = [
     {
@@ -191,7 +192,7 @@ watch(filter, async () => {
                     </button>
                     <template #popper>
                         <div class="px-2 py-1">
-                            <nuxt-link class="block" v-for="affected in item.affected_images" :to="`images/${affected.sha}`">
+                            <nuxt-link class="block" v-for="affected in item.affected_images" :to="localPath(`images/${affected.sha}`)">
                                 {{ affected.name }}
                             </nuxt-link>
                         </div>
