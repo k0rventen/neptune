@@ -284,12 +284,8 @@ await store.getHistoricalStat().then(() => {
             </div>
         </div>
         <div
-            class="w-full h-full max-h-fit p-5 bg-white shadow-md flex justify-between items-center col-span-4 md:col-span-2">
+            class="w-full h-full max-h-fit p-5 bg-white shadow-md flex justify-between items-center col-span-4">
             <apexchart class="w-full" height="100%" type="line" :options="tags.options" :series="tags.series" />
-        </div>
-        <div
-            class="w-full h-full max-h-fit p-5 bg-white shadow-md flex justify-between items-center col-span-4 md:col-span-2">
-
         </div>
         <div
             class="w-full h-full max-h-fit p-5 bg-white shadow-md flex justify-between items-center col-span-4 md:col-span-2">
