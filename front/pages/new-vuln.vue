@@ -43,7 +43,7 @@ const pagination = reactive({
 const filter = reactive({
     name_filter: undefined,
     severity_filter: undefined,
-    active_filter: undefined
+    scan_filter: true
 })
 
 await vulnStore.getVulnerabilities({ ...pagination, filter }).then(() => {
@@ -146,14 +146,6 @@ watch(filter, async () => {
                 <option value="critical">{{ $t('vulnerabilities.critical') }}</option>
             </select>
             <br>
-
-            <label>{{ $t('vulnerabilities.filter_state') }}:</label>
-            <select v-model="filter.active_filter" class="outline-none">
-                <option :value="undefined">{{ $t('vulnerabilities.no_filter') }}</option>
-                <option value="true">{{ $t('vulnerabilities.active') }}</option>
-                <option value="false">{{ $t('vulnerabilities.inactive') }}</option>
-            </select>
-
         </div>
     </div>
     <div class="bg-white p-5 mt-5 rounded shadow">
