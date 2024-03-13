@@ -63,7 +63,7 @@ def scan_image(scan_request: ImageScanRequest, session: Session = Depends(get_db
     if not grype_ok:
         raise HTTPException(status_code=400, detail=vuln_json)
     vulns = [{"id": v["vulnerability"]["id"],
-              "severity":v["vulnerability"]["severity"],
+              "severity":v["vulnerability"].get("severity",'unknown'),
               "description":v["vulnerability"].get("description", ""),
               "artifact_name":v["artifact"]["name"],
               "artifact_type":v["artifact"]["type"],
