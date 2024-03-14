@@ -2,11 +2,10 @@
 """
 import time
 
-from schedule import every, repeat, run_pending, run_all
+from schedule import every, repeat, run_pending
 
-from utils import (Logger, cleanup_images, create_statistics,
-                   database_housekeeping, db_sbom_rescan, grype_update,
-                   startup_logins, stop_flag)
+from utils import (Logger, create_statistics,
+                   database_housekeeping, db_sbom_rescan, grype_update, stop_flag)
 
 tasks_logger = Logger("tasks")
 
@@ -29,5 +28,4 @@ def daily_rescan():
 def daily_housekeeping():
     tasks_logger.info("starting housekeeping chores..")
     database_housekeeping()
-    cleanup_images()
     create_statistics()

@@ -1,18 +1,18 @@
 """scan endpoints"""
 import json
 import time
-from typing import Optional
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException
+from starlette.background import BackgroundTask
 from fastapi.responses import JSONResponse
 from models import (Package, PackageVersion, SBOMJson, Tag, Vulnerability,
                     get_db)
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from utils import (Logger, cleanup_images, database_housekeeping, grype_report,create_statistics,
+from utils import (Logger, cleanup_files, grype_report,create_statistics,
                    human_readable_size, human_readable_time, scan_mutex,
-                   skopeo_login, skopeo_pull, syft_report)
+                   skopeo_pull, syft_report)
 
 
 class ImageScanRequest(BaseModel):
@@ -52,8 +52,8 @@ def scan_image(scan_request: ImageScanRequest, session: Session = Depends(get_db
         if not spec_image:
             raise HTTPException(status_code=404, detail="SHA does not exists")
         logger.info(f"rescanning {spec_image.image}:{spec_image.tag} ({spec_image.sha})")
-        scan_uuid = uuid4()
-        syft_report_path = f'/tmp/{scan_uuid}_syftreport.json'
+        image_uuid = str(uuid4())
+        syft_report_path = f'/tmp/{image_uuid}_syftreport.json'
         with open(syft_report_path, 'w+') as f:
             json.dump(spec_image.sbom.sbom, f)
 
@@ -117,8 +117,7 @@ def scan_image(scan_request: ImageScanRequest, session: Session = Depends(get_db
                     package.versions.append(version)
 
                 else:
-                    version = [
-                        v for v in package.versions if v.version == p["version"]][0]
+                    version = [v for v in package.versions if v.version == p["version"]][0]
                 s_image.packages.append(version)
 
         # vulns
@@ -133,16 +132,17 @@ def scan_image(scan_request: ImageScanRequest, session: Session = Depends(get_db
                     Package.name == v["artifact_name"]).filter(Package.type == v["artifact_type"]).filter(PackageVersion.version == v["artifact_version"]).one_or_none()
                 if version:
                     v = Vulnerability(name=v["id"], severity=v["severity"])
+                    new_vulns.append(v)
                     version.vulnerabilities.append(v)
                     version.refresh_outdated_status()
                     session.add(version)
         if scan_request.sha:
-            return {'new_vulns': new_vulns}
+            return {'new_vulns': [v.serialize() for v in new_vulns]}
         session.add(s_image)
         logger.info("commiting to DB")
 
     # now that we have updated the inventory, tell the client the stats of the image (size,packages, and vulns)
-    # return 400 code if the image has active vulnerabilities and the client wants a 400 http error as a signal
+    # return 400 code if the image has active vulnerabilities 
     t1 = time.time() - t0
     active_vulns = []
     for package in s_image.packages:
@@ -157,7 +157,7 @@ def scan_image(scan_request: ImageScanRequest, session: Session = Depends(get_db
                 "packages": len(s_image.packages),
                 "vulnerabilities": active_vulns}
 
-    # ask for a new stats point to be c reated in the bg
+    # ask for a new stats point to be created in the bg
     create_statistics(session=session)
 
-    return JSONResponse(response, status_code=400 if active_vulns and scan_request.return_error else 200)
+    return JSONResponse(response, status_code=400 if active_vulns and scan_request.return_error else 200,background=BackgroundTask(cleanup_files,image_uuid))

@@ -10,7 +10,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.ext.hybrid import hybrid_property
 
-engine = create_engine("sqlite:///data/neptune.db?check_same_thread=false")
+engine = create_engine("sqlite:////app/data/neptune.db?check_same_thread=false")
 SessionLocal = sessionmaker(autoflush=True, bind=engine)
 
 Base = declarative_base()
@@ -108,7 +108,6 @@ class Tag(Base):
 
     def number_of_vulns(self,only_active=False):
         full_vuln_ids = set()
-        return sum([len(p.vulnerabilities) for p in self.packages])
         for p in self.packages:
             if only_active:
                 full_vuln_ids.update(v.id for v in p.vulnerabilities if v.active)

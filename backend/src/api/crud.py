@@ -1,6 +1,4 @@
 """ressources management endpoints (tags, vulns, packages)"""
-from typing import Optional
-
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -8,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from models import (HistoricalStatistics, Package,
                     RegistryConfig, Tag, Vulnerability, get_db)
-from utils import (Logger, create_statistics, paginate_query, skopeo_login,database_housekeeping,auth_required)
+from utils import (Logger, create_statistics, paginate_query, skopeo_login,database_housekeeping)
 
 
 class RegistryConfigRequest(BaseModel):
@@ -32,7 +30,7 @@ class PackagePut(BaseModel):
 
 logger = Logger("api")
 
-api_router = APIRouter(prefix='/api',dependencies=[Depends(auth_required)])
+api_router = APIRouter(prefix='/api')
 
 @api_router.post("/registries", tags=['config'])
 def post_config(new_config: RegistryConfigRequest, session: Session = Depends(get_db)):
