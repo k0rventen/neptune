@@ -7,7 +7,7 @@ import json
 import uvicorn
 import requests
 from uvicorn.config import LOGGING_CONFIG
-
+from pathlib import Path
 from models import (Tag, Package, PackageVersion, RegistryConfig,
                     Vulnerability, HistoricalStatistics, create_session)
 from fastapi import Depends, HTTPException
@@ -18,6 +18,8 @@ LOGGING_CONFIG["formatters"]["default"]["fmt"] = "%(asctime)s :: uvicorn :: %(le
 LOGGING_CONFIG["formatters"]["default"]["datefmt"] = "%Y-%m-%d %H:%M:%S"
 # tweak uvicorn access logger
 LOGGING_CONFIG["loggers"]["uvicorn.access"]["handlers"] = []
+
+DEV_MODE = "DEV_MODE" in os.environ
 
 stop_flag = threading.Event()
 scan_mutex = threading.Lock()
@@ -32,23 +34,13 @@ class APIServer(uvicorn.Server):
         stop_flag.set()
         return super().handle_exit(sig, frame)
 
-
-NEPTUNE_SECURITY_KEY = os.getenv("NEPTUNE_SECURITY_KEY")
-if NEPTUNE_SECURITY_KEY:
-    api_key_header = APIKeyHeader(name="x-neptune-key")
-    async def auth_required(x_api_key: str = Depends(api_key_header)):
-        if x_api_key != NEPTUNE_SECURITY_KEY:
-            raise HTTPException(status_code=401, detail="neptune-key Header is invalid")
-else:
-    async def auth_required(): pass
-
-
-def Logger(name, level='INFO'):
+def Logger(name):
     # Create a custom logger
     log = logging.getLogger(name)
     if log.hasHandlers():
         return log
     log.propagate = False
+
 
     # add a streamhandler for stdout
     stdout_handler = logging.StreamHandler()
@@ -56,7 +48,7 @@ def Logger(name, level='INFO'):
                                       "%Y-%m-%d %H:%M:%S")
     stdout_handler.setFormatter(stdout_format)
     log.addHandler(stdout_handler)
-    log.setLevel(level)
+    log.setLevel('DEBUG' if DEV_MODE else 'INFO')
 
     return log
 
@@ -95,13 +87,12 @@ def human_readable_size(size_s: int) -> str:
     return sizestr
 
 
-def cleanup_images():
-    """deletes images in the images dir
-    """
-    cleanup = Logger("cleanup")
-    cleanup.info("Cleaning up images..")
-    for image in os.listdir("/tmp"):
-        os.remove("/tmp/{}".format(image))
+def cleanup_files(uuid:str):
+    """deletes images in the images dir"""
+    tmp_dir = Path('/tmp')
+    files = tmp_dir.glob(f'{uuid}*')
+    for f in files:
+        f.unlink()
 
 
 def database_housekeeping():
@@ -209,9 +200,15 @@ def skopeo_pull(url, local_path):
 def grype_update():
     grype = subprocess.run(["grype", "db", "update"],
                            capture_output=True, check=False)
-    if grype.returncode == 0:
-        return True, grype.stdout.decode()
-    return False, grype.stdout.decode()+grype.stderr.decode()
+    logger = Logger('grype')
+    if grype.returncode != 0:
+        
+        logger.warn(grype.stdout.decode()+grype.stderr.decode())
+        return False, grype.stdout.decode()+grype.stderr.decode()
+    logger.info(grype.stdout.decode().strip())
+    return True, grype.stdout.decode()
+
+
 
 
 def db_sbom_rescan():
