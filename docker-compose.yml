@@ -1,0 +1,10 @@
+services:
+  neptune:
+    build: .
+    environment:
+    - DEV_MODE=1
+    volumes:
+    - ./data:/app/data:rw
+    - ./backend/src:/app/src:rw
+    ports:
+    - 5000:5000
