@@ -8,11 +8,13 @@ RUN curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | 
 RUN curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b . ${GRYPE_VERSION}
 RUN upx grype syft
 
+
 # backend build layer
 FROM python:3.12-alpine as backend-builder
 RUN apk add build-base
 COPY backend/requirements.txt .
 RUN pip3 install --prefix="/install" -r requirements.txt
+
 
 # frontend build layer
 FROM node:18-alpine as frontend-build
@@ -23,17 +25,20 @@ RUN npm install
 COPY front ./
 RUN npx nuxi generate
 
+
 # final layer
 FROM python:3.12-alpine
+# copy runtime libs, deps and binaries from other layers
 RUN apk add skopeo
 COPY --from=backend-builder /install /usr/local/
 COPY --from=bin-downloader /download /usr/local/bin
-WORKDIR /app
-RUN mkdir data
-COPY backend/src/ ./
-COPY --from=frontend-build /app/.output/public/ dist/
-
-ENV PYTHONUNBUFFERED 1
+# preload the CVE db
 ENV GRYPE_DB_CACHE_DIR /app/data/grype
+RUN grype db update
+# add back/front end code
+WORKDIR /app/src
+COPY backend/src/ .
+COPY --from=frontend-build /app/.output/public/ /app/dist/
 
-ENTRYPOINT ["python3","app.py"]
+# start neptune
+ENTRYPOINT python3 -u app.py
