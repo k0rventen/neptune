@@ -3,12 +3,12 @@
 ![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/k0rventen/neptune)
 
 ![header](header.png)
-neptune is a dependency & vulnerability inventory for containers. 
+neptune is a dependencies & vulnerabilities inventory for containers. 
 
 It is SBOM driven, and doesn't rely solely on the scan of an image to determine vulnerabilites.
-It will analyze the languages-specific and distro packages installed, check for vulnerabilities based on thoses, and store all of theses informations server-side.
-That means if a new vulnerability shows up, you don't have to scan your entire inventory again. neptune will automatically link new vulnerabilities to previously scanned images.
+It will analyze the languages-specific and distro packages installed (using syft), check for vulnerabilities based on thoses (using grype), and store all of theses informations server-side.
 
+That means if a new vulnerability shows up, you don't have to scan your entire inventory again. neptune will automatically link new vulnerabilities to previously scanned images.
 
 Scans can be made through its UI, but it was initially designed to be called during a CI workflow where a container image is built (and optionnaly pushed to a registry).
 Operators can then check their dependencies and vulnerabilities inventory through the UI or the API.
@@ -26,9 +26,9 @@ let neptune scan itself
 # httpie
 http post :5000/api/scan image=k0rventen/neptune
 # new curl
-curl --json '{"image":"k0rventen/neptune"}' http://localhost:5000
+curl --json '{"image":"k0rventen/neptune"}' http://localhost:5000/api/scan
 # old curl
-curl -d '{"image":"k0rventen/neptune"}' -H "Content-Type: application/json" -X POST http://localhost:5000
+curl -d '{"image":"k0rventen/neptune"}' -H "Content-Type: application/json" -X POST http://localhost:5000/api/scan
 ```
 
 then open `http://localhost:5000/` to check the ui.
@@ -62,6 +62,17 @@ neptune:
     - CI_IMAGE="$CI_REGISTRY_IMAGE:${CI_COMMIT_TAG:-latest}"
     - curl --fail-with-body --json '{"image":"'$CI_IMAGE'"}' https://neptune/api/scan
 ```
+## develop
+
+### backend
+
+use the compose file to start a dev env locally:
+```
+docker compose up --build
+```
+
+Any changes in the backend/src/ folder will hot reload the API.
+
 
 ## Roadmap
 
