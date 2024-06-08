@@ -11,7 +11,7 @@ import time
 
 neptune_api = FastAPI(
     title="Neptune API",
-    version="0.6.0",
+    version="0.7.0",
     description="Containers SBOM & vulnerability management system",
     redoc_url=None,
     docs_url="/api",
