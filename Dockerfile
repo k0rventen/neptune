@@ -2,8 +2,8 @@
 FROM debian:bullseye as bin-downloader
 RUN apt update && apt install upx-ucl curl ca-certificates -y --no-install-recommends
 WORKDIR /download
-ARG SYFT_VERSION=v0.96.0
-ARG GRYPE_VERSION=v0.73.1
+ARG SYFT_VERSION=v1.5.0
+ARG GRYPE_VERSION=v0.78.0
 RUN curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b . ${SYFT_VERSION}
 RUN curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b . ${GRYPE_VERSION}
 RUN upx grype syft
@@ -34,7 +34,7 @@ COPY --from=backend-builder /install /usr/local/
 COPY --from=bin-downloader /download /usr/local/bin
 # preload the CVE db
 ENV GRYPE_DB_CACHE_DIR /app/data/grype
-RUN grype db update
+#RUN grype db update
 # add back/front end code
 WORKDIR /app/src
 COPY backend/src/ .
