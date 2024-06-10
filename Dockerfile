@@ -34,6 +34,7 @@ COPY --from=backend-builder /install /usr/local/
 COPY --from=bin-downloader /download /usr/local/bin
 # preload the CVE db
 ENV GRYPE_DB_CACHE_DIR /app/data/grype
+RUN mkdir -p /app/data
 #RUN grype db update
 # add back/front end code
 WORKDIR /app/src
