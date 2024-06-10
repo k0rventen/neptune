@@ -1,12 +1,24 @@
 """ressources management endpoints (tags, vulns, packages)"""
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
+from models import (
+    HistoricalStatistics,
+    Package,
+    RegistryConfig,
+    Tag,
+    Vulnerability,
+    get_db,
+)
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-
-from models import (HistoricalStatistics, Package,
-                    RegistryConfig, Tag, Vulnerability, get_db)
-from utils import (Logger, create_statistics, paginate_query, skopeo_login,database_housekeeping)
+from utils import (
+    Logger,
+    create_statistics,
+    database_housekeeping,
+    mem_cache,
+    paginate_query,
+    skopeo_login,
+)
 
 
 class RegistryConfigRequest(BaseModel):
@@ -78,7 +90,7 @@ def statistics(session: Session = Depends(get_db), current: bool = False):
     if current:
         last_stats = base_query.order_by(HistoricalStatistics.timestamp.desc()).first()
         return last_stats.serialize() if last_stats else None
-         
+
     stats = base_query.order_by(HistoricalStatistics.timestamp.asc()).all()
     stats = [s.serialize() for s in stats]
     return stats
@@ -105,6 +117,8 @@ def get_featured_tags(session: Session = Depends(get_db)):
     """returns a curated list of 5 tags:
        ["active_vulnerabilities", "vulnerabilities", "outdated_packages", "packages","most_recent"]
     """
+    if cached := mem_cache.cached('featured'):
+        return cached
     response = {"most_vulnerabilities": {}, "most_packages": {},
                 "most_outdated_packages": {}, "most_active_vulnerabilities": {},"most_recent":{}}
     all_tags = session.query(Tag).all()
@@ -116,6 +130,7 @@ def get_featured_tags(session: Session = Depends(get_db)):
             if tag[feature] > response["most_"+feature].get(feature, -1):
                 response["most_"+feature] = tag
     response["most_recent"] = most_recent_tag_serialized
+    mem_cache.cache('featured',response,600)
     return response
 
 
@@ -130,7 +145,7 @@ def get_tag(sha: str, session: Session = Depends(get_db)):
 @api_router.delete("/tags/{sha}", tags=['images'])
 def delete_tag(sha: str, session: Session = Depends(get_db)):
     tag = session.query(Tag).filter(Tag.sha == sha).first()
-    if tag: 
+    if tag:
         session.delete(tag)
         database_housekeeping()
         create_statistics()

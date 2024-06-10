@@ -1,17 +1,24 @@
 """functions that interacts with locally installed binaries and other utils"""
+import json
 import logging
 import os
 import subprocess
 import threading
-import json
-import uvicorn
-import requests
-from uvicorn.config import LOGGING_CONFIG
 from pathlib import Path
-from models import (Tag, Package, PackageVersion, RegistryConfig,
-                    Vulnerability, HistoricalStatistics, create_session)
-from fastapi import Depends, HTTPException
-from fastapi.security import APIKeyHeader
+from time import time
+
+import requests
+import uvicorn
+from models import (
+    HistoricalStatistics,
+    Package,
+    PackageVersion,
+    RegistryConfig,
+    Tag,
+    Vulnerability,
+    create_session,
+)
+from uvicorn.config import LOGGING_CONFIG
 
 # uvicorn logging setup
 LOGGING_CONFIG["formatters"]["default"]["fmt"] = "%(asctime)s :: uvicorn :: %(levelname)s :: %(message)s"
@@ -24,6 +31,19 @@ DEV_MODE = "DEV_MODE" in os.environ
 stop_flag = threading.Event()
 scan_mutex = threading.Lock()
 
+class Cache:
+    def __init__(self) -> None:
+        self.mem_cache = {}
+        self.default_cache_time = 300
+
+    def cached(self,key):
+        if key in self.mem_cache and time() < self.mem_cache[key]['timestamp']:
+            return self.mem_cache[key]['data']
+        return None
+    def cache(self,key,data,cache_time=None):
+        self.mem_cache[key] = {'timestamp':time()+ (cache_time or self.default_cache_time),'data':data}
+
+mem_cache = Cache()
 class APIServer(uvicorn.Server):
     """custom uvicorn server
 
@@ -31,6 +51,8 @@ class APIServer(uvicorn.Server):
     """
 
     def handle_exit(self, sig: int, frame) -> None:
+        log = Logger('main')
+        log.warning(f'Received signal {sig}, exiting !')
         stop_flag.set()
         return super().handle_exit(sig, frame)
 
@@ -202,7 +224,7 @@ def grype_update():
                            capture_output=True, check=False)
     logger = Logger('grype')
     if grype.returncode != 0:
-        
+
         logger.warn(grype.stdout.decode()+grype.stderr.decode())
         return False, grype.stdout.decode()+grype.stderr.decode()
     logger.info(grype.stdout.decode().strip())
