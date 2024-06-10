@@ -1,13 +1,13 @@
 """API for neptune"""
+import time
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from utils import Logger
 
 from .crud import api_router as crud_router
 from .scan import api_router as scan_router
-from utils import Logger
-
-import time 
 
 neptune_api = FastAPI(
     title="Neptune API",

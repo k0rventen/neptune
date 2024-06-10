@@ -4,15 +4,22 @@ import time
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException
-from starlette.background import BackgroundTask
 from fastapi.responses import JSONResponse
-from models import (Package, PackageVersion, SBOMJson, Tag, Vulnerability,
-                    get_db)
+from models import Package, PackageVersion, SBOMJson, Tag, Vulnerability, get_db
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from utils import (Logger, cleanup_files, grype_report,create_statistics,
-                   human_readable_size, human_readable_time, scan_mutex,
-                   skopeo_pull, syft_report)
+from starlette.background import BackgroundTask
+from utils import (
+    Logger,
+    cleanup_files,
+    create_statistics,
+    grype_report,
+    human_readable_size,
+    human_readable_time,
+    scan_mutex,
+    skopeo_pull,
+    syft_report,
+)
 
 
 class ImageScanRequest(BaseModel):
@@ -142,7 +149,7 @@ def scan_image(scan_request: ImageScanRequest, session: Session = Depends(get_db
         logger.info("commiting to DB")
 
     # now that we have updated the inventory, tell the client the stats of the image (size,packages, and vulns)
-    # return 400 code if the image has active vulnerabilities 
+    # return 400 code if the image has active vulnerabilities
     t1 = time.time() - t0
     active_vulns = []
     for package in s_image.packages:
