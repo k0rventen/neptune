@@ -1,56 +1,101 @@
-<script setup>
-const localPath = useLocalePath()
-
-const isOpen = ref(false)
-const openSidebar = (state) => {
-    isOpen.value = state
-}
-</script>
+<script setup></script>
 
 <template>
-    <div class="h-full w-16 px-2 py-2 bg-white shadow-md transition-all ease-in overflow-x-hidden flex flex-col justify-between"
-        :class="{ 'w-72': isOpen }" @mouseenter="openSidebar(true)" @mouseleave="openSidebar(false)">
-        <div>
-            <div class="w-full flex justify-center">
-                <img class="w-10" src="@/assets/img/logo.png" alt="neptune">
-            </div>
-            <hr class="mt-4">
-            <div class="w-full mt-3 flex flex-col gap-3">
-            </div>
-            <nuxt-link class="flex flex-nowrap grow items-center gap-3 py-2" :to="localPath('/')">
-                <img class="ml-3" src="@/assets/img/dashboard.svg" alt="">
-                <p class="transition-all ease-in whitespace-nowrap" :class="isOpen ? 'opacity-100' : 'opacity-0'">{{
-                    $t('sidebar.dashboard')
-                }}</p>
-            </nuxt-link>
-            <nuxt-link class="flex flex-nowrap grow items-center gap-3 py-2" :to="localPath('/images')">
-                <img class="ml-3" src="@/assets/img/box.svg" alt="">
-                <p class="transition-all ease-in whitespace-nowrap" :class="isOpen ? 'opacity-100' : 'opacity-0'">{{
-                    $t('sidebar.images') }}
-                </p>
-            </nuxt-link>
-            <nuxt-link class="flex flex-nowrap grow items-center gap-3 py-2" :to="localPath('/vulnerabilities')">
-                <img class="ml-3" src="@/assets/img/vulnerability.svg" alt="">
-                <p class="transition-all ease-in whitespace-nowrap" :class="isOpen ? 'opacity-100' : 'opacity-0'">{{
-                    $t('sidebar.vulnerabilities') }}</p>
-            </nuxt-link>
-            <nuxt-link class="flex flex-nowrap grow items-center gap-3 py-2" :to="localPath('/dependencies')">
-                <img class="ml-3" src="@/assets/img/paperclip.svg" alt="">
-                <p class="transition-all ease-in whitespace-nowrap" :class="isOpen ? 'opacity-100' : 'opacity-0'">{{
-                    $t('sidebar.dependencies') }}</p>
-            </nuxt-link>
-            <nuxt-link class="flex flex-nowrap grow items-center gap-3 py-2" :to="localPath('/registry')">
-                <img class="ml-3" src="@/assets/img/inbox.svg" alt="">
-                <p class="transition-all ease-in whitespace-nowrap" :class="isOpen ? 'opacity-100' : 'opacity-0'">{{
-                    $t('sidebar.registry') }}
-                </p>
-            </nuxt-link>
-            <nuxt-link class="flex flex-nowrap grow items-center gap-3 py-2" :to="localPath('/new-vuln')">
-                <img class="ml-3" src="@/assets/img/new.svg" alt="">
-                <p class="transition-all ease-in whitespace-nowrap" :class="isOpen ? 'opacity-100' : 'opacity-0'">{{
-                    $t('sidebar.new_vuln') }}</p>
-            </nuxt-link>
-        </div>
-        <langswitcher />
+  <div
+    class="bg-[#1b1c1e] min-h-screen border-r-[1px] border-white/15 min-w-16 flex flex-col align-center py-5 px-3 relative z-10"
+  >
+    <div class="relative">
+      <div class="bg-[#242424] h-fit w-fit p-2 rounded-md">
+        <Icon
+          size="24"
+          name="iconoir:planet"
+          color="white"
+          class="opacity-75"
+        />
+      </div>
     </div>
+    <div class="bg-white/15 h-[1px] w-full my-3" />
+    <div class="flex flex-col gap-3">
+      <NuxtLink
+        to="/"
+        class="bg-[#242424] group ease-in transition hover:bg-[#955ab8] h-fit w-fit p-2 rounded-md relative"
+      >
+        <Icon
+          size="24"
+          name="iconoir:graph-up"
+          color="white"
+          class="opacity-75"
+        />
+        <div
+          class="hidden group-hover:block absolute translate-x-full -right-5 top-1/2 -translate-y-1/2 origin-top-left bg-[#1b1c1e] border-white/15 border px-4 py-1 rounded text-white"
+        >
+          <p>Dashboard</p>
+        </div>
+      </NuxtLink>
+      <NuxtLink
+        to="/images"
+        class="bg-[#242424] group ease-in transition hover:bg-[#955ab8] h-fit w-fit p-2 rounded-md relative"
+      >
+        <Icon
+          size="24"
+          name="iconoir:box-3d-center"
+          color="white"
+          class="opacity-75"
+        />
+        <div
+          class="hidden group-hover:block absolute translate-x-full -right-5 top-1/2 -translate-y-1/2 origin-top-left bg-[#1b1c1e] border-white/15 border px-4 py-1 rounded text-white"
+        >
+          <p>Images</p>
+        </div>
+      </NuxtLink>
+      <NuxtLink
+        to="/vulnerabilities"
+        class="bg-[#242424] group ease-in transition hover:bg-[#955ab8] h-fit w-fit p-2 rounded-md relative"
+      >
+        <Icon
+          size="24"
+          name="iconoir:wrench"
+          color="white"
+          class="opacity-75"
+        />
+        <div
+          class="hidden group-hover:block absolute translate-x-full -right-5 top-1/2 -translate-y-1/2 origin-top-left bg-[#1b1c1e] border-white/15 border px-4 py-1 rounded text-white"
+        >
+          <p>Vulnerabilities</p>
+        </div>
+      </NuxtLink>
+      <NuxtLink
+        to="/packages"
+        class="bg-[#242424] group ease-in transition hover:bg-[#955ab8] h-fit w-fit p-2 rounded-md relative"
+      >
+        <Icon
+          size="24"
+          name="iconoir:attachment"
+          color="white"
+          class="opacity-75"
+        />
+        <div
+          class="hidden group-hover:block absolute translate-x-full -right-5 top-1/2 -translate-y-1/2 origin-top-left bg-[#1b1c1e] border-white/15 border px-4 py-1 rounded text-white"
+        >
+          <p>Packages</p>
+        </div>
+      </NuxtLink>
+      <NuxtLink
+        to="/registry"
+        class="bg-[#242424] group ease-in transition hover:bg-[#955ab8] h-fit w-fit p-2 rounded-md relative"
+      >
+        <Icon
+          size="24"
+          name="iconoir:puzzle"
+          color="white"
+          class="opacity-75"
+        />
+        <div
+          class="hidden group-hover:block absolute translate-x-full -right-5 top-1/2 -translate-y-1/2 origin-top-left bg-[#1b1c1e] border-white/15 border px-4 py-1 rounded text-white"
+        >
+          <p>Registry</p>
+        </div>
+      </NuxtLink>
+    </div>
+  </div>
 </template>
