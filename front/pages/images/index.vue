@@ -12,6 +12,9 @@ const queryParams = computed(() => {
   };
 });
 
+const isOpenModal = ref(false);
+const imageName = ref();
+
 const fetchProjects = async ({ pageParam = 0 }) => {
   let url = `http://localhost:5000/api/tags?page=${pageParam}&per_page=20`;
 
@@ -41,16 +44,52 @@ const delaySearch = (value: string) => {
     searchValue.value = value;
   }, 500);
 };
+
+const sendNewImg = async () => {
+  console.log("test");
+  await fetch("http://localhost:5000/api/scan", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      name: imageName.value,
+    }),
+  });
+};
 </script>
 
 <template>
   <div class="w-full h-screen p-5 gap-5 relative z-[5]">
+    <Modal :visible="isOpenModal" @close="isOpenModal = !isOpenModal">
+      <div>
+        <label>Image name : </label>
+        <input v-model="imageName" class="bg-transparent" type="text" />
+      </div>
+      <button
+        class="bg-[#1b1c1e] text-white border-white/15 border rounded flex items-center justify-center py-1 pr-4 pl-2 gap-2 w-full mt-5 hover:bg-[#161618] transition ease-in"
+        @click="sendNewImg"
+      >
+        <Icon name="iconoir:plus" class="w-6 h-6" />
+        Add the image
+      </button>
+    </Modal>
+
     <searchbar :value="searchValue" @input="delaySearch" />
-    <label class="text-white flex gap-3 items-center mt-3">
-      <input class="block" type="checkbox" @click="hasVuln = !hasVuln" />
-      Has vulnerabilities
-    </label>
-    <div class="mt-5 grid grid-cols-3 gap-5">
+    <div class="flex items-center mt-3 gap-3">
+      <button
+        class="bg-[#1b1c1e] text-white border-white/15 border rounded flex items-center justify-center py-1 pr-4 pl-2 gap-2"
+        @click="isOpenModal = true"
+      >
+        <Icon name="iconoir:plus" class="w-6 h-6" />
+        Add new image
+      </button>
+      <label class="text-white flex gap-3 items-center">
+        <input class="block" type="checkbox" @click="hasVuln = !hasVuln" />
+        Has vulnerabilities
+      </label>
+    </div>
+    <div class="mt-3 grid grid-cols-3 gap-5">
       <template v-for="items in data?.pages">
         <NuxtLink v-for="image in items.items" :to="`/images/${image.sha}`">
           <card class="relative cursor-pointer">
