@@ -52,7 +52,7 @@ const delaySearch = (value: string) => {
     </label>
     <div class="mt-5 grid grid-cols-3 gap-5">
       <template v-for="items in data?.pages">
-        <NuxtLink v-for="image in items.items" :to="`/images/${153}`">
+        <NuxtLink v-for="image in items.items" :to="`/images/${image.sha}`">
           <card class="relative cursor-pointer">
             <div
               style="clip-path: polygon(10% 0%, 100% 0%, 90% 100%, 0% 100%)"
@@ -84,7 +84,10 @@ const delaySearch = (value: string) => {
               <span class="font-sans">{{ image.outdated_packages }}</span>
             </p>
             <p class="text-md font-mattone">
-              Date: <span class="font-sans">{{ image.date_added }}</span>
+              Date:
+              <span class="font-sans">{{
+                dateConverter(image.date_added)
+              }}</span>
             </p>
           </card>
         </NuxtLink>

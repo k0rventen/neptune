@@ -44,14 +44,7 @@ const options = computed(() => {
   };
 
   option.xaxis.categories = recordStat.value.map((stat: StatType): string => {
-    const date = new Date(stat.timestamp);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "numeric",
-      minute: "numeric",
-    });
+    return dateConverter(stat.timestamp);
   });
 
   return option;
@@ -145,36 +138,40 @@ const options = computed(() => {
     </card>
     <card class="col-span-6 row-span-2 flex items-center gap-5 w-full">
       <div class="w-full h-full grid grid-cols-5 gap-5">
-        <card
+        <NuxtLink
           v-for="(image, key, index) in featured"
-          class="bg-[#242424] relative cursor-pointer p-6 col-span-6 lg:col-span-1"
+          :to="`/images/${image.sha}`"
         >
-          <div
-            style="clip-path: polygon(10% 0%, 100% 0%, 90% 100%, 0% 100%)"
-            class="bg-red-500 italic text-xs w-fit px-5 absolute -top-1 -right-0"
+          <card
+            class="bg-[#242424] relative cursor-pointer p-6 col-span-6 lg:col-span-1 h-full"
           >
-            <p>{{ brandTextFeatured(index) }}</p>
-          </div>
-          <p class="font-mattone tracking-wide text-sm">
-            Name:
-            <span class="font-sans">{{ image.image }}:{{ image.tag }}</span>
-          </p>
-          <p class="font-mattone tracking-wide text-sm">
-            Size:
-            <span class="font-sans">{{ useCalcConverter(image.size) }}</span>
-          </p>
-          <p class="font-mattone tracking-wide text-sm">
-            Packages: <span class="font-sans">{{ image.packages }}</span>
-          </p>
-          <p class="font-mattone tracking-wide text-sm">
-            Vulnerabilites:
-            <span class="font-sans">{{ image.vulnerabilities }}</span>
-          </p>
-          <p class="font-mattone tracking-wide text-sm">
-            Out. Packages:
-            <span class="font-sans">{{ image.outdated_packages }}</span>
-          </p>
-        </card>
+            <div
+              style="clip-path: polygon(10% 0%, 100% 0%, 90% 100%, 0% 100%)"
+              class="bg-red-500 italic text-xs w-fit px-5 absolute -top-1 -right-0"
+            >
+              <p>{{ brandTextFeatured(index) }}</p>
+            </div>
+            <p class="font-mattone tracking-wide text-sm">
+              Name:
+              <span class="font-sans">{{ image.image }}:{{ image.tag }}</span>
+            </p>
+            <p class="font-mattone tracking-wide text-sm">
+              Size:
+              <span class="font-sans">{{ useCalcConverter(image.size) }}</span>
+            </p>
+            <p class="font-mattone tracking-wide text-sm">
+              Packages: <span class="font-sans">{{ image.packages }}</span>
+            </p>
+            <p class="font-mattone tracking-wide text-sm">
+              Vulnerabilites:
+              <span class="font-sans">{{ image.vulnerabilities }}</span>
+            </p>
+            <p class="font-mattone tracking-wide text-sm">
+              Out. Packages:
+              <span class="font-sans">{{ image.outdated_packages }}</span>
+            </p>
+          </card>
+        </NuxtLink>
       </div>
     </card>
   </div>
