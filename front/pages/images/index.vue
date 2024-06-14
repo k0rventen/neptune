@@ -18,8 +18,6 @@ const imageName = ref();
 const fetchProjects = async ({ pageParam = 0 }) => {
   let url = `http://localhost:5000/api/tags?page=${pageParam}&per_page=20`;
 
-  console.log(queryParams.value);
-
   Object.entries(queryParams.value).forEach(([key, value]) => {
     if (value) {
       url += `&${key}=${value}`;
@@ -46,7 +44,6 @@ const delaySearch = (value: string) => {
 };
 
 const sendNewImg = async () => {
-  console.log("test");
   await fetch("http://localhost:5000/api/scan", {
     method: "POST",
     headers: {
@@ -64,7 +61,11 @@ const sendNewImg = async () => {
     <Modal :visible="isOpenModal" @close="isOpenModal = !isOpenModal">
       <div>
         <label>Image name : </label>
-        <input v-model="imageName" class="bg-transparent" type="text" />
+        <input
+          v-model="imageName"
+          class="bg-transparent outline-none"
+          type="text"
+        />
       </div>
       <button
         class="bg-[#1b1c1e] text-white border-white/15 border rounded flex items-center justify-center py-1 pr-4 pl-2 gap-2 w-full mt-5 hover:bg-[#161618] transition ease-in"
@@ -78,10 +79,13 @@ const sendNewImg = async () => {
     <searchbar :value="searchValue" @input="delaySearch" />
     <div class="flex items-center mt-3 gap-3">
       <button
-        class="bg-[#1b1c1e] text-white border-white/15 border rounded flex items-center justify-center py-1 pr-4 pl-2 gap-2"
+        class="bg-[#1b1c1e] text-white border-white/15 border rounded flex items-center justify-center py-1 pr-4 pl-2 gap-2 hover:bg-[#161618] transition ease-in"
         @click="isOpenModal = true"
       >
-        <Icon name="iconoir:plus" class="w-6 h-6" />
+        <Icon
+          name="iconoir:plus"
+          class="w-6 h-6 hover:bg-[#161618] transition ease-in"
+        />
         Add new image
       </button>
       <label class="text-white flex gap-3 items-center">

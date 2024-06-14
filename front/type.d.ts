@@ -13,3 +13,8 @@ export type StatType = {
   high_vulnerabilities_count: number;
   critical_vulnerabilities_count: number;
 };
+
+export type TableColumns = {
+  name: string;
+  key: string;
+};

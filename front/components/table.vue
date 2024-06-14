@@ -1,16 +1,25 @@
-<script setup></script>
+<script setup lang="ts">
+import type { TableColumns } from "~/type";
+
+const props = defineProps<{
+  columns: TableColumns[];
+  data: any;
+}>();
+</script>
 
 <template>
   <table class="w-full text-white">
     <tr class="border-b-[1px] border-white/15">
-      <th class="text-left pb-2.5">Company</th>
-      <th class="text-left pb-2.5">Company</th>
-      <th class="text-left pb-2.5">Company</th>
+      <th v-for="column in columns" class="text-left pb-2.5" :key="column.key">
+        {{ column.name }}
+      </th>
     </tr>
-    <tr>
-      <td class="py-2.5">Alfreds Futterkiste</td>
-      <td class="py-2.5">Maria Anders</td>
-      <td class="py-2.5">Germany</td>
+    <tr v-for="(row, index) in data" :key="index">
+      <td v-for="column in columns" class="py-2.5" :key="column.key">
+        <slot :name="column.key" :item="row">
+          {{ row[column.key] }}
+        </slot>
+      </td>
     </tr>
   </table>
 </template>

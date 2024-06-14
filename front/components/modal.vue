@@ -16,6 +16,16 @@ const emit = defineEmits(["close", "submit"]);
       @click="emit('close')"
     >
       <card @click.stop>
+        <div class="flex w-full gap-1 justify-center items-center mb-3">
+          <Icon
+            size="24"
+            name="iconoir:planet"
+            color="white"
+            class="opacity-75"
+          />
+          <p>Neptune</p>
+        </div>
+        <div class="h-[1px] w-full bg-white opacity-75 mb-3" />
         <slot />
       </card>
     </div>

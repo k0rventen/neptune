@@ -3,7 +3,7 @@ const emit = defineEmits(["input"]);
 </script>
 <template>
   <div
-    class="w-full flex bg-[#1b1c1e] px-3 py-2 gap-3 overflow-y-auto rounded border border-white/15 border"
+    class="w-full min-h-fit flex bg-[#1b1c1e] px-3 py-2 gap-3 overflow-y-auto rounded border border-white/15"
   >
     <Icon
       name="ph:magnifying-glass-duotone"
