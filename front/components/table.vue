@@ -5,6 +5,8 @@ const props = defineProps<{
   columns: TableColumns[];
   data: any;
 }>();
+
+console.log(props.data);
 </script>
 
 <template>
