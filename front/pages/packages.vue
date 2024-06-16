@@ -1,59 +1,8 @@
 <script setup lang="ts">
 import { useInfiniteQuery } from "@tanstack/vue-query";
-import type { TableColumns } from "~/type";
 
-const searchValue = ref<string>();
-
-const columns: TableColumns[] = [
-  {
-    name: "Name",
-    key: "name",
-  },
-  {
-    name: "Dependencies type",
-    key: "type",
-  },
-  {
-    name: "Date added",
-    key: "date_added",
-  },
-  {
-    name: "Versions",
-    key: "versions",
-  },
-];
-
-const data = [
-  {
-    name: "test",
-    dependencies: "test",
-    date_added: "test",
-    versions: "test",
-  },
-];
-
-const queryParams = computed(() => {
-  return {
-    name_filter: searchValue.value,
-    with_outdated_versions: "",
-    with_vulnerable_versions: "",
-    type_filter: "",
-  };
-});
-
-const fetchProjects = async ({ pageParam = 0 }) => {
-  let url = `http://localhost:5000/api/packages?page=${pageParam}&per_page=40`;
-
-  Object.entries(queryParams.value).forEach(([key, value]) => {
-    if (value) {
-      url += `&${key}=${value}`;
-    }
-  });
-
-  const res = await fetch(url);
-
-  return res.json();
-};
+const { fetchProjects, delaySearch, columns, queryParams, searchValue } =
+  usePackages();
 
 const {
   data: packages,
@@ -71,22 +20,9 @@ const {
   initialPageParam: 1,
 });
 
-const isTyping = ref();
-
-const loadMore = () => {
-  fetchNextPage();
-};
-
 const allPackages = computed(() => {
   return packages.value?.pages.map((page) => page.items).flat();
 });
-
-const delaySearch = (value: string) => {
-  clearTimeout(isTyping.value);
-  isTyping.value = setTimeout(() => {
-    searchValue.value = value;
-  }, 500);
-};
 </script>
 
 <template>
@@ -101,14 +37,27 @@ const delaySearch = (value: string) => {
             {{ new Date(item.date_added).toLocaleDateString() }}
           </template>
           <template #versions="{ item }">
-            {{ item.versions.join(", ") }}
+            <div class="flex gap-3">
+              <template v-for="version in item.versions">
+                <div
+                  :class="
+                    version.vulnerabilities.length > 0
+                      ? 'bg-[#cf463c]'
+                      : 'bg-[#1b9e72]'
+                  "
+                  class="bg-[#242424] text-white rounded border border-white/15 w-fit px-4 py-2"
+                >
+                  {{ version.version }}
+                </div>
+              </template>
+            </div>
           </template>
         </Table>
       </ClientOnly>
       <button
         class="bg-[#242424] text-white rounded border border-white/15 w-fit px-4 py-2"
         v-if="hasNextPage"
-        @click="loadMore"
+        @click="() => fetchNextPage()"
       >
         Load More...
       </button>

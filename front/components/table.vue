@@ -1,12 +1,10 @@
 <script setup lang="ts">
 import type { TableColumns } from "~/type";
 
-const props = defineProps<{
+defineProps<{
   columns: TableColumns[];
   data: any;
 }>();
-
-console.log(props.data);
 </script>
 
 <template>

@@ -32,8 +32,13 @@ const fetchProjects = async ({ pageParam = 0 }) => {
 const { data, fetchNextPage, hasNextPage } = useInfiniteQuery({
   queryKey: ["images", queryParams],
   queryFn: fetchProjects,
-  getNextPageParam: (lastPage) => lastPage.nextPage,
-  initialPageParam: 0,
+  getNextPageParam: (lastPage) => {
+    if ((lastPage.current_page + 1) * 40 - lastPage.total < 40) {
+      return lastPage.current_page + 1;
+    }
+    return undefined;
+  },
+  initialPageParam: 1,
 });
 
 const delaySearch = (value: string) => {
@@ -53,6 +58,14 @@ const sendNewImg = async () => {
       name: imageName.value,
     }),
   });
+};
+
+// less than 1 week
+const isNew = (date: string) => {
+  const now = new Date();
+  const dateAdded = new Date(date);
+  const diff = now.getTime() - dateAdded.getTime();
+  return diff < 604800000;
 };
 </script>
 
@@ -98,6 +111,7 @@ const sendNewImg = async () => {
         <NuxtLink v-for="image in items.items" :to="`/images/${image.sha}`">
           <card class="relative cursor-pointer">
             <div
+              v-if="isNew(image.date_added)"
               style="clip-path: polygon(10% 0%, 100% 0%, 90% 100%, 0% 100%)"
               class="bg-red-500 italic text-xs w-fit px-5 absolute -top-1 -right-0"
             >
