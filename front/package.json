@@ -13,6 +13,7 @@
     "@nuxtjs/tailwindcss": "^6.12.0",
     "@tanstack/vue-query": "^5.40.1",
     "apexcharts": "^3.49.1",
+    "floating-vue": "^5.2.2",
     "nuxt": "^3.11.2",
     "nuxt-icon": "^0.6.10",
     "vue": "^3.4.27",

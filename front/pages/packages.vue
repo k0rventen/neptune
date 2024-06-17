@@ -39,16 +39,45 @@ const allPackages = computed(() => {
           <template #versions="{ item }">
             <div class="flex gap-3">
               <template v-for="version in item.versions">
-                <div
-                  :class="
-                    version.vulnerabilities.length > 0
-                      ? 'bg-[#cf463c]'
-                      : 'bg-[#1b9e72]'
-                  "
-                  class="bg-[#242424] text-white rounded border border-white/15 w-fit px-4 py-2"
-                >
-                  {{ version.version }}
-                </div>
+                <VDropdown :distance="6">
+                  <button
+                    :class="
+                      version.vulnerabilities.length > 0
+                        ? 'bg-[#cf463c] hover:bg-[#7e2e28]'
+                        : 'bg-[#1b9e72] hover:bg-[#0f6b4a]'
+                    "
+                    class="text-white rounded border border-white/15 w-fit px-2 py-1 relative z-10 transition ease-in"
+                  >
+                    {{ version.version }}
+                  </button>
+                  <template #popper>
+                    <div class="p-2 text-xs">
+                      <template v-if="version.vulnerabilities.length > 0">
+                        <p>Vulnerabilities :</p>
+                        <ul>
+                          <NuxtLink
+                            v-for="vuln in version.vulnerabilities"
+                            :key="vuln.id"
+                            :to="`/vulnerabilities?name=${vuln.name}`"
+                          >
+                            <li class="ml-2">- {{ vuln.name }}</li>
+                          </NuxtLink>
+                        </ul>
+                      </template>
+
+                      <p>Related Images:</p>
+                      <ul>
+                        <li
+                          v-for="tag in version.tags"
+                          :key="tag.sha"
+                          class="cursor-pointer ml-2"
+                        >
+                          - {{ tag.name }}
+                        </li>
+                      </ul>
+                    </div>
+                  </template>
+                </VDropdown>
               </template>
             </div>
           </template>
