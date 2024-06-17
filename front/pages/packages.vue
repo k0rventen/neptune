@@ -1,8 +1,16 @@
 <script setup lang="ts">
 import { useInfiniteQuery } from "@tanstack/vue-query";
 
-const { fetchProjects, delaySearch, columns, queryParams, searchValue } =
-  usePackages();
+const {
+  fetchProjects,
+  delaySearch,
+  columns,
+  queryParams,
+  searchValue,
+  withOutdated,
+  withVulnerabilities,
+  typePackages,
+} = usePackages();
 
 const {
   data: packages,
@@ -28,8 +36,27 @@ const allPackages = computed(() => {
 <template>
   <div class="w-full h-full p-5 gap-5 relative z-[5]">
     <searchbar :value="searchValue" @input="delaySearch" />
+    <div class="my-3 flex gap-5 text-white">
+      <label class="flex gap-2">
+        <input type="checkbox" v-model="withOutdated" />
+        With outdated packages
+      </label>
+      <label class="flex gap-2">
+        <input type="checkbox" v-model="withVulnerabilities" />
+        With vulnerabilities
+      </label>
+      <div class="gap-2 flex">
+        <label>Dependency type : </label>
+        <input
+          v-model="typePackages"
+          class="bg-transparent outline-none border-b-[1px] border-white/15"
+          type="text"
+        />
+      </div>
+    </div>
+
     <div
-      class="h-full mt-3 p-5 bg-[#1b1c1e] border-[1px] border-white/15 flex flex-col items-center gap-5"
+      class="h-full p-5 bg-[#1b1c1e] border-[1px] border-white/15 flex flex-col items-center gap-5"
     >
       <ClientOnly>
         <Table :columns="columns" :data="allPackages">

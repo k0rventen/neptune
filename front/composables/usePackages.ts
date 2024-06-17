@@ -2,14 +2,17 @@ import type { TableColumns } from "~/type";
 
 export const usePackages = () => {
   const searchValue = ref<string>();
+  const withOutdated = ref<boolean>(false);
+  const withVulnerabilities = ref<boolean>(false);
+  const typePackages = ref<string>();
   const isTyping = ref();
 
   const queryParams = computed(() => {
     return {
       name_filter: searchValue.value,
-      with_outdated_versions: "",
-      with_vulnerable_versions: "",
-      type_filter: "",
+      with_outdated_versions: withOutdated.value,
+      with_vulnerable_versions: withVulnerabilities.value,
+      type_filter: typePackages.value,
     };
   });
 
@@ -54,6 +57,9 @@ export const usePackages = () => {
   };
 
   return {
+    typePackages,
+    withOutdated,
+    withVulnerabilities,
     fetchProjects,
     delaySearch,
     isTyping,
