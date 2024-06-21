@@ -76,7 +76,7 @@ const isNew = (date: string) => {
         <label>Image name : </label>
         <input
           v-model="imageName"
-          class="bg-transparent outline-none"
+          class="bg-transparent outline-none border-b-[1px] border-white/15"
           type="text"
         />
       </div>

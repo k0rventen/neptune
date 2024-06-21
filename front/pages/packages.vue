@@ -9,6 +9,7 @@ const {
   searchValue,
   withOutdated,
   withVulnerabilities,
+  delaySearchPackage,
   typePackages,
 } = usePackages();
 
@@ -48,7 +49,7 @@ const allPackages = computed(() => {
       <div class="gap-2 flex">
         <label>Dependency type : </label>
         <input
-          v-model="typePackages"
+          @input="(event: Event) => delaySearchPackage((event?.target as HTMLInputElement)?.value)"
           class="bg-transparent outline-none border-b-[1px] border-white/15"
           type="text"
         />
@@ -94,13 +95,13 @@ const allPackages = computed(() => {
 
                       <p>Related Images:</p>
                       <ul>
-                        <li
+                        <NuxtLink
                           v-for="tag in version.tags"
                           :key="tag.sha"
-                          class="cursor-pointer ml-2"
+                          :to="`/images/${tag.sha}`"
                         >
-                          - {{ tag.name }}
-                        </li>
+                          <li class="cursor-pointer ml-2">- {{ tag.name }}</li>
+                        </NuxtLink>
                       </ul>
                     </div>
                   </template>

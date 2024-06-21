@@ -6,6 +6,7 @@ export const usePackages = () => {
   const withVulnerabilities = ref<boolean>(false);
   const typePackages = ref<string>();
   const isTyping = ref();
+  const isTypingPackage = ref();
 
   const queryParams = computed(() => {
     return {
@@ -39,6 +40,14 @@ export const usePackages = () => {
     clearTimeout(isTyping.value);
     isTyping.value = setTimeout(() => {
       searchValue.value = value;
+      console.log(queryParams.value);
+    }, 500);
+  };
+
+  const delaySearchPackage = (value: string) => {
+    clearTimeout(isTypingPackage.value);
+    isTypingPackage.value = setTimeout(() => {
+      typePackages.value = value;
     }, 500);
   };
 
@@ -57,12 +66,13 @@ export const usePackages = () => {
   };
 
   return {
-    typePackages,
     withOutdated,
     withVulnerabilities,
     fetchProjects,
     delaySearch,
     isTyping,
+    typePackages,
+    delaySearchPackage,
     columns,
     queryParams,
     searchValue,

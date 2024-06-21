@@ -14,7 +14,7 @@ const emit = defineEmits(["input"]);
     <input
       class="bg-transparent w-full outline-none text-white"
       placeholder="Image name..."
-      @input="(event) => emit('input', event?.target?.value)"
+      @input="(event: Event) => emit('input', (event?.target as HTMLInputElement).value)"
     />
   </div>
 </template>
