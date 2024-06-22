@@ -1,5 +1,8 @@
 <script setup>
-import { useMutation, useQuery } from "@tanstack/vue-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
+
+const queryClient = new useQueryClient();
+
 const formValues = ref({
   registry: "",
   user: "",
@@ -12,10 +15,11 @@ const { data: registries } = useQuery({
     const res = await fetch("http://localhost:5000/api/registries");
     return res.json();
   },
+  refetchOnWindowFocus: false,
 });
 
 const mutation = useMutation({
-  onMutate: async (variables) => {
+  mutationFn: async (variables) => {
     await fetch("http://localhost:5000/api/registries", {
       method: "POST",
       headers: {
@@ -28,12 +32,40 @@ const mutation = useMutation({
     console.log(error);
   },
   onSuccess: (data, variables, context) => {
-    console.log(data);
+    queryClient.setQueriesData(["registries"], (oldData) => [
+      ...oldData,
+      variables,
+    ]);
+  },
+});
+
+const remove = useMutation({
+  mutationFn: async (variables) => {
+    await fetch("http://localhost:5000/api/registries", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(variables),
+    });
+  },
+  onSuccess: (data, variables, context) => {
+    queryClient.setQueriesData(["registries"], (oldData) =>
+      oldData.filter((registry) => registry.registry !== variables.registry)
+    );
   },
 });
 
 const sendRegistry = () => {
   mutation.mutate(formValues.value);
+};
+
+const deleteRegistry = async (registry) => {
+  remove.mutate({ registry });
+
+  await queryClient.invalidateQueries({
+    queryKey: ["registries"],
+  });
 };
 </script>
 
@@ -44,6 +76,13 @@ const sendRegistry = () => {
         class="bg-[#242424] px-3 py-2 col-span-1 relative overflow-hidden rounded"
         v-for="registry in registries"
       >
+        <Icon
+          size="12"
+          name="akar-icons:cross"
+          color="white"
+          class="opacity-50 absolute top-3 right-2 cursor-pointer"
+          @click="deleteRegistry(registry.registry)"
+        />
         <Icon
           size="150"
           name="iconoir:box-iso"
