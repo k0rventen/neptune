@@ -3,9 +3,12 @@ import type { TableColumns } from "~/type";
 export const useVulnerabilities = () => {
   const searchValue = ref("");
   const isTyping = ref();
-  const queryParams = ref({
-    severity_filter: undefined,
-    active_filter: undefined,
+  const queryParams = computed(() => {
+    return {
+      name_filter: searchValue.value,
+      severity_filter: undefined,
+      active_filter: undefined,
+    };
   });
   const columns: TableColumns[] = [
     {
@@ -38,6 +41,7 @@ export const useVulnerabilities = () => {
     clearTimeout(isTyping.value);
     isTyping.value = setTimeout(() => {
       searchValue.value = value;
+      console.log(searchValue.value);
     }, 500);
   };
 

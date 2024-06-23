@@ -94,14 +94,25 @@ const changeStatus = (item: any) => {
             </a>
           </template>
           <template #affected_images="{ item }">
-            <div class="rounded">
-              <p>{{ item.affected_images.length }}</p>
+            <div class="w-fit">
+              <VDropdown :distance="6">
+                <button
+                  class="rounded bg-[#242424] w-fit px-2 border-[1px] border-white/15"
+                >
+                  <p>{{ item.affected_images.length }}</p>
+                </button>
+                <template #popper>
+                  <div class="px-2">
+                    <p v-for="img in item.affected_images">
+                      {{ img.name }}
+                    </p>
+                  </div>
+                </template>
+              </VDropdown>
             </div>
           </template>
           <template #affected_package="{ item }">
-            <div class="rounded">
-              <p>{{ item.affected_package.name }}</p>
-            </div>
+            <p>{{ item.affected_package.name }}</p>
           </template>
           <template #notes="{ item }">
             <input
