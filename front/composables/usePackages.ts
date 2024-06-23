@@ -40,7 +40,6 @@ export const usePackages = () => {
     clearTimeout(isTyping.value);
     isTyping.value = setTimeout(() => {
       searchValue.value = value;
-      console.log(queryParams.value);
     }, 500);
   };
 

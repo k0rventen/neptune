@@ -56,9 +56,7 @@ const allPackages = computed(() => {
       </div>
     </div>
 
-    <div
-      class="h-full p-5 bg-[#1b1c1e] border-[1px] border-white/15 flex flex-col items-center gap-5"
-    >
+    <card class="flex flex-col items-center">
       <ClientOnly>
         <Table :columns="columns" :data="allPackages">
           <template #date_added="{ item }">
@@ -118,6 +116,6 @@ const allPackages = computed(() => {
       >
         Load More...
       </button>
-    </div>
+    </card>
   </div>
 </template>
