@@ -47,6 +47,20 @@ const mutation = useMutation({
   },
 });
 
+const noteMutation = useMutation({
+  mutationFn: async (data: any) => {
+    await fetch(`http://localhost:5000/api/vulnerabilities/${data.id}`, {
+      method: "PUT",
+      body: JSON.stringify({
+        notes: data.notes,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  },
+});
+
 const allVulnerabilities = computed(() => {
   return vulnerabilites.value?.pages.map((page) => page.items).flat();
 });
@@ -71,6 +85,14 @@ const changeStatus = (item: any) => {
               <p>{{ item.active ? "Active" : "Inactive" }}</p>
             </button>
           </template>
+          <template #name="{ item }">
+            <a
+              :href="`https://www.google.com/search?q=${item.name}`"
+              target="_blank"
+            >
+              <p>{{ item.name }}</p>
+            </a>
+          </template>
           <template #affected_images="{ item }">
             <div class="rounded">
               <p>{{ item.affected_images.length }}</p>
@@ -85,6 +107,11 @@ const changeStatus = (item: any) => {
             <input
               class="bg-transparent outline-none border-b-[1px] border-white/15 w-full"
               type="text"
+              :value="item.notes"
+              @blur="
+                (e: FocusEvent) =>
+                  noteMutation.mutate({ id: item.id, notes: (e?.target as HTMLInputElement)?.value })
+              "
             />
           </template>
         </Table>
