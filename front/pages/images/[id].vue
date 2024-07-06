@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { useQuery } from "@tanstack/vue-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import type { RouteLocationNormalizedLoaded } from "vue-router";
 
 const route: RouteLocationNormalizedLoaded = useRoute();
+const { columns, activeVulnColumn } = useImage();
+const queryClient = useQueryClient();
 
 const { data: image, isLoading } = useQuery({
   queryKey: ["images", { id: route.params.id }],
@@ -12,12 +14,39 @@ const { data: image, isLoading } = useQuery({
     );
     return res.json();
   },
+  refetchOnWindowFocus: false,
+});
+
+const mutation = useMutation({
+  mutationFn: async (data: any) => {
+    await fetch(`http://localhost:5000/api/vulnerabilities/${data.id}`, {
+      method: "PUT",
+      body: JSON.stringify({
+        active: !data.active,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  },
+  onSuccess: () => {
+    queryClient.invalidateQueries({
+      queryKey: ["images", { id: route.params.id }],
+    });
+  },
+});
+
+const vulnerabiltiesTable = computed(() => {
+  return [
+    ...image.value.vulnerabilities,
+    ...image.value.active_vulnerabilities,
+  ];
 });
 </script>
 
 <template>
-  <div class="w-full p-5 gap-5 relative z-[5]">
-    <card v-if="!isLoading" class="w-full h-fit grid grid-cols-3">
+  <div v-if="!isLoading" class="w-full p-5 gap-5 relative z-[5]">
+    <card class="w-full h-fit grid grid-cols-3">
       <div>
         <p class="font-mattone">
           Name :
@@ -59,5 +88,32 @@ const { data: image, isLoading } = useQuery({
         </p>
       </div>
     </card>
+    <div class="grid grid-cols-2 w-full mt-5 gap-5">
+      <card>
+        <Table :columns="columns" :data="image.packages">
+          <template #outdated="{ item }">
+            <button
+              class="rounded px-2 w-fit"
+              :class="[item.outdated ? 'bg-red-500' : 'bg-green-500']"
+            >
+              <p>{{ item.outdated ? "Outdated" : "Up to date" }}</p>
+            </button>
+          </template>
+        </Table>
+      </card>
+      <card>
+        <Table :columns="activeVulnColumn" :data="vulnerabiltiesTable">
+          <template #active="{ item }">
+            <button
+              class="rounded px-2 w-fit"
+              :class="[item.active ? 'bg-green-500' : 'bg-red-500']"
+              @click="mutation.mutate(item)"
+            >
+              <p>{{ item.active ? "Active" : "Inactive" }}</p>
+            </button>
+          </template>
+        </Table>
+      </card>
+    </div>
   </div>
 </template>
