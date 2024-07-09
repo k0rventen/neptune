@@ -1,39 +1,33 @@
-<script setup>
-defineProps(['modelValue'])
-const emit = defineEmits(['update:modelValue'])
+<script setup lang="ts">
+const props: { visible: boolean } = defineProps({
+  visible: {
+    type: Boolean,
+    required: true,
+  },
+});
 
-const modal = ref()
-
-const handleMouseout = (event) => {
-    if (modal.value && !modal.value.contains(event.target)) {
-        emit('update:modelValue', false)
-    }
-}
-
-window.addEventListener('mousedown', handleMouseout)
+const emit = defineEmits(["close", "submit"]);
 </script>
 
 <template>
-    <Transition>
-        <div v-if="modelValue"
-            class="bg-black/25 backdrop-blur fixed top-0 left-0 w-full h-full z-20 flex justify-center items-center">
-            <div ref="modal" class="bg-white p-3 min-h-[50vmin] min-w-[50vmax] rounded">
-                <slot name="header"/>
-                <hr class="mt-1">
-                <slot />
-            </div>
+  <Teleport v-if="visible" to="body">
+    <div
+      class="w-full h-screen bg-black/50 fixed top-0 left-0 z-[99999] backdrop-blur-md flex justify-center items-center"
+      @click="emit('close')"
+    >
+      <card @click.stop>
+        <div class="flex w-full gap-1 justify-center items-center mb-3">
+          <Icon
+            size="24"
+            name="iconoir:planet"
+            color="white"
+            class="opacity-75"
+          />
+          <p>Neptune</p>
         </div>
-    </Transition>
+        <div class="h-[1px] w-full bg-white opacity-75 mb-3" />
+        <slot />
+      </card>
+    </div>
+  </Teleport>
 </template>
-
-<style scoped>
-.v-enter-active,
-.v-leave-active {
-    transition: opacity 0.5s ease;
-}
-
-.v-enter-from,
-.v-leave-to {
-    opacity: 0;
-}
-</style>

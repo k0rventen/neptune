@@ -1,58 +1,151 @@
 <script setup>
-import { useRegistryStore } from '@/store/registry.store'
+import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 
-const registryStore = useRegistryStore()
+const queryClient = new useQueryClient();
 
-await registryStore.getRegistries()
+const formValues = ref({
+  registry: "",
+  user: "",
+  password: "",
+});
 
-const registries = ref({
-    url: undefined,
-    username: undefined,
-    password: undefined
-})
+const { data: registries } = useQuery({
+  queryKey: ["registries"],
+  queryFn: async () => {
+    const res = await fetch("http://localhost:5000/api/registries");
+    return res.json();
+  },
+  refetchOnWindowFocus: false,
+});
 
-const sendRegistry = async () => {
-    await registryStore.sendRegistry(registries.value).then(() => {
-        registries.value = {
-            registry: undefined,
-            user: undefined,
-            password: undefined
-        }
-    })
-}
+const mutation = useMutation({
+  mutationFn: async (variables) => {
+    await fetch("http://localhost:5000/api/registries", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(variables),
+    });
+  },
+  onError: (error, variables, context) => {
+    console.log(error);
+  },
+  onSuccess: (data, variables, context) => {
+    queryClient.setQueriesData(["registries"], (oldData) => [
+      ...oldData,
+      variables,
+    ]);
+  },
+});
+
+const remove = useMutation({
+  mutationFn: async (variables) => {
+    await fetch("http://localhost:5000/api/registries", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(variables),
+    });
+  },
+  onSuccess: (data, variables, context) => {
+    queryClient.setQueriesData(["registries"], (oldData) =>
+      oldData.filter((registry) => registry.registry !== variables.registry)
+    );
+  },
+});
+
+const sendRegistry = () => {
+  mutation.mutate(formValues.value);
+};
+
+const deleteRegistry = async (registry) => {
+  remove.mutate({ registry });
+
+  await queryClient.invalidateQueries({
+    queryKey: ["registries"],
+  });
+};
 </script>
 
 <template>
-    <div class="h-2/3 bg-white border rounded-md">
-        <div class="grid grid-cols-3 gap-5 p-3">
-            <div v-for="registry in registryStore.registries" :key="registry.url"
-                class="text-white px-5 rounded-lg py-5 overflow-hidden cursor-pointer bg-primary relative">
-                <svg class="absolute opacity-20 -right-5 -bottom-5" width="116" height="116" viewBox="0 0 24 24"
-                    fill="white">
-                    <path
-                        d="M18 10.031v-6.423l-6.036-3.608-5.964 3.569v6.499l-6 3.224v7.216l6.136 3.492 5.864-3.393 5.864 3.393 6.136-3.492v-7.177l-6-3.3zm-1.143.036l-4.321 2.384v-4.956l4.321-2.539v5.111zm-4.895-8.71l4.272 2.596-4.268 2.509-4.176-2.554 4.172-2.551zm-10.172 12.274l4.778-2.53 4.237 2.417-4.668 2.667-4.347-2.554zm4.917 3.587l4.722-2.697v5.056l-4.722 2.757v-5.116zm6.512-3.746l4.247-2.39 4.769 2.594-4.367 2.509-4.649-2.713zm9.638 6.323l-4.421 2.539v-5.116l4.421-2.538v5.115z" />
-                </svg>
-                <p class="truncate">{{ $t('registry.url') }} : {{ registry.registry }}</p>
-                <p class="truncate">{{ $t('registry.username') }} : {{ registry.user }}</p>
-                <p class="truncate">{{ $t('registry.password') }} : {{ registry.password }}</p>
+  <div class="flex-1 p-5 grid grid-cols-1 lg:grid-rows-8 gap-2 relative z-[5]">
+    <card class="row-span-5 grid grid-cols-4 grid-rows-3 gap-3">
+      <div
+        class="bg-[#242424] px-3 py-2 col-span-1 relative overflow-hidden rounded"
+        v-for="registry in registries"
+      >
+        <Icon
+          size="12"
+          name="akar-icons:cross"
+          color="white"
+          class="opacity-50 absolute top-3 right-2 cursor-pointer"
+          @click="deleteRegistry(registry.registry)"
+        />
+        <Icon
+          size="150"
+          name="iconoir:box-iso"
+          color="white"
+          class="opacity-50 absolute -right-8 -bottom-8"
+        />
+        <p>Registry: {{ registry.registry }}</p>
+        <p>Username: {{ registry.user }}</p>
+        <p>Password: {{ registry.password }}</p>
+      </div>
+    </card>
+
+    <div class="row-span-3">
+      <div class="flex gap-2">
+        <Icon
+          size="24"
+          name="iconoir:puzzle"
+          color="white"
+          class="opacity-75"
+        />
+        <p class="font-mattone mb-2 text-white opacity-75">Add registry</p>
+      </div>
+
+      <card class="h-[calc(100%-32px)]">
+        <form
+          class="flex flex-col gap-3 h-full justify-between"
+          @submit.prevent="sendRegistry"
+        >
+          <div class="gap-3 flex flex-col">
+            <div class="flex gap-3">
+              <label>Repository URL: </label>
+              <input
+                v-model="formValues.registry"
+                class="bg-transparent outline-none border-b-[1px] border-white/15"
+                type="text"
+              />
             </div>
-        </div>
-    </div>
-    <div class="mt-3">
-        <form class="gap-3" @submit.prevent="sendRegistry">
-            <label class="block">{{ $t('registry.url') }} :</label>
-            <input v-model="registries.registry" type="text" class="border-b-1 border outline-none px-2 py-1 rounded">
+            <div class="flex gap-3">
+              <label>Username: </label>
+              <input
+                v-model="formValues.user"
+                class="bg-transparent outline-none border-b-[1px] border-white/15"
+                type="text"
+              />
+            </div>
+            <div class="flex gap-3">
+              <label>Password: </label>
+              <input
+                v-model="formValues.password"
+                class="bg-transparent outline-none border-b-[1px] border-white/15"
+                type="password"
+              />
+            </div>
+          </div>
 
-            <label class="block">{{ $t('registry.username') }} :</label>
-            <input v-model="registries.user" type="text" class="border-b-1 border outline-none px-2 py-1 rounded">
-
-            <label class="block">{{ $t('registry.password') }} :</label>
-            <input v-model="registries.password" type="password" class="border-b-1 border outline-none px-2 py-1 rounded block">
-
-            <button type="submit" class="bg-primary w-fit px-3 py-1 mt-1 text-white rounded">{{ $t('registry.added') }} !</button>
+          <button
+            class="bg-[#1b1c1e] text-white border-white/15 border rounded flex items-center justify-center py-1 pr-4 pl-2 gap-2 w-full mt-5 hover:bg-[#161618] transition ease-in"
+            type="submit"
+          >
+            Validate
+          </button>
         </form>
-
-
-
+      </card>
     </div>
+  </div>
 </template>

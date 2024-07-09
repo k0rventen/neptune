@@ -1,83 +1,154 @@
-<script setup>
-import { useImageStore } from '~/store/images.store';
+<script setup lang="ts">
+import { useInfiniteQuery } from "@tanstack/vue-query";
 
-const imageStore = useImageStore()
+const searchValue: Ref<string> = ref("");
+const hasVuln: Ref<boolean> = ref(false);
+const isTyping = ref();
 
-const pagination = reactive({
-    page: 1,
-    perPage: 20,
-})
+const queryParams = computed(() => {
+  return {
+    name_filter: searchValue.value,
+    has_vuln: hasVuln.value,
+  };
+});
 
-const filter = reactive({
-    name_filter: undefined,
-    has_vuln: undefined
-})
+const isOpenModal = ref(false);
+const imageName = ref();
 
-const image = ref({
-    image: undefined,
-    return_error: false,
-})
-const openModal = ref(false)
+const fetchProjects = async ({ pageParam = 0 }) => {
+  let url = `http://localhost:5000/api/tags?page=${pageParam}&per_page=20`;
 
+  Object.entries(queryParams.value).forEach(([key, value]) => {
+    if (value) {
+      url += `&${key}=${value}`;
+    }
+  });
+
+  const res = await fetch(url);
+
+  return res.json();
+};
+
+const { data, fetchNextPage, hasNextPage } = useInfiniteQuery({
+  queryKey: ["images", queryParams],
+  queryFn: fetchProjects,
+  getNextPageParam: (lastPage) => {
+    if ((lastPage.current_page + 1) * 40 - lastPage.total < 40) {
+      return lastPage.current_page + 1;
+    }
+    return undefined;
+  },
+  initialPageParam: 1,
+});
+
+const delaySearch = (value: string) => {
+  clearTimeout(isTyping.value);
+  isTyping.value = setTimeout(() => {
+    searchValue.value = value;
+  }, 500);
+};
 
 const sendNewImg = async () => {
-    await imageStore.scanImage(image.value)
-}
+  await fetch("http://localhost:5000/api/scan", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      name: imageName.value,
+    }),
+  });
+};
 
-const delay = ref(undefined)
-const refresh = ref(0)
-
-watch(filter, async () => {
-    await imageStore.getImages({ ...pagination, filter })
-})
-
-const delaySearch = (input) => {
-    filter.name_filter = input.target.value
-    clearTimeout(delay.value)
-    delay.value = setTimeout(async () => {
-        await imageStore.getImages({ ...pagination, filter })
-        pagination.page = 1
-        refresh.value++
-    }, 750)
-}
-
-watch(pagination, async () => {
-    await imageStore.getImages({ ...pagination, filter })
-})
-
-await imageStore.getImages({ ...pagination, filter })
+// less than 1 week
+const isNew = (date: string) => {
+  const now = new Date();
+  const dateAdded = new Date(date);
+  const diff = now.getTime() - dateAdded.getTime();
+  return diff < 604800000;
+};
 </script>
 
 <template>
-    <!-- Modal add image -->
-    <modal v-model="openModal">
-        <template #header>
-            {{ $t('images.modal.title') }}
-        </template>
-        <form @submit.prevent="sendNewImg" class="flex flex-col justify-between w-full h-full min-h-[50vmin]">
-            <div class="mt-2">
-                <label>{{ $t('images.modal.img_name') }}:</label>
-                <input v-model="image.image" type="text" class="border-b-1 border ml-2 outline-none px-2 py-1 rounded">
+  <div class="w-full h-screen p-5 gap-5 relative z-[5]">
+    <Modal :visible="isOpenModal" @close="isOpenModal = !isOpenModal">
+      <div>
+        <label>Image name : </label>
+        <input
+          v-model="imageName"
+          class="bg-transparent outline-none border-b-[1px] border-white/15"
+          type="text"
+        />
+      </div>
+      <button
+        class="bg-[#1b1c1e] text-white border-white/15 border rounded flex items-center justify-center py-1 pr-4 pl-2 gap-2 w-full mt-5 hover:bg-[#161618] transition ease-in"
+        @click="sendNewImg"
+      >
+        <Icon name="iconoir:plus" class="w-6 h-6" />
+        Add the image
+      </button>
+    </Modal>
+
+    <searchbar :value="searchValue" @input="delaySearch" />
+    <div class="flex items-center mt-3 gap-3">
+      <button
+        class="bg-[#1b1c1e] text-white border-white/15 border rounded flex items-center justify-center py-1 pr-4 pl-2 gap-2 hover:bg-[#161618] transition ease-in"
+        @click="isOpenModal = true"
+      >
+        <Icon
+          name="iconoir:plus"
+          class="w-6 h-6 hover:bg-[#161618] transition ease-in"
+        />
+        Add new image
+      </button>
+      <label class="text-white flex gap-3 items-center">
+        <input class="block" type="checkbox" @click="hasVuln = !hasVuln" />
+        Has vulnerabilities
+      </label>
+    </div>
+    <div class="mt-3 grid grid-cols-3 gap-5">
+      <template v-for="items in data?.pages">
+        <NuxtLink v-for="image in items.items" :to="`/images/${image.sha}`">
+          <card class="relative cursor-pointer">
+            <div
+              v-if="isNew(image.date_added)"
+              style="clip-path: polygon(10% 0%, 100% 0%, 90% 100%, 0% 100%)"
+              class="bg-red-500 italic text-xs w-fit px-5 absolute -top-1 -right-0"
+            >
+              <p>NEW !</p>
             </div>
-            <button type="submit" class="bg-primary w-full px-3 py-1 text-white rounded">
-                {{ $t('images.modal.add') }}
-            </button>
-        </form>
-    </modal>
-
-
-    <input class="w-full px-2 py-2 shadow outline-none rounded" type="text" :placeholder="$t('images.img_name')"
-        @input="delaySearch">
-    <div class="flex gap-2 my-2">
-        <label for="vuln">{{ $t('images.with_vuln') }}</label>
-        <input v-model="filter.has_vuln" type="checkbox" id="vuln" name="vuln">
+            <p class="font-mattone tracking-wide">
+              {{ image.image }}:{{ image.tag }}
+            </p>
+            <div class="bg-white/15 h-[1px] w-full my-3" />
+            <p class="text-md font-mattone">
+              Image size:
+              <span class="font-sans">{{ useCalcConverter(image.size) }}</span>
+            </p>
+            <p class="text-md font-mattone">
+              Packages: <span class="font-sans">{{ image.packages }}</span>
+            </p>
+            <p class="text-md font-mattone">
+              Vulnerabilities:
+              <span class="font-sans">{{ image.vulnerabilities }}</span>
+            </p>
+            <p class="text-md font-mattone">
+              Active vulnerabilities:
+              <span class="font-sans">{{ image.active_vulnerabilities }}</span>
+            </p>
+            <p class="text-md font-mattone">
+              Outdated Packages:
+              <span class="font-sans">{{ image.outdated_packages }}</span>
+            </p>
+            <p class="text-md font-mattone">
+              Date:
+              <span class="font-sans">{{
+                dateConverter(image.date_added)
+              }}</span>
+            </p>
+          </card>
+        </NuxtLink>
+      </template>
     </div>
-    <button class="px-3 py-1 bg-primary text-white rounded" @click="openModal = true">{{ $t('images.add_img')
-    }}</button>
-    <div class="grid grid-cols-1 md:grid-cols-4 mt-5 gap-5">
-        <card v-for="image in imageStore.images.items" :image="image" />
-    </div>
-    <div class="w-full flex justify-center mt-3">
-        <paginate v-model="pagination.page" :nbPages="Math.ceil(imageStore.images.total / imageStore.images.per_page)"
-            :key="refresh"></paginate>
-</div></template>
+  </div>
+</template>

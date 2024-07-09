@@ -60,7 +60,8 @@ def post_config(new_config: RegistryConfigRequest, session: Session = Depends(ge
             registry_conf = RegistryConfig(
                 url=new_config.registry, user=new_config.user, password=new_config.password)
         session.add(registry_conf)
-        return {"message": message}
+        return registry_conf.serialize()
+        #return {"message": message}
     raise HTTPException(status_code=400, detail=message)
 
 
